@@ -1,4 +1,4 @@
-/* Йога-студия Yogamat.kz — общие элементы интерфейса */
+/* Йога-студия yoga_matkz — общие элементы интерфейса */
 (function () {
   'use strict';
   const { RU } = Studio;
@@ -86,7 +86,7 @@
   function bar(percent, warn) { return h('div', { class: 'bar' + (warn ? ' warn' : '') }, h('i', { style: { width: Math.max(0, Math.min(100, percent)) + '%' } })); }
   function chip(label, on, onclick) { return h('button', { class: 'chip' + (on ? ' on' : ''), type: 'button', onclick }, label); }
   function footer(version) {
-    return h('div', { class: 'app-footer' }, 'Версия: ' + version + ' · ', h('em', null, 'Разработано Yogamat.kz'));
+    return h('div', { class: 'app-footer' }, 'Версия: ' + version + ' · ', h('em', null, 'Разработано yoga_matkz'));
   }
 
   /* ---------- поля форм ---------- */

@@ -1,4 +1,4 @@
-/* Йога-студия Yogamat.kz — выгрузка таблиц CSV в PDF (A4, книжная ориентация) */
+/* Йога-студия yoga_matkz — выгрузка таблиц CSV в PDF (A4, книжная ориентация) */
 (function () {
   'use strict';
   const { h, sheet, toast, icon } = UI;
@@ -65,7 +65,7 @@
     });
     const n = doc.getNumberOfPages(); const W = doc.internal.pageSize.getWidth(); const Hh = doc.internal.pageSize.getHeight();
     for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFont('DejaVu', 'normal'); doc.setFontSize(7.5); doc.setTextColor(110, 124, 111);
-      doc.text('Версия ' + Studio.APP_VERSION + ' · Разработано Yogamat.kz', M, Hh - 8); doc.text('Стр. ' + i + ' из ' + n, W - M, Hh - 8, { align: 'right' }); }
+      doc.text('Версия ' + Studio.APP_VERSION + ' · Разработано yoga_matkz', M, Hh - 8); doc.text('Стр. ' + i + ' из ' + n, W - M, Hh - 8, { align: 'right' }); }
     return { blob: doc.output('blob'), pages: n };
   }
 

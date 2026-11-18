@@ -1,4 +1,4 @@
-/* Йога-студия Yogamat.kz — запуск, вход по PIN, навигация */
+/* Йога-студия yoga_matkz — запуск, вход по PIN, навигация */
 (function () {
   'use strict';
   const { RU } = Studio;
@@ -37,7 +37,7 @@
     const tabs = TABS.filter((t) => t[0] !== 'income' || store.isAdmin);
     tabbar.appendChild(h('nav', { class: 'tabbar', 'aria-label': 'Разделы' }, tabs.map(([id, title, ic]) => h('button', { class: 'tab' + (route.tab === id ? ' on' : ''), type: 'button', 'aria-current': route.tab === id ? 'page' : null, onclick: () => { if (location.hash === '#/' + id) scroller.scrollTo({ top: 0, behavior: 'smooth' }); else App.go('/' + id); } },
       h('span', { class: 'ico' }, icon(ic)), h('span', null, title)))));
-    document.title = store.state.studioName || 'Yogamat.kz';
+    document.title = store.state.studioName || 'yoga_matkz';
     if (bgImg.getAttribute('src') !== store.logoSrc()) bgImg.src = store.logoSrc();
   }
   const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(render); } };
@@ -53,7 +53,7 @@
     if (authDrawn) return;
     if (!store.state.staff.length) authSetup(); else authChoose();
   }
-  const authShell = (title, lead, ...kids) => { clearInterval(timer); authDrawn = true; clear(authRoot); authRoot.appendChild(h('div', { class: 'auth-inner' }, h('img', { class: 'logo', src: store.logoSrc(), alt: store.state.studioName || 'Yogamat.kz' }), h('h1', null, title), lead ? h('p', { class: 'lead' }, lead) : null, ...kids, UI.footer(Studio.APP_VERSION))); const f = authRoot.querySelector('input'); if (f) setTimeout(() => f.focus({ preventScroll: true }), 50); };
+  const authShell = (title, lead, ...kids) => { clearInterval(timer); authDrawn = true; clear(authRoot); authRoot.appendChild(h('div', { class: 'auth-inner' }, h('img', { class: 'logo', src: store.logoSrc(), alt: store.state.studioName || 'yoga_matkz' }), h('h1', null, title), lead ? h('p', { class: 'lead' }, lead) : null, ...kids, UI.footer(Studio.APP_VERSION))); const f = authRoot.querySelector('input'); if (f) setTimeout(() => f.focus({ preventScroll: true }), 50); };
   const pinInput = (ph) => input({ type: 'password', inputmode: 'numeric', pattern: '[0-9]*', maxlength: 8, class: 'inp pin', placeholder: ph || '••••', autocomplete: 'off' });
   const errBox = () => h('div', { class: 'err', role: 'alert', hidden: true });
   const showErr = (box, msg) => { box.textContent = msg; box.hidden = !msg; };

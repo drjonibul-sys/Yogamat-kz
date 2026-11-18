@@ -301,6 +301,12 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     assert.strictEqual(s.paymentsReport('2026-11-01', '2026-11-30').total, 28000); assert.strictEqual(s.paymentsReport('2026-07-01', '2026-12-31').total, 38000);
     assert(s.paymentsCSV('2026-07-01', '2026-12-31').includes('Итого')); assert.strictEqual(s.paymentsReport('2026-12-01', '2026-12-31').total, 0);
   });
+  await test('название студии по умолчанию — yoga_matkz; прежнее по умолчанию переименовывается, своё сохраняется', () => {
+    assert.strictEqual(mk().state.studioName, 'Студия yoga_matkz');
+    const st = memoryStorage(); const a = createStore({ storage: st, now: () => t0 }); a.load(); a.importSnapshot(Object.assign({}, a.snapshot(), { studioName: 'Студия Yogamat.kz' }));
+    assert.strictEqual(a.state.studioName, 'Студия yoga_matkz');
+    a.importSnapshot(Object.assign({}, a.snapshot(), { studioName: 'Моя студия' })); assert.strictEqual(a.state.studioName, 'Моя студия');
+  });
   await test('версия в version.json совпадает', () => {
     assert.strictEqual(JSON.parse(require('fs').readFileSync(__dirname + '/../docs/version.json', 'utf8')).version, require('../docs/store.js').APP_VERSION);
   });

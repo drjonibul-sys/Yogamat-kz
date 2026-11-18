@@ -1,4 +1,4 @@
-/* Йога-студия Yogamat.kz — ядро данных (порт StudioStore.swift нативного приложения).
+/* Йога-студия yoga_matkz — ядро данных (порт StudioStore.swift нативного приложения).
    Работает в браузере и в Node (для тестов). Даты — ключи «ГГГГ-ММ-ДД» в местном времени. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.5.1';
+  const APP_VERSION = '1.5.2';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -136,7 +136,7 @@
     const S = {
       clients: [], subscriptions: [], visits: [], transfers: [],
       classes: [], tariffs: [], rentSettings: null, rentPeriods: [],
-      staff: [], favoriteAsanas: [], studioName: 'Студия Yogamat.kz', studioLogo: null
+      staff: [], favoriteAsanas: [], studioName: 'Студия yoga_matkz', studioLogo: null
     };
     let currentUserID = null;
     let saveError = null;
@@ -173,7 +173,7 @@
       S.classes = snap.classes || defaultClasses();
       S.tariffs = snap.tariffs || []; S.rentSettings = snap.rentSettings || null; S.rentPeriods = snap.rentPeriods || [];
       S.staff = snap.staff || []; S.favoriteAsanas = snap.favoriteAsanas || [];
-      if (snap.studioName) S.studioName = snap.studioName;
+      if (snap.studioName) S.studioName = snap.studioName === 'Студия Yogamat.kz' ? 'Студия yoga_matkz' : snap.studioName; /* прежнее название по умолчанию */
       S.studioLogo = isLogo(snap.studioLogo) ? snap.studioLogo : null;
     }
 

@@ -19,7 +19,7 @@ with sync_playwright() as p:
     ok('несколько страниц (%s)' % pages, int(pages) >= 2)
     subprocess.run(['pdftoppm', '-r', '70', '-png', '-f', '1', '-l', '1', '/tmp/shots/clients.pdf', '/tmp/shots/pdf-clients'], check=True)
     txt = subprocess.run(['pdftotext', '-layout', '/tmp/shots/clients.pdf', '-'], capture_output=True, text=True).stdout
-    flat = re.sub(r'\s+', ' ', txt); ok('кириллица, телефон и колонтитул в тексте PDF', 'Длинная-Фамилия 1' in flat and '+7 701 234 56 01' in flat and 'Стр. 1 из 2' in flat and 'Разработано Yogamat.kz' in flat and 'Стр. 1 из' in txt and 'Разработано Yogamat.kz' in txt)
+    flat = re.sub(r'\s+', ' ', txt); ok('кириллица, телефон и колонтитул в тексте PDF', 'Длинная-Фамилия 1' in flat and '+7 701 234 56 01' in flat and 'Стр. 1 из 2' in flat and 'Разработано yoga_matkz' in flat and 'Стр. 1 из' in txt and 'Разработано yoga_matkz' in txt)
     # кнопка и окно
     page.goto(BASE + '#/clients'); page.wait_for_selector('text=PDF'); page.click('.btn:has-text("PDF")'); page.wait_for_selector('text=PDF готов', timeout=20000)
     ok('кнопка «PDF» открывает окно готового файла', 'A4 книжный' in page.inner_text('.sheet')); page.keyboard.press('Escape')

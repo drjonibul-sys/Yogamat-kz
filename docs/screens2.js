@@ -1,4 +1,4 @@
-/* Йога-студия Yogamat.kz — доход, платежи, долги, тарифы, аренда, нагрузка, настройки, аккаунт */
+/* Йога-студия yoga_matkz — доход, платежи, долги, тарифы, аренда, нагрузка, настройки, аккаунт */
 (function () {
   'use strict';
   const { RU } = Studio;
@@ -261,7 +261,7 @@
             h('button', { class: 'link danger small', type: 'button', onclick: () => { store.deleteBackup(b.id); draw(); } }, 'Удалить')]))) : h('div', { class: 'soft small' }, 'Копий пока нет. Раз в неделю при запуске создаётся автоматическая копия.')));
       }
       box.appendChild(section('О приложении'));
-      box.appendChild(h('div', { class: 'card' }, row('Студия', store.state.studioName), row('Версия', Studio.APP_VERSION), h('div', { class: 'row between' }, h('span', { class: 'soft' }, 'Разработано'), h('em', null, 'Yogamat.kz')),
+      box.appendChild(h('div', { class: 'card' }, row('Студия', store.state.studioName), row('Версия', Studio.APP_VERSION), h('div', { class: 'row between' }, h('span', { class: 'soft' }, 'Разработано'), h('em', null, 'yoga_matkz')),
         updateBlock(draw),
         h('div', { class: 'card flat', style: { boxShadow: 'none' } }, navRow('book', 'Вопрос-ответ / FAQ', 'Инструкция по приложению для вашей роли', '/faq')),
         h('div', { class: 'hint' }, 'Справочник асан: иллюстрации и источники указаны в карточках асан.')));
