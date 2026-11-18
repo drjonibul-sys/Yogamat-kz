@@ -306,3 +306,4 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .att-table .pay-note { font-size: 11px; color: var(--danger); }
 .att-table .pay-note.paid { color: var(--sage-deep); }
 .att-table tr.tot td { background: var(--sage-tint); font-weight: 700; }
+.att-table td.day-col.moved { background: var(--sand); color: var(--terracotta); font-weight: 700; }

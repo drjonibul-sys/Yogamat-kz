@@ -320,6 +320,34 @@
 
   /* ---------- Визиты: таблица недели (как в первоначальной версии) ---------- */
   const weekView = { start: null, classID: '', scroll: 0 }; /* состояние живёт вне построения экрана: экран перерисовывается после каждой отметки */
+  /* Пропуск: занятие сгорело. Перенос и снятие — только вручную, для одного клиента и одной даты, с подтверждением. */
+  function absenceSheet(c, date) {
+    const a = store.absenceOn(c.id, date); if (!a) return;
+    sheet('Пропуск занятия', (s) => {
+      const draw = () => {
+        clear(s.body); const cur = store.absenceOn(c.id, date); if (!cur) return s.close();
+        const sub = store.subscription(cur.subscriptionID) || store.activeSubscription(c.id);
+        s.body.appendChild(h('div', { class: 'card' }, h('div', { class: 'h3' }, c.name), h('div', { class: 'soft small' }, 'Пропуск: ' + RU.longDay(date)),
+          cur.transferredTo ? h('div', { class: 'small' }, 'Занятие перенесено на ' + RU.longDay(cur.transferredTo) + '.') : h('div', { class: 'small' }, 'Занятие сгорело — с абонемента оно не возвращается.')));
+        if (cur.transferredTo) {
+          s.body.appendChild(h('div', { class: 'hint' }, 'На новую дату поставлено посещение. Если отменить запись на новую дату, перенос будет снят и занятие снова сгорит.'));
+          s.body.appendChild(h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox('Отменить перенос?', c.name + ': запись на ' + RU.longDay(cur.transferredTo) + ' будет удалена, занятие за ' + RU.longDay(date) + ' снова сгорит.', 'Отменить перенос', true)) { try { store.cancelBooking(cur.transferVisitID); toast('Перенос отменён'); } catch (e) { toast(e.message); } draw(); } } }, 'Отменить перенос'));
+          return;
+        }
+        const nd = input({ type: 'date', value: '', min: RU.key(RU.addDaysToDate(RU.date(date), 1)), max: sub ? sub.expiryDate : '', 'aria-label': 'Дата переноса' });
+        s.body.appendChild(field('Перенести занятие на дату (по желанию)', nd));
+        s.body.appendChild(h('div', { class: 'hint' }, 'Перенос устанавливается только вручную: одному клиенту и на одну дату. На новую дату ставится посещение (занятие спишется там). Не позже окончания абонемента' + (sub ? ' (' + RU.longDay(sub.expiryDate) + ')' : '') + '.'));
+        s.body.appendChild(h('button', { class: 'btn', type: 'button', onclick: async () => {
+          s.error(''); if (!nd.value) return s.error('Выберите дату переноса');
+          if (!(await confirmBox('Перенести занятие?', c.name + ': занятие от ' + RU.longDay(date) + ' переносится на ' + RU.longDay(nd.value) + '. Сгоревшее занятие возвращается, на новую дату ставится посещение.', 'Перенести'))) return;
+          try { store.transferAbsence(c.id, date, nd.value); toast('Занятие перенесено на ' + RU.longDay(nd.value)); draw(); } catch (e) { s.error(e.message); }
+        } }, 'Перенести на выбранную дату'));
+        s.body.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: async () => { if (await confirmBox('Снять пропуск?', c.name + ': пропуск за ' + RU.longDay(date) + ' будет снят, занятие вернётся в абонемент.', 'Снять пропуск')) { try { store.clearAbsence(c.id, date); toast('Пропуск снят, занятие возвращено'); } catch (e) { toast(e.message); } s.close(); } } }, 'Снять пропуск (вернуть занятие)'));
+        s.body.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: () => s.close() }, 'Оставить — занятие сгорает'));
+      };
+      draw();
+    });
+  }
   function weekGrid() {
     const t = today(); if (!weekView.start) weekView.start = RU.key(RU.startOfWeek(new Date()));
     const start = RU.date(weekView.start); const dates = []; for (let i = 0; i < 7; i++) dates.push(RU.key(RU.addDaysToDate(start, i)));
@@ -343,11 +371,11 @@
       const left = sub ? (sub.visitsTotal > 500 ? '∞' : String(sub.visitsLeft)) : '—';
       const cells = dates.map((d, i) => {
         const v = store.state.visits.find((x) => x.clientID === c.id && x.date === d && (!cf || x.classID === cf));
-        const miss = !v && store.absenceOn(c.id, d);
+        const ab = !v && store.absenceOn(c.id, d); const miss = !!ab; const moved = !!(ab && ab.transferredTo);
         if (v) totals[i]++;
-        const td = h('td', { class: 'day-col' + (v ? ' done' : miss ? ' miss' : '') + (d === t && !v && !miss ? ' today' : ''), role: 'button', tabindex: '0', 'aria-label': c.name + ', ' + RU.longDay(d) + ': ' + (v ? 'посещение' : miss ? 'пропуск' : 'не отмечено') },
-          v ? '✓' : miss ? '✕' : '');
-        const act = () => { try { store.cycleAttendance(c.id, d, cf || null); } catch (e) { toast(e.message); } };
+        const td = h('td', { class: 'day-col' + (v ? ' done' : moved ? ' moved' : miss ? ' miss' : '') + (d === t && !v && !miss ? ' today' : ''), role: 'button', tabindex: '0', 'aria-label': c.name + ', ' + RU.longDay(d) + ': ' + (v ? 'посещение' : moved ? 'пропуск, занятие перенесено' : miss ? 'пропуск, занятие сгорело' : 'не отмечено'), title: moved ? 'Перенесено на ' + ab.transferredTo : '' },
+          v ? '✓' : moved ? '↪' : miss ? '✕' : '');
+        const act = () => { if (miss) return absenceSheet(c, d); try { store.cycleAttendance(c.id, d, cf || null); } catch (e) { toast(e.message); } };
         td.addEventListener('click', act); td.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
         return td;
       });
@@ -362,7 +390,7 @@
     const wrap = h('div', { class: 'att-wrap' }, h('table', { class: 'att-table' }, h('thead', null, head), h('tbody', null, rows, foot)));
     wrap.addEventListener('scroll', () => { weekView.scroll = wrap.scrollLeft; }, { passive: true });
     requestAnimationFrame(() => { wrap.scrollLeft = weekView.scroll; });
-    return [nav, filter, wrap, h('div', { class: 'hint' }, 'Нажмите на ячейку: ✓ посещение (занятие списывается) → ✕ пропуск (занятие возвращается, в «Пропуски» учитывается за срок действующего абонемента) → пусто. Пропуск отмечается только за сегодня и прошедшие дни.')];
+    return [nav, filter, wrap, h('div', { class: 'hint' }, 'Нажмите на ячейку: ✓ посещение (занятие списывается) → ✕ пропуск (занятие сгорает). Нажатие на ✕ открывает окно: перенести занятие на конкретную дату, снять пропуск или оставить. ↪ — занятие перенесено вручную. Пропуск отмечается только за сегодня и прошедшие дни.')];
   }
 
   function visitsPage() {

@@ -368,19 +368,30 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     await rejects(s.logIn(admin.id, '0000'), 'Неверный PIN');
   });
 
-  await test('таблица недели: цикл ✓ → ✕ → пусто, пропуски, примечание, экспорт', async () => {
+  await test('таблица недели: ✓ → ✕ (занятие сгорает), снятие и ручной перенос, примечание, экспорт', async () => {
     const s = mk(); const c = sale(s); const sub = s.activeSubscription(c.id); const left0 = sub.visitsLeft;
     assert.strictEqual(s.cycleAttendance(c.id, '2026-11-17', null), 'visit'); assert.strictEqual(sub.visitsLeft, left0 - 1);
-    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-17', null), 'absent'); assert.strictEqual(sub.visitsLeft, left0, 'пропуск возвращает занятие');
-    assert.strictEqual(s.absencesCount(c.id), 1); assert(s.absenceOn(c.id, '2026-11-17'));
-    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-17', null), 'empty'); assert.strictEqual(s.absencesCount(c.id), 0);
-    // будущий день: ✓ допустим (запись), второй клик снимает, пропуск запрещён
-    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-20', null), 'visit'); assert.strictEqual(s.cycleAttendance(c.id, '2026-11-20', null), 'empty');
+    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-17', null), 'absent'); assert.strictEqual(sub.visitsLeft, left0 - 1, 'пропуск: занятие сгорает');
+    assert.strictEqual(s.absencesCount(c.id), 1);
+    throws(() => s.cycleAttendance(c.id, '2026-11-17', null), 'вручную'); // автоматического снятия нет
+    s.clearAbsence(c.id, '2026-11-17'); assert.strictEqual(sub.visitsLeft, left0, 'снятие вручную возвращает занятие'); assert.strictEqual(s.absencesCount(c.id), 0);
+    // будущий день: ✓ допустим (запись), второй клик снимает с возвратом, пропуск запрещён
+    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-20', null), 'visit'); assert.strictEqual(s.cycleAttendance(c.id, '2026-11-20', null), 'empty'); assert.strictEqual(sub.visitsLeft, left0);
     throws(() => s.markAbsence(c.id, '2026-11-20'), 'только за сегодня');
-    s.markAbsence(c.id, '2026-11-16'); assert.strictEqual(s.absencesCount(c.id), 1);
-    s.markVisit(c.id, '2026-11-16'); assert.strictEqual(s.absencesCount(c.id), 0, 'отметка посещения снимает пропуск'); throws(() => s.markAbsence(c.id, '2026-11-16'), 'уже отмечено'); s.cancelBooking(s.state.visits.find((v) => v.date === '2026-11-16').id); s.markAbsence(c.id, '2026-11-16');
+    // перенос вручную
+    s.markVisit(c.id, '2026-11-16'); s.cycleAttendance(c.id, '2026-11-16', null); assert.strictEqual(sub.visitsLeft, left0 - 1);
+    throws(() => s.transferAbsence(c.id, '2026-11-16', '2026-11-15'), 'позже даты пропуска');
+    throws(() => s.transferAbsence(c.id, '2026-11-16', '2030-01-01'), 'окончания абонемента');
+    s.transferAbsence(c.id, '2026-11-16', '2026-11-19'); const ab = s.absenceOn(c.id, '2026-11-16');
+    assert.strictEqual(ab.transferredTo, '2026-11-19'); assert.strictEqual(sub.visitsLeft, left0 - 1, 'перенос: занятие списано один раз, на новую дату');
+    assert(s.state.visits.some((v) => v.date === '2026-11-19')); assert.strictEqual(s.absencesCount(c.id), 0, 'перенесённый не считается пропуском');
+    throws(() => s.clearAbsence(c.id, '2026-11-16'), 'перенесено');
+    s.cancelBooking(ab.transferVisitID); assert.strictEqual(s.absenceOn(c.id, '2026-11-16').transferredTo, null); assert.strictEqual(sub.visitsLeft, left0 - 1, 'отмена переноса: занятие снова сгорело');
+    assert.strictEqual(s.absencesCount(c.id), 1);
+    s.markVisit(c.id, '2026-11-16'); assert.strictEqual(s.absencesCount(c.id), 0, 'пришёл — сгоревшее возвращено'); assert.strictEqual(sub.visitsLeft, left0 - 1);
+    s.cancelBooking(s.state.visits.find((v) => v.date === '2026-11-16').id); s.markAbsence(c.id, '2026-11-16');
     s.setAttendanceNote(c.id, '  болела  '); assert.strictEqual(s.client(c.id).attendanceNote, 'болела');
-    const dates = ['2026-11-16', '2026-11-17']; assert(s.weekGridClients(dates).some((x) => x.id === c.id));
+    assert(s.weekGridClients(['2026-11-16', '2026-11-17']).some((x) => x.id === c.id));
     const snap = JSON.parse(JSON.stringify(s.snapshot())); assert.strictEqual(snap.absences.length, 1);
     const s2 = mk(); s2.importSnapshot(snap); assert.strictEqual(s2.absencesCount(c.id), 1); assert.strictEqual(s2.client(c.id).attendanceNote, 'болела');
     snap.absences[0].clientID = 'нет'; throws(() => mk().importSnapshot(snap), 'пропусках');

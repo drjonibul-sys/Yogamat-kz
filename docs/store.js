@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.11.0';
+  const APP_VERSION = '1.11.1';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -429,8 +429,9 @@
       const sub = api.activeSubscription(clientID);
       if (!sub) fail('У клиента нет активного абонемента');
       if (S.visits.some((v) => v.clientID === clientID && v.date === date)) fail('Посещение в этот день уже отмечено');
+      const ab = S.absences.find((a) => a.clientID === clientID && a.date === date);
+      if (ab) { if (ab.transferredTo) fail('В этот день занятие перенесено — сначала отмените запись на новую дату'); refund(ab.subscriptionID); S.absences = S.absences.filter((a) => a !== ab); } /* пришёл — сгоревшее занятие возвращается */
       sub.visitsLeft = Math.max(0, sub.visitsLeft - 1);
-      S.absences = S.absences.filter((a) => !(a.clientID === clientID && a.date === date)); /* пришёл — пропуск снимается */
       S.visits.push({ id: uid(), clientID, subscriptionID: sub.id, date, classID: classID || null, createdAt: now().toISOString() });
       persist();
     };
@@ -438,34 +439,66 @@
       const i = S.visits.findIndex((v) => v.id === visitID);
       if (i < 0) fail('Запись не найдена');
       const v = S.visits[i];
-      const sub = api.subscription(v.subscriptionID);
-      if (sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft + 1);
+      const moved = S.absences.find((a) => a.transferVisitID === v.id);
+      if (moved) { moved.transferredTo = null; moved.transferVisitID = null; } /* перенос отменён: занятие снова сгорело (возврата нет) */
+      else { const sub = api.subscription(v.subscriptionID); if (sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft + 1); }
       S.visits.splice(i, 1); persist();
     };
 
 
     /* ----- таблица «Визиты»: неделя, пропуски, примечание ----- */
-    /* Пропуск — неявка клиента в отмеченный день; занятие с абонемента НЕ списывается. Считается за срок действующего абонемента. */
+    /* Пропуск — неявка: занятие СГОРАЕТ (остаётся списанным с абонемента). Перенос занятия на другую дату — только вручную,
+       с подтверждением, для одного клиента и одной даты (transferAbsence); автоматических переносов нет. */
     api.absenceOn = (clientID, date) => S.absences.find((a) => a.clientID === clientID && a.date === date);
     api.absencesOf = (clientID) => S.absences.filter((a) => a.clientID === clientID).sort((a, b) => (a.date < b.date ? 1 : -1));
-    api.absencesCount = (clientID) => {
+    api.absencesCount = (clientID) => { /* сгоревшие занятия действующего абонемента (перенесённые не считаются) */
       const sub = api.activeSubscription(clientID);
-      return S.absences.filter((a) => a.clientID === clientID && (!sub || (a.date >= sub.purchaseDate && a.date <= sub.expiryDate))).length;
+      return S.absences.filter((a) => a.clientID === clientID && !a.transferredTo && (a.subscriptionID ? (!sub || a.subscriptionID === sub.id) : (!sub || (a.date >= sub.purchaseDate && a.date <= sub.expiryDate)))).length;
     };
-    api.markAbsence = (clientID, date, classID) => {
+    const refund = (subID) => { const sub = subID && api.subscription(subID); if (sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft + 1); };
+    const burn = (subID) => { const sub = subID && api.subscription(subID); if (sub) sub.visitsLeft = Math.max(0, sub.visitsLeft - 1); };
+    api.markAbsence = (clientID, date, classID, subscriptionID) => {
       if (!api.client(clientID)) fail('Клиент не найден');
       if (!RU.isValidDay(date)) fail('Некорректная дата');
       if (date > todayKey()) fail('Пропуск можно отметить только за сегодня и прошедшие дни');
       if (S.visits.some((v) => v.clientID === clientID && v.date === date)) fail('В этот день уже отмечено посещение');
       if (api.absenceOn(clientID, date)) return;
-      S.absences.push({ id: uid(), clientID, date, classID: classID || null, createdAt: now().toISOString() }); persist();
+      const sub = (subscriptionID && api.subscription(subscriptionID)) || api.activeSubscription(clientID);
+      if (!sub) fail('У клиента нет активного абонемента — занятие не с чего списать');
+      burn(sub.id);
+      S.absences.push({ id: uid(), clientID, subscriptionID: sub.id, date, classID: classID || null, createdAt: now().toISOString(), transferredTo: null, transferVisitID: null }); persist();
     };
-    api.clearAbsence = (clientID, date) => { const n = S.absences.length; S.absences = S.absences.filter((a) => !(a.clientID === clientID && a.date === date)); if (S.absences.length !== n) persist(); };
-    /* нажатие на ячейку: пусто → ✓ (посещение, списывается занятие) → ✕ (пропуск, занятие возвращается) → пусто */
+    /* снять пропуск: сгоревшее занятие возвращается (если оно не перенесено) */
+    api.clearAbsence = (clientID, date) => {
+      const a = api.absenceOn(clientID, date); if (!a) return;
+      if (a.transferredTo) fail('Занятие перенесено на ' + a.transferredTo + ' — сначала отмените запись на новую дату');
+      refund(a.subscriptionID); S.absences = S.absences.filter((x) => x !== a); persist();
+    };
+    /* ручной перенос сгоревшего занятия на конкретную дату: старое списание снимается, на новую дату ставится посещение (запись) */
+    api.transferAbsence = (clientID, date, newDate) => {
+      const a = api.absenceOn(clientID, date); if (!a) fail('Пропуск не найден');
+      if (a.transferredTo) fail('Занятие уже перенесено на ' + a.transferredTo);
+      if (!RU.isValidDay(newDate)) fail('Укажите дату переноса');
+      if (!(newDate > date)) fail('Дата переноса должна быть позже даты пропуска');
+      const sub = api.subscription(a.subscriptionID) || api.activeSubscription(clientID); if (!sub) fail('У клиента нет активного абонемента');
+      if (newDate > sub.expiryDate) fail('Дата переноса позже окончания абонемента (' + sub.expiryDate + ')');
+      if (S.visits.some((v) => v.clientID === clientID && v.date === newDate)) fail('На эту дату у клиента уже есть отметка');
+      if (S.absences.some((x) => x.clientID === clientID && x.date === newDate)) fail('На эту дату у клиента отмечен пропуск');
+      refund(sub.id);
+      const v = { id: uid(), clientID, subscriptionID: sub.id, date: newDate, classID: null, createdAt: now().toISOString() };
+      burn(sub.id); S.visits.push(v);
+      a.transferredTo = newDate; a.transferVisitID = v.id; persist();
+      return v;
+    };
+    /* нажатие на ячейку: пусто → ✓ (списывается занятие) → ✕ (занятие сгорает). Снятие/перенос пропуска — через окно пропуска, вручную */
     api.cycleAttendance = (clientID, date, classID) => {
       const visit = S.visits.find((v) => v.clientID === clientID && v.date === date);
-      if (visit) { api.cancelBooking(visit.id); if (date <= todayKey()) { api.markAbsence(clientID, date, classID); return 'absent'; } return 'empty'; }
-      if (api.absenceOn(clientID, date)) { api.clearAbsence(clientID, date); return 'empty'; }
+      if (visit) {
+        const subID = visit.subscriptionID; api.cancelBooking(visit.id);
+        if (date <= todayKey()) { api.markAbsence(clientID, date, classID, subID); return 'absent'; }
+        return 'empty';
+      }
+      if (api.absenceOn(clientID, date)) fail('Пропуск: снимите или перенесите занятие вручную (нажмите на ✕)');
       api.markVisit(clientID, date, classID); return 'visit';
     };
     api.setAttendanceNote = (clientID, text) => { const c = api.client(clientID); if (!c) fail('Клиент не найден'); c.attendanceNote = trim(text).slice(0, 200); persist(); };
@@ -481,7 +514,7 @@
     api.cancelFutureBookings = () => {
       if (!api.isAdmin) fail('Отменять записи может только администратор');
       const list = api.futureBookings(); const ids = new Set(list.map((v) => v.id));
-      list.forEach((v) => { const sub = api.subscription(v.subscriptionID); if (sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft + 1); });
+      list.forEach((v) => { const moved = S.absences.find((a) => a.transferVisitID === v.id); if (moved) { moved.transferredTo = null; moved.transferVisitID = null; } else { const sub = api.subscription(v.subscriptionID); if (sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft + 1); } });
       S.visits = S.visits.filter((v) => !ids.has(v.id)); persist();
       return { count: list.length, clients: new Set(list.map((v) => v.clientID)).size };
     };
