@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.10.0';
+  const APP_VERSION = '1.11.0';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -140,7 +140,7 @@
     const now = options.now || (() => new Date());
     const listeners = [];
     const S = {
-      clients: [], subscriptions: [], visits: [], transfers: [],
+      clients: [], subscriptions: [], visits: [], transfers: [], absences: [],
       classes: [], tariffs: [], rentSettings: null, rentPeriods: [],
       staff: [], favoriteAsanas: [], studioName: 'Студия yoga_matkz', studioLogo: null
     };
@@ -166,7 +166,7 @@
 
     function snapshot() {
       return {
-        version: 1, clients: S.clients, subscriptions: S.subscriptions, visits: S.visits, transfers: S.transfers,
+        version: 1, clients: S.clients, subscriptions: S.subscriptions, visits: S.visits, transfers: S.transfers, absences: S.absences,
         studioName: S.studioName, studioLogo: S.studioLogo || null, classes: S.classes, tariffs: S.tariffs, rentSettings: S.rentSettings,
         rentPeriods: S.rentPeriods, staff: S.staff, favoriteAsanas: S.favoriteAsanas.slice().sort()
       };
@@ -175,7 +175,7 @@
 
     function apply(snap) {
       S.clients = snap.clients || []; S.subscriptions = snap.subscriptions || []; S.visits = snap.visits || [];
-      S.transfers = snap.transfers || [];
+      S.transfers = snap.transfers || []; S.absences = snap.absences || [];
       S.classes = snap.classes || S.classes || defaultClasses();
       S.tariffs = snap.tariffs || []; S.rentSettings = snap.rentSettings || null; S.rentPeriods = snap.rentPeriods || [];
       S.staff = snap.staff || S.staff || []; S.favoriteAsanas = snap.favoriteAsanas || S.favoriteAsanas || [];
@@ -383,6 +383,7 @@
       S.subscriptions = S.subscriptions.filter((s) => s.clientID !== id);
       S.visits = S.visits.filter((v) => v.clientID !== id);
       S.transfers = S.transfers.filter((t) => t.clientID !== id);
+      S.absences = S.absences.filter((a) => a.clientID !== id);
       persist();
     };
 
@@ -429,6 +430,7 @@
       if (!sub) fail('У клиента нет активного абонемента');
       if (S.visits.some((v) => v.clientID === clientID && v.date === date)) fail('Посещение в этот день уже отмечено');
       sub.visitsLeft = Math.max(0, sub.visitsLeft - 1);
+      S.absences = S.absences.filter((a) => !(a.clientID === clientID && a.date === date)); /* пришёл — пропуск снимается */
       S.visits.push({ id: uid(), clientID, subscriptionID: sub.id, date, classID: classID || null, createdAt: now().toISOString() });
       persist();
     };
@@ -439,6 +441,39 @@
       const sub = api.subscription(v.subscriptionID);
       if (sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft + 1);
       S.visits.splice(i, 1); persist();
+    };
+
+
+    /* ----- таблица «Визиты»: неделя, пропуски, примечание ----- */
+    /* Пропуск — неявка клиента в отмеченный день; занятие с абонемента НЕ списывается. Считается за срок действующего абонемента. */
+    api.absenceOn = (clientID, date) => S.absences.find((a) => a.clientID === clientID && a.date === date);
+    api.absencesOf = (clientID) => S.absences.filter((a) => a.clientID === clientID).sort((a, b) => (a.date < b.date ? 1 : -1));
+    api.absencesCount = (clientID) => {
+      const sub = api.activeSubscription(clientID);
+      return S.absences.filter((a) => a.clientID === clientID && (!sub || (a.date >= sub.purchaseDate && a.date <= sub.expiryDate))).length;
+    };
+    api.markAbsence = (clientID, date, classID) => {
+      if (!api.client(clientID)) fail('Клиент не найден');
+      if (!RU.isValidDay(date)) fail('Некорректная дата');
+      if (date > todayKey()) fail('Пропуск можно отметить только за сегодня и прошедшие дни');
+      if (S.visits.some((v) => v.clientID === clientID && v.date === date)) fail('В этот день уже отмечено посещение');
+      if (api.absenceOn(clientID, date)) return;
+      S.absences.push({ id: uid(), clientID, date, classID: classID || null, createdAt: now().toISOString() }); persist();
+    };
+    api.clearAbsence = (clientID, date) => { const n = S.absences.length; S.absences = S.absences.filter((a) => !(a.clientID === clientID && a.date === date)); if (S.absences.length !== n) persist(); };
+    /* нажатие на ячейку: пусто → ✓ (посещение, списывается занятие) → ✕ (пропуск, занятие возвращается) → пусто */
+    api.cycleAttendance = (clientID, date, classID) => {
+      const visit = S.visits.find((v) => v.clientID === clientID && v.date === date);
+      if (visit) { api.cancelBooking(visit.id); if (date <= todayKey()) { api.markAbsence(clientID, date, classID); return 'absent'; } return 'empty'; }
+      if (api.absenceOn(clientID, date)) { api.clearAbsence(clientID, date); return 'empty'; }
+      api.markVisit(clientID, date, classID); return 'visit';
+    };
+    api.setAttendanceNote = (clientID, text) => { const c = api.client(clientID); if (!c) fail('Клиент не найден'); c.attendanceNote = trim(text).slice(0, 200); persist(); };
+    /* клиенты для таблицы недели: с действующим абонементом или с отметками за неделю */
+    api.weekGridClients = (dates) => {
+      const set = new Set(dates);
+      return S.clients.filter((c) => api.activeSubscription(c.id) || S.visits.some((v) => v.clientID === c.id && set.has(v.date)) || S.absences.some((a) => a.clientID === c.id && set.has(a.date)))
+        .sort((a, b) => RU.compare(a.name, b.name));
     };
 
     /* отмена всех записей на будущие занятия (после сегодняшнего дня): занятия возвращаются в абонементы */
@@ -712,6 +747,7 @@
         if (!RU.isValidDay(s.purchaseDate) || !RU.isValidDay(s.expiryDate) || s.expiryDate < s.purchaseDate) fail('В абонементах некорректные даты');
       });
       snap.visits.forEach((v) => { if (!cids.has(v.clientID) || !sids.has(v.subscriptionID) || !RU.isValidDay(v.date)) fail('В визитах есть запись с неизвестным клиентом или абонементом'); });
+      (snap.absences || []).forEach((a) => { if (!cids.has(a.clientID) || !RU.isValidDay(a.date)) fail('В пропусках есть некорректная запись'); });
       (snap.transfers || []).forEach((t) => { if (!cids.has(t.clientID) || !sids.has(t.subscriptionID) || !(t.days >= 1)) fail('В переносах есть некорректная запись'); });
       (snap.classes || []).forEach((c) => { if (!(c.capacity >= 1 && c.durationMin >= 1)) fail('В направлениях есть некорректное занятие'); });
       (snap.tariffs || []).forEach((t) => { if (!(t.visitsCount >= 1 && t.durationDays >= 1 && t.price >= 0)) fail('В тарифах есть некорректная запись'); });

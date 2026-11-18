@@ -23,7 +23,7 @@ with sync_playwright() as p:
     ok('вопрос обязателен: без него войти нельзя', (page.click('text=Начать работу'), 'Выберите контрольный вопрос' in page.inner_text('.auth'))[1])
     page.select_option('.auth select', 'Город, в котором вы родились?'); page.fill('.auth input[aria-label="Ответ на контрольный вопрос"]', 'Астана'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
     ok('после создания открыт Обзор с приветствием', 'Анна' in page.inner_text('.title'))
-    ok('версия и разработчик на странице', 'Версия: 1.10.0' in page.inner_text('.app-footer') and 'Разработано yoga_matkz' in page.inner_text('.app-footer'))
+    ok('версия и разработчик на странице', 'Версия: 1.11.0' in page.inner_text('.app-footer') and 'Разработано yoga_matkz' in page.inner_text('.app-footer'))
     ok('у админа 5 вкладок', page.locator('.tab').count() == 5)
     page.screenshot(path=SHOTS + '/02-overview.png')
 

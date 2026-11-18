@@ -368,6 +368,25 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     await rejects(s.logIn(admin.id, '0000'), 'Неверный PIN');
   });
 
+  await test('таблица недели: цикл ✓ → ✕ → пусто, пропуски, примечание, экспорт', async () => {
+    const s = mk(); const c = sale(s); const sub = s.activeSubscription(c.id); const left0 = sub.visitsLeft;
+    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-17', null), 'visit'); assert.strictEqual(sub.visitsLeft, left0 - 1);
+    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-17', null), 'absent'); assert.strictEqual(sub.visitsLeft, left0, 'пропуск возвращает занятие');
+    assert.strictEqual(s.absencesCount(c.id), 1); assert(s.absenceOn(c.id, '2026-11-17'));
+    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-17', null), 'empty'); assert.strictEqual(s.absencesCount(c.id), 0);
+    // будущий день: ✓ допустим (запись), второй клик снимает, пропуск запрещён
+    assert.strictEqual(s.cycleAttendance(c.id, '2026-11-20', null), 'visit'); assert.strictEqual(s.cycleAttendance(c.id, '2026-11-20', null), 'empty');
+    throws(() => s.markAbsence(c.id, '2026-11-20'), 'только за сегодня');
+    s.markAbsence(c.id, '2026-11-16'); assert.strictEqual(s.absencesCount(c.id), 1);
+    s.markVisit(c.id, '2026-11-16'); assert.strictEqual(s.absencesCount(c.id), 0, 'отметка посещения снимает пропуск'); throws(() => s.markAbsence(c.id, '2026-11-16'), 'уже отмечено'); s.cancelBooking(s.state.visits.find((v) => v.date === '2026-11-16').id); s.markAbsence(c.id, '2026-11-16');
+    s.setAttendanceNote(c.id, '  болела  '); assert.strictEqual(s.client(c.id).attendanceNote, 'болела');
+    const dates = ['2026-11-16', '2026-11-17']; assert(s.weekGridClients(dates).some((x) => x.id === c.id));
+    const snap = JSON.parse(JSON.stringify(s.snapshot())); assert.strictEqual(snap.absences.length, 1);
+    const s2 = mk(); s2.importSnapshot(snap); assert.strictEqual(s2.absencesCount(c.id), 1); assert.strictEqual(s2.client(c.id).attendanceNote, 'болела');
+    snap.absences[0].clientID = 'нет'; throws(() => mk().importSnapshot(snap), 'пропусках');
+    await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана'); s.deleteClient(c.id); assert.strictEqual(s.state.absences.length, 0);
+  });
+
   await test('версия в sw.js, store.js и index совпадает', () => {
     const fs = require('fs'); const sw = fs.readFileSync(__dirname + '/../docs/sw.js', 'utf8');
     assert.strictEqual(/VERSION = '([\d.]+)'/.exec(sw)[1], require('../docs/store.js').APP_VERSION);

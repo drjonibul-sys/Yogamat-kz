@@ -277,3 +277,32 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .help-btn { font-size: 20px; font-weight: 700; line-height: 1; font-family: Georgia, 'Times New Roman', serif; }
 .upd-promo { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 6px 0; }
 .upd-promo img { border-radius: 14px; object-fit: contain; }
+
+/* таблица недели «Визиты» */
+.att-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.att-nav .att-lbl { flex: 1; text-align: center; font-weight: 600; font-size: 15px; }
+.icon-btn .flip { transform: scaleX(-1); }
+.att-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--hairline); border-radius: 18px; background: var(--card); }
+.att-table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 820px; font-size: 13px; }
+.att-table th, .att-table td { border-bottom: 1px solid var(--hairline); border-right: 1px solid var(--hairline); padding: 8px 6px; text-align: center; background: var(--card); }
+.att-table th { background: var(--sage-tint); font-weight: 700; vertical-align: middle; }
+.att-table .name-col { position: sticky; left: 0; z-index: 1; text-align: left; min-width: 100px; max-width: 118px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; cursor: pointer; }
+.att-table th.name-col { z-index: 2; background: var(--sage-tint); }
+.att-table .num-col { min-width: 62px; font-weight: 700; }
+.att-table .num-col.left { color: var(--sage-deep); }
+.att-table .num-col.left.low { color: var(--danger); }
+.att-table .num-col.has { color: var(--terracotta); }
+.att-table .day-head { line-height: 1.2; }
+.att-table .day-head .wd { font-size: 11px; opacity: .85; }
+.att-table .day-head .dn { font-size: 15px; font-weight: 700; }
+.att-table .day-head .mo { font-size: 10px; opacity: .8; }
+.att-table .day-col { min-width: 46px; height: 44px; font-size: 18px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.att-table th.today, .att-table td.day-col.today { background: var(--powder-tint); }
+.att-table td.day-col.done { background: var(--sage); color: var(--on-sage); font-weight: 700; }
+.att-table td.day-col.miss { background: var(--powder); color: var(--danger); font-weight: 700; }
+.att-table .note-col { min-width: 170px; text-align: left; padding: 4px 8px; }
+.att-table .note-col input { width: 100%; border: none; background: transparent; padding: 4px 2px; font-size: 14px; color: var(--ink); font-family: inherit; }
+.att-table .note-col input:focus { outline: 1px solid var(--sage); border-radius: 4px; }
+.att-table .pay-note { font-size: 11px; color: var(--danger); }
+.att-table .pay-note.paid { color: var(--sage-deep); }
+.att-table tr.tot td { background: var(--sage-tint); font-weight: 700; }

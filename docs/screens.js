@@ -292,7 +292,7 @@
   }
 
   /* ---------- Визиты ---------- */
-  function visitsPage() {
+  function visitsJournal() {
     let q = '', mode = prefs.visitsMode || 'week';
     const list = h('div', { class: 'stack' });
     const draw = () => {
@@ -315,8 +315,60 @@
     const chips = h('div', { class: 'seg' });
     const drawChips = () => { clear(chips); [['today', 'Сегодня'], ['week', '7 дней'], ['month', '30 дней'], ['all', 'Все']].forEach(([k, l]) => chips.appendChild(chip(l, mode === k, () => { mode = k; setPref('visitsMode', k); drawChips(); draw(); }))); };
     drawChips(); draw();
-    return page('Визиты', { sticky: true, right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Отметить визит', onclick: () => markVisitForm() }, icon('plus')) },
-      h('div', { class: 'search' }, icon('search'), input({ placeholder: 'Поиск по имени клиента', 'aria-label': 'Поиск', oninput: (e) => { q = e.target.value.trim().toLowerCase(); draw(); } })), chips, list);
+    return [h('div', { class: 'search' }, icon('search'), input({ placeholder: 'Поиск по имени клиента', 'aria-label': 'Поиск', oninput: (e) => { q = e.target.value.trim().toLowerCase(); draw(); } })), chips, list];
+  }
+
+  /* ---------- Визиты: таблица недели (как в первоначальной версии) ---------- */
+  const weekView = { start: null, classID: '', scroll: 0 }; /* состояние живёт вне построения экрана: экран перерисовывается после каждой отметки */
+  function weekGrid() {
+    const t = today(); if (!weekView.start) weekView.start = RU.key(RU.startOfWeek(new Date()));
+    const start = RU.date(weekView.start); const dates = []; for (let i = 0; i < 7; i++) dates.push(RU.key(RU.addDaysToDate(start, i)));
+    if (weekView.classID && !store.studioClass(weekView.classID)) weekView.classID = '';
+    const cf = weekView.classID;
+    const shift = (days) => { weekView.start = RU.key(RU.addDaysToDate(RU.date(weekView.start), days)); App.rerender(); };
+    const nav = h('div', { class: 'att-nav' },
+      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Предыдущая неделя', onclick: () => shift(-7) }, icon('chev', 'flip')),
+      h('div', { class: 'att-lbl' }, RU.weekRange(start) + ' ' + RU.date(dates[6]).getFullYear()),
+      h('button', { class: 'chip', type: 'button', onclick: () => { weekView.start = RU.key(RU.startOfWeek(new Date())); App.rerender(); } }, 'Сегодня'),
+      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Следующая неделя', onclick: () => shift(7) }, icon('chev')));
+    const filter = select([{ value: '', label: 'Все направления' }].concat(store.orderedClasses().map((c) => ({ value: c.id, label: c.name }))), cf, (e) => { weekView.classID = e.target.value; App.rerender(); });
+    const clients = store.weekGridClients(dates);
+    if (!clients.length) return [nav, filter, empty('people', 'Нет клиентов с действующим абонементом', 'Продайте абонемент — клиент появится в таблице недели.')];
+    const th = (cls, ...kids) => h('th', { class: cls || '' }, ...kids);
+    const head = h('tr', null, th('name-col', 'Клиент'), th('num-col left', 'Осталось'), th('num-col', 'Пропуски'),
+      ...dates.map((d, i) => { const dt = RU.date(d); return th(d === t ? 'today' : '', h('div', { class: 'day-head' }, h('div', { class: 'wd' }, RU.weekdayShort[i]), h('div', { class: 'dn' }, String(dt.getDate())), h('div', { class: 'mo' }, RU.monthsShort[dt.getMonth()]))); }), th('note-col', 'Примечание'));
+    const totals = dates.map(() => 0);
+    const rows = clients.map((c) => {
+      const sub = store.activeSubscription(c.id);
+      const left = sub ? (sub.visitsTotal > 500 ? '∞' : String(sub.visitsLeft)) : '—';
+      const cells = dates.map((d, i) => {
+        const v = store.state.visits.find((x) => x.clientID === c.id && x.date === d && (!cf || x.classID === cf));
+        const miss = !v && store.absenceOn(c.id, d);
+        if (v) totals[i]++;
+        const td = h('td', { class: 'day-col' + (v ? ' done' : miss ? ' miss' : '') + (d === t && !v && !miss ? ' today' : ''), role: 'button', tabindex: '0', 'aria-label': c.name + ', ' + RU.longDay(d) + ': ' + (v ? 'посещение' : miss ? 'пропуск' : 'не отмечено') },
+          v ? '✓' : miss ? '✕' : '');
+        const act = () => { try { store.cycleAttendance(c.id, d, cf || null); } catch (e) { toast(e.message); } };
+        td.addEventListener('click', act); td.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+        return td;
+      });
+      const pay = sub ? (sub.paid ? 'оплачено' : 'не оплачено') : 'нет абонемента';
+      const note = input({ value: c.attendanceNote || '', placeholder: 'Примечание…', maxlength: 200, 'aria-label': 'Примечание: ' + c.name, onchange: (e) => { try { store.setAttendanceNote(c.id, e.target.value); } catch (er) { toast(er.message); } } });
+      const miss = store.absencesCount(c.id);
+      return h('tr', null, h('td', { class: 'name-col', onclick: () => App.go('/client/' + c.id) }, c.name),
+        h('td', { class: 'num-col left' + (sub && sub.visitsLeft <= 2 && sub.visitsTotal <= 500 ? ' low' : '') }, left), h('td', { class: 'num-col' + (miss ? ' has' : '') }, String(miss)), ...cells,
+        h('td', { class: 'note-col' }, h('div', { class: 'pay-note' + (sub && sub.paid ? ' paid' : '') }, pay), note));
+    });
+    const foot = h('tr', { class: 'tot' }, h('td', { class: 'name-col' }, 'Всего за день'), h('td', { class: 'num-col' }), h('td', { class: 'num-col' }), ...totals.map((n) => h('td', null, n ? String(n) : '')), h('td', null));
+    const wrap = h('div', { class: 'att-wrap' }, h('table', { class: 'att-table' }, h('thead', null, head), h('tbody', null, rows, foot)));
+    wrap.addEventListener('scroll', () => { weekView.scroll = wrap.scrollLeft; }, { passive: true });
+    requestAnimationFrame(() => { wrap.scrollLeft = weekView.scroll; });
+    return [nav, filter, wrap, h('div', { class: 'hint' }, 'Нажмите на ячейку: ✓ посещение (занятие списывается) → ✕ пропуск (занятие возвращается, в «Пропуски» учитывается за срок действующего абонемента) → пусто. Пропуск отмечается только за сегодня и прошедшие дни.')];
+  }
+
+  function visitsPage() {
+    const view = prefs.visitsView === 'log' ? 'log' : 'week';
+    const seg = h('div', { class: 'seg' }, chip('Неделя', view === 'week', () => { setPref('visitsView', 'week'); App.rerender(); }), chip('Журнал', view === 'log', () => { setPref('visitsView', 'log'); App.rerender(); }));
+    return page('Визиты', { sticky: true, right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Отметить визит', onclick: () => markVisitForm() }, icon('plus')) }, seg, ...(view === 'week' ? weekGrid() : visitsJournal()));
   }
 
   /* ---------- Классы и расписание ---------- */

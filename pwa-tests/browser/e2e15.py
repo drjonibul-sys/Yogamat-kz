@@ -1,0 +1,33 @@
+# 1.11.0: Визиты — таблица недели (клиенты, осталось, пропуски, ✓/✕, примечание)
+from playwright.sync_api import sync_playwright
+import sys, datetime
+B='http://localhost:8765/'; bad=0
+def ok(n,c):
+    global bad; print(('OK   ' if c else 'FAIL ')+n); bad+= (not c)
+with sync_playwright() as p:
+    b=p.chromium.launch(); ctx=b.new_context(viewport={'width':390,'height':800},locale='ru-RU',service_workers='block',device_scale_factor=2); pg=ctx.new_page()
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
+    pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
+    t=datetime.date.today(); mon=t-datetime.timedelta(days=t.weekday())
+    pg.evaluate("""([d0])=>{const s=App.store; for(const n of ['Айгуль','Бота','Динара']){ s.addQuickSale({name:n,phone:'',tariffName:'8 занятий',purchaseDate:d0,expiryDate:'2027-12-30',visitsTotal:8,price:28000,paid:n!=='Бота',paidDate:n!=='Бота'?d0:null}); } }""",[ (t-datetime.timedelta(days=20)).isoformat() ])
+    pg.goto(B+'#/visits'); pg.wait_for_selector('.att-table')
+    heads=pg.locator('.att-table thead th').all_inner_texts(); ok('колонки: Клиент, Осталось, Пропуски, Примечание', 'Клиент' in heads[0] and 'Осталось' in heads[1] and 'Пропуски' in heads[2] and 'Примечание' in heads[-1])
+    ok('7 дней недели', len(heads)==3+7+1)
+    names=pg.locator('.att-table tbody td.name-col').all_inner_texts(); ok('список клиентов по алфавиту', names[:3]==['Айгуль','Бота','Динара'])
+    day0=mon.isoformat()
+    cell=lambda row,i: pg.locator('.att-table tbody tr').nth(row).locator('td.day-col').nth(i)
+    cell(0,0).click(); pg.wait_for_function("document.querySelector('.att-table tbody tr td.day-col').classList.contains('done')"); ok('✓ по нажатию', cell(0,0).inner_text()=='✓')
+    ok('осталось уменьшилось', pg.locator('.att-table tbody tr').nth(0).locator('td.num-col').first.inner_text()=='7')
+    cell(0,0).click(); pg.wait_for_function("document.querySelector('.att-table tbody tr td.day-col').classList.contains('miss')"); ok('✕ вторым нажатием', cell(0,0).inner_text()=='✕')
+    ok('осталось вернулось, пропуски = 1', pg.locator('.att-table tbody tr').nth(0).locator('td.num-col').nth(0).inner_text()=='8' and pg.locator('.att-table tbody tr').nth(0).locator('td.num-col').nth(1).inner_text()=='1')
+    cell(0,0).click(); pg.wait_for_function("!document.querySelector('.att-table tbody tr td.day-col').classList.contains('miss')"); ok('третьим — пусто', cell(0,0).inner_text()=='')
+    pg.fill('.att-table tbody tr >> nth=1 >> input','на отпуске'); pg.keyboard.press('Tab'); pg.wait_for_timeout(300)
+    ok('примечание сохраняется', pg.evaluate("App.store.state.clients.find(c=>c.name==='Бота').attendanceNote")=='на отпуске')
+    ok('«Бота» не оплачено видно', 'не оплачено' in pg.locator('.att-table tbody tr').nth(1).inner_text())
+    pg.click('button[aria-label="Предыдущая неделя"]'); pg.wait_for_timeout(200); ok('переход на прошлую неделю', 'att-table' in pg.content())
+    pg.click('text=Сегодня'); pg.wait_for_timeout(200)
+    pg.click('.seg >> text=Журнал'); pg.wait_for_selector('.search'); ok('журнал сохранён как вкладка', True)
+    pg.click('.seg >> text=Неделя'); pg.wait_for_selector('.att-table')
+    pg.screenshot(path='/tmp/visits.png')
+    b.close()
+sys.exit(1 if bad else 0)
