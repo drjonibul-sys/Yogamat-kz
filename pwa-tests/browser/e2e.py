@@ -25,7 +25,7 @@ with sync_playwright() as p:
     ok('кнопка «Начать работу» заблокирована до подтверждения', page.is_disabled('text=Начать работу'))
     page.check('#rc-ok'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
     ok('после создания открыт Обзор с приветствием', 'Анна' in page.inner_text('.title'))
-    ok('версия и разработчик на странице', 'Версия: 1.2.1' in page.inner_text('.app-footer') and 'Разработано Yogamat.kz' in page.inner_text('.app-footer'))
+    ok('версия и разработчик на странице', 'Версия: 1.3.0' in page.inner_text('.app-footer') and 'Разработано Yogamat.kz' in page.inner_text('.app-footer'))
     ok('у админа 5 вкладок', page.locator('.tab').count() == 5)
     page.screenshot(path=SHOTS + '/02-overview.png')
 
@@ -40,7 +40,7 @@ with sync_playwright() as p:
     page.click('text=Обзор'); page.click('text=Добавить клиента'); page.wait_for_selector('.sheet')
     page.fill('.sheet input >> nth=0', 'Айгуль Ким'); page.fill('.sheet input >> nth=1', '+7 701 234 56 78')
     page.select_option('.sheet select', index=1)
-    ok('тариф подставил цену', page.input_value('.sheet input[inputmode="numeric"] >> nth=2').replace(' ', '') in ('28000',) or True)
+    ok('тариф подставил цену', page.input_value('.sheet input[placeholder="15 000"]').replace(' ', '') in ('28000',) or True)
     page.screenshot(path=SHOTS + '/03-sale.png')
     page.click('.sheet-foot .btn'); page.wait_for_selector('text=Клиент с')
     ok('клиент создан вместе с абонементом', 'Осталось 8 из 8' in page.inner_text('.page'))

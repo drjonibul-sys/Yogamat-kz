@@ -121,7 +121,26 @@
   }
   const phoneValue = (i) => (/^\+7\s*$/.test(i.value) ? '' : i.value.trim());
   const num = (s) => { const n = Number(String(s).replace(/[\s ]/g, '').replace(',', '.')); return isFinite(n) ? n : NaN; };
-  const moneyInput = (value) => input({ type: 'text', inputmode: 'numeric', value: value == null || value === '' ? '' : String(value), placeholder: '15 000' });
+  /* суммы: разделитель разрядов (15 000), дробная часть сохраняется */
+  const groupDigits = (s) => {
+    const t = String(s).replace(/[^\d.,]/g, '').replace(',', '.'); const [a, ...r] = t.split('.'); const frac = r.join('').slice(0, 2);
+    const g = a.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+    return t.includes('.') ? g + ',' + frac : g;
+  };
+  const moneyInput = (value) => {
+    const i = input({ type: 'text', inputmode: 'decimal', placeholder: '15 000', autocomplete: 'off' });
+    const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    Object.defineProperty(i, 'value', { get() { return proto.get.call(i); }, set(v) { proto.set.call(i, v == null || v === '' ? '' : groupDigits(v)); }, configurable: true });
+    i.addEventListener('input', () => {
+      const cur = proto.get.call(i); const pos = i.selectionStart == null ? cur.length : i.selectionStart;
+      const sig = cur.slice(0, pos).replace(/[^\d.,]/g, '').length; const f = groupDigits(cur);
+      if (f === cur) return; proto.set.call(i, f);
+      let n = 0, p = 0; while (p < f.length && n < sig) { if (/[\d,]/.test(f[p])) n++; p++; }
+      try { i.setSelectionRange(p, p); } catch (e) { /* не критично */ }
+    });
+    i.value = value;
+    return i;
+  };
 
   /* ---------- окна ---------- */
   let sheetStack = [];

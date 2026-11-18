@@ -1,5 +1,5 @@
 :root {
-  --canvas: #f3f6ef; --ink: #000000; --ink-soft: #3d4a3f; --hairline: #e4e9df; --card: #fdfdfb;
+  --canvas: #f3f6ef; --ink: #000000; --ink-soft: #1f2a22; --hairline: #e4e9df; --card: #fdfdfb;
   --sage: #8fa98b; --sage-deep: #5c7a58; --sage-tint: #e4ede0; --powder: #f3dcd3; --powder-tint: #fbe9e3;
   --terracotta: #b06a4a; --sand: #efe6d9; --overlay: rgba(31, 42, 34, .42); --shadow: rgba(31, 42, 34, .07);
   --bar: rgba(253, 253, 251, .94); --on-sage: #fff; --danger: #b0473a;
@@ -8,14 +8,14 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --canvas: #141b16; --ink: #ffffff; --ink-soft: #c9d5ca; --hairline: #2a352c; --card: #1c251e;
+    --canvas: #141b16; --ink: #ffffff; --ink-soft: #e6eee7; --hairline: #2a352c; --card: #1c251e;
     --sage: #7c9a78; --sage-deep: #a9c8a4; --sage-tint: #26352a; --powder: #43302a; --powder-tint: #33241f;
     --terracotta: #e09a78; --sand: #332e25; --overlay: rgba(0, 0, 0, .6); --shadow: rgba(0, 0, 0, .3);
     --bar: rgba(28, 37, 30, .94); --danger: #e68b7d; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --canvas: #141b16; --ink: #ffffff; --ink-soft: #c9d5ca; --hairline: #2a352c; --card: #1c251e;
+  --canvas: #141b16; --ink: #ffffff; --ink-soft: #e6eee7; --hairline: #2a352c; --card: #1c251e;
   --sage: #7c9a78; --sage-deep: #a9c8a4; --sage-tint: #26352a; --powder: #43302a; --powder-tint: #33241f;
   --terracotta: #e09a78; --sand: #332e25; --overlay: rgba(0, 0, 0, .6); --shadow: rgba(0, 0, 0, .3);
   --bar: rgba(28, 37, 30, .94); --danger: #e68b7d; color-scheme: dark;
@@ -24,7 +24,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; }
 body {
-  --text-stroke: 0.1px; /* контрастное сглаживание шрифтов: +10% плотности штриха */
+  --text-stroke: 0.15px; /* контрастное сглаживание шрифтов: +50% к прежним 0.1px */
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;
   -webkit-text-stroke: var(--text-stroke);
   font-family: var(--font); background: var(--canvas); color: var(--ink); font-size: 16px; line-height: 1.35;
