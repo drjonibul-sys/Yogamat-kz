@@ -280,8 +280,37 @@
     draw(); return page('Настройки', { back: '/overview' }, box);
   }
 
-  function applyUpdate() {
-    return (async () => { try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map((r) => r.unregister())); const keys = await caches.keys(); await Promise.all(keys.map((k) => caches.delete(k))); } catch (e) { /* ок */ } location.reload(); })();
+  /* Обновление с индикатором: скачиваем файлы новой версии с показом хода (n из N), затем сбрасываем кэш и перезапускаем.
+     Пока идёт скачивание, старая версия остаётся рабочей: при ошибке ничего не теряется. */
+  let updating = false;
+  async function applyUpdate() {
+    if (updating) return; updating = true;
+    const bar = h('div', { class: 'upd-bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0', 'aria-label': 'Ход обновления' }, h('i', null));
+    const pct = h('div', { class: 'upd-pct num' }, '0%'); const step = h('div', { class: 'upd-step' }, 'Подготовка…'); const note = h('div', { class: 'hint' }, 'Не закрывайте приложение. Ваши данные не затрагиваются.');
+    const title = h('h2', { class: 'upd-title' }, 'Обновление' + (App.update && App.update.version ? ' до ' + App.update.version : ''));
+    const actions = h('div', { class: 'row', hidden: true, style: { justifyContent: 'center', gap: '10px' } });
+    const ov = h('div', { class: 'upd', role: 'alertdialog', 'aria-modal': 'true', 'aria-live': 'polite', 'aria-busy': 'true', 'aria-label': 'Обновление приложения' },
+      h('div', { class: 'upd-inner' }, h('div', { class: 'upd-ring', 'aria-hidden': 'true' }, h('img', { src: store.logoSrc(), alt: '' })), title, step, bar, pct, note, actions));
+    document.body.appendChild(ov); document.body.classList.add('locked');
+    const set = (p, text) => { const v = Math.max(0, Math.min(100, Math.round(p))); bar.firstChild.style.width = v + '%'; bar.setAttribute('aria-valuenow', String(v)); pct.textContent = v + '%'; if (text) step.textContent = text; };
+    const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+    const timed = async (url) => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 25000); try { const r = await fetch(url, { cache: 'reload', signal: c.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); await r.arrayBuffer(); } finally { clearTimeout(t); } };
+    const fail = (e) => {
+      updating = false; ov.setAttribute('aria-busy', 'false'); ov.classList.add('err'); title.textContent = 'Не удалось обновить'; step.textContent = (navigator.onLine === false ? 'Нет подключения к интернету. ' : '') + 'Приложение продолжает работать в прежней версии. ' + (e && /^HTTP/.test(e.message || '') ? 'Сайт ответил ошибкой (' + e.message + ').' : 'Не удалось загрузить файлы — проверьте интернет и повторите.');
+      actions.hidden = false; clear(actions); actions.append(h('button', { class: 'btn', type: 'button', onclick: () => { ov.remove(); document.body.classList.remove('locked'); applyUpdate(); } }, 'Повторить'), h('button', { class: 'btn soft-btn', type: 'button', onclick: () => { ov.remove(); document.body.classList.remove('locked'); } }, 'Закрыть'));
+    };
+    try {
+      set(2, 'Проверяем список файлов…');
+      const sw = await (await fetch('sw.js?t=' + Date.now(), { cache: 'no-store' })).text(); const m = /const SHELL = \[([\s\S]*?)\];/.exec(sw);
+      const files = m ? (m[1].match(/'([^']+)'/g) || []).map((x) => x.slice(1, -1)) : []; files.push('version.json');
+      let done = 0; const total = files.length;
+      for (const f of files) { set(5 + (done / total) * 80, 'Загрузка новой версии: ' + done + ' из ' + total); await timed(f === './' ? './' : f); done++; }
+      set(88, 'Установка…'); await pause(250);
+      try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map((r) => r.unregister())); } catch (e) { /* ок */ }
+      set(94, 'Очистка старых данных кэша…'); try { const keys = await caches.keys(); await Promise.all(keys.map((k) => caches.delete(k))); } catch (e) { /* ок */ }
+      await pause(250); set(100, 'Перезапуск приложения…'); await pause(500);
+      location.reload();
+    } catch (e) { fail(e); }
   }
   App.applyUpdate = applyUpdate;
   function updateBlock(redraw) {

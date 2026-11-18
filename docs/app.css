@@ -238,3 +238,21 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .faq-body p { margin: 0; }
 .faq-li { position: relative; padding-left: 18px; }
 .faq-li::before { content: '•'; position: absolute; left: 2px; }
+
+/* окно обновления: ход загрузки и анимация */
+.upd { position: fixed; inset: 0; z-index: 400; background: color-mix(in srgb, var(--canvas) 96%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); display: grid; place-items: center; padding: 24px; }
+.upd-inner { width: min(360px, 100%); display: flex; flex-direction: column; gap: 14px; align-items: stretch; text-align: center; }
+.upd-ring { position: relative; width: 96px; height: 96px; margin: 0 auto; display: grid; place-items: center; }
+.upd-ring::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--hairline); border-top-color: var(--sage-deep, var(--sage)); animation: upd-spin 1s linear infinite; }
+.upd-ring img { width: 64px; height: 64px; border-radius: 16px; object-fit: contain; }
+.upd-title { font-size: 22px; }
+.upd-step { color: var(--ink-soft); min-height: 2.6em; overflow-wrap: anywhere; }
+.upd-bar { height: 12px; border-radius: 999px; background: var(--hairline); overflow: hidden; }
+.upd-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--sage), var(--sage-deep, var(--sage))); background-size: 200% 100%; transition: width .35s ease; animation: upd-shift 1.4s linear infinite; }
+.upd-pct { font-weight: 700; }
+.upd.err .upd-ring::before { animation: none; border-color: var(--hairline); }
+.upd.err .upd-bar { display: none; }
+@keyframes upd-spin { to { transform: rotate(360deg); } }
+@keyframes upd-shift { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .upd-ring::before, .upd-bar i { animation: none; } .upd-bar i { transition: none; } }
+.upd.err .upd-pct, .upd.err .hint { display: none; }
