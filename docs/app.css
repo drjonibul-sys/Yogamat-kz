@@ -300,10 +300,10 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .att-table th.today, .att-table td.day-col.today { background: var(--powder-tint); }
 .att-table td.day-col.done { background: var(--sage); color: var(--on-sage); font-weight: 700; }
 .att-table td.day-col.miss { background: var(--powder); color: var(--danger); font-weight: 700; }
-.att-table .note-col { min-width: 170px; text-align: left; padding: 4px 8px; }
+.att-table .note-col { min-width: 210px; text-align: left; padding: 4px 8px; }
 .att-table .note-col input { width: 100%; border: none; background: transparent; padding: 4px 2px; font-size: 14px; color: var(--ink); font-family: inherit; }
 .att-table .note-col input:focus { outline: 1px solid var(--sage); border-radius: 4px; }
-.att-table .pay-note { font-size: 11px; color: var(--danger); }
+.att-table .pay-note { font-size: 12px; font-weight: 600; color: var(--danger); }
 .att-table .pay-note.paid { color: var(--sage-deep); }
 .att-table tr.tot td { background: var(--sage-tint); font-weight: 700; }
 .att-table td.day-col.moved { background: var(--sand); color: var(--terracotta); font-weight: 700; }

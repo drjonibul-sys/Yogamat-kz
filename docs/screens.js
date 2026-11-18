@@ -379,12 +379,13 @@
         td.addEventListener('click', act); td.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
         return td;
       });
-      const pay = sub ? (sub.paid ? 'оплачено' : 'не оплачено') : 'нет абонемента';
-      const note = input({ value: c.attendanceNote || '', placeholder: 'Примечание…', maxlength: 200, 'aria-label': 'Примечание: ' + c.name, onchange: (e) => { try { store.setAttendanceNote(c.id, e.target.value); } catch (er) { toast(er.message); } } });
+      const last = sub || store.subscriptionsOf(c.id).slice().sort((x, y) => (x.purchaseDate < y.purchaseDate ? 1 : -1))[0]; /* без действующего — последний абонемент */
+      const pay = !last ? 'нет абонемента' : (last.paid ? 'Оплачено: ' + (last.paidDate ? RU.shortDate(last.paidDate) : 'дата не указана') : 'Не оплачено') + (sub ? '' : ' · абонемент завершён');
+      const note = input({ value: c.attendanceNote || '', placeholder: 'Комментарий…', maxlength: 200, 'aria-label': 'Примечание: ' + c.name, onchange: (e) => { try { store.setAttendanceNote(c.id, e.target.value); } catch (er) { toast(er.message); } } });
       const miss = store.absencesCount(c.id);
       return h('tr', null, h('td', { class: 'name-col', onclick: () => App.go('/client/' + c.id) }, c.name),
         h('td', { class: 'num-col left' + (sub && sub.visitsLeft <= 2 && sub.visitsTotal <= 500 ? ' low' : '') }, left), h('td', { class: 'num-col' + (miss ? ' has' : '') }, String(miss)), ...cells,
-        h('td', { class: 'note-col' }, h('div', { class: 'pay-note' + (sub && sub.paid ? ' paid' : '') }, pay), note));
+        h('td', { class: 'note-col' }, h('div', { class: 'pay-note' + (last && last.paid ? ' paid' : '') }, pay), note));
     });
     const foot = h('tr', { class: 'tot' }, h('td', { class: 'name-col' }, 'Всего за день'), h('td', { class: 'num-col' }), h('td', { class: 'num-col' }), ...totals.map((n) => h('td', null, n ? String(n) : '')), h('td', null));
     const wrap = h('div', { class: 'att-wrap' }, h('table', { class: 'att-table' }, h('thead', null, head), h('tbody', null, rows, foot)));

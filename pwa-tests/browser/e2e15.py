@@ -40,7 +40,9 @@ with sync_playwright() as p:
     pg.wait_for_function("!document.querySelector('.att-table tbody tr td.day-col').classList.contains('miss')"); ok('снят вручную: занятие возвращено (8)', cell(0,0).inner_text()=='' and num(0,0)=='8')
     pg.fill('.att-table tbody tr >> nth=1 >> input','на отпуске'); pg.keyboard.press('Tab'); pg.wait_for_timeout(300)
     ok('примечание сохраняется', pg.evaluate("App.store.state.clients.find(c=>c.name==='Бота').attendanceNote")=='на отпуске')
-    ok('«Бота» не оплачено видно', 'не оплачено' in pg.locator('.att-table tbody tr').nth(1).inner_text())
+    ok('«Бота»: «Не оплачено» в примечании', 'Не оплачено' in pg.locator('.att-table tbody tr').nth(1).inner_text())
+    import re
+    ok('«Айгуль»: «Оплачено: дд.мм.гггг»', re.search(r'Оплачено: \d{2}\.\d{2}\.\d{4}', pg.locator('.att-table tbody tr').nth(0).inner_text()) is not None)
     pg.click('button[aria-label="Предыдущая неделя"]'); pg.wait_for_timeout(200); ok('переход на прошлую неделю', 'att-table' in pg.content())
     pg.click('text=Сегодня'); pg.wait_for_timeout(200)
     pg.click('.seg >> text=Журнал'); pg.wait_for_selector('.search'); ok('журнал сохранён как вкладка', True)
