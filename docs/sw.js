@@ -1,5 +1,5 @@
 /* Йога-студия yoga_matkz — офлайн-режим. Версия кэша совпадает с версией приложения (проверяется тестом). */
-const VERSION = '1.8.1';
+const VERSION = '1.8.2';
 const CACHE = 'yogamat-' + VERSION;
 importScripts('shell.js');
 const SHELL = self.SHELL_FILES;
@@ -19,7 +19,8 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => { if (res.ok) { const copy = res.clone(); caches.open(IMG_CACHE).then((c) => c.put(req, copy)); } return res; })));
     return;
   }
-  // страницы и скрипты: сначала сеть (чтобы обновления доходили сразу), без сети — кэш
-  e.respondWith(fetch(req).then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); } return res; })
-    .catch(() => caches.match(req).then((hit) => hit || (req.mode === 'navigate' ? caches.match('index.html') : Response.error()))));
+  // оболочка приложения: сразу из кэша (запуск без сети и без ожидания); новая версия приходит через обновление service worker (кэш назван версией)
+  e.respondWith(caches.match(req).then((hit) => hit || (req.mode === 'navigate' ? caches.match('index.html') : null)).then((hit) => hit ||
+    fetch(req).then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); } return res; })
+      .catch(() => (req.mode === 'navigate' ? caches.match('index.html') : Response.error()))));
 });

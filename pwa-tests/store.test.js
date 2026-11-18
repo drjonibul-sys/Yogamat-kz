@@ -355,6 +355,19 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
   await test('версия в version.json совпадает', () => {
     assert.strictEqual(JSON.parse(require('fs').readFileSync(__dirname + '/../docs/version.json', 'utf8')).version, require('../docs/store.js').APP_VERSION);
   });
+  await test('PIN: старая запись (2000×SHA-256) принимается и тихо переходит на быстрый хэш', async () => {
+    const crypto = require('crypto'); const st = memoryStorage();
+    const s = createStore({ storage: st, now: () => t0 }); s.load();
+    await s.setupAdmin('Анна', '4321', 'Город, в котором вы родились?', 'Астана'); const admin = s.state.staff[0]; s.logOut();
+    // подменяем запись на формат прежней версии
+    const salt = 'abc123'; let h = salt + ':4321'; for (let i = 0; i < 2000; i++) h = crypto.createHash('sha256').update(h + salt).digest('hex');
+    const pk = Studio_KEYS.pins; const pins = JSON.parse(st.getItem(pk)); pins['pin.' + admin.id] = salt + ':' + h; st.setItem(pk, JSON.stringify(pins));
+    await s.logIn(admin.id, '4321'); assert(s.isAdmin); s.logOut();
+    assert(JSON.parse(st.getItem(pk))['pin.' + admin.id].startsWith('v2$'), 'запись должна обновиться');
+    await s.logIn(admin.id, '4321'); assert(s.isAdmin); s.logOut();
+    await rejects(s.logIn(admin.id, '0000'), 'Неверный PIN');
+  });
+
   await test('версия в sw.js, store.js и index совпадает', () => {
     const fs = require('fs'); const sw = fs.readFileSync(__dirname + '/../docs/sw.js', 'utf8');
     assert.strictEqual(/VERSION = '([\d.]+)'/.exec(sw)[1], require('../docs/store.js').APP_VERSION);

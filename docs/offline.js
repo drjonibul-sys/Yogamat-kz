@@ -82,6 +82,8 @@
     if (!st.supported) return emit();
     try { await navigator.serviceWorker.ready; } catch (e) { /* ок */ }
     await inspect();
+    await new Promise((r) => (window.requestIdleCallback ? requestIdleCallback(() => setTimeout(r, 6000), { timeout: 12000 }) : setTimeout(r, 8000))); /* докачка справочника — не мешает запуску */
+    await inspect();
     const conn = navigator.connection; const saver = conn && conn.saveData;
     if (online() && !saver && level() !== 'ready') prepare(); /* фоновая загрузка справочника, пока есть интернет */
     navigator.serviceWorker.addEventListener('controllerchange', () => inspect());

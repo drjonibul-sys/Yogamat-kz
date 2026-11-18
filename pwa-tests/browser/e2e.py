@@ -23,7 +23,7 @@ with sync_playwright() as p:
     ok('вопрос обязателен: без него войти нельзя', (page.click('text=Начать работу'), 'Выберите контрольный вопрос' in page.inner_text('.auth'))[1])
     page.select_option('.auth select', 'Город, в котором вы родились?'); page.fill('.auth input[aria-label="Ответ на контрольный вопрос"]', 'Астана'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
     ok('после создания открыт Обзор с приветствием', 'Анна' in page.inner_text('.title'))
-    ok('версия и разработчик на странице', 'Версия: 1.8.1' in page.inner_text('.app-footer') and 'Разработано yoga_matkz' in page.inner_text('.app-footer'))
+    ok('версия и разработчик на странице', 'Версия: 1.8.2' in page.inner_text('.app-footer') and 'Разработано yoga_matkz' in page.inner_text('.app-footer'))
     ok('у админа 5 вкладок', page.locator('.tab').count() == 5)
     page.screenshot(path=SHOTS + '/02-overview.png')
 
@@ -77,7 +77,7 @@ with sync_playwright() as p:
     page.click('.user-card:has-text("Ольга Пак")'); page.fill('.auth input', '0000'); page.click('.auth >> text=Войти')
     page.wait_for_selector('.err:not([hidden])'); ok('неверный PIN отклонён', 'Осталось попыток: 4' in page.inner_text('.auth'))
     page.fill('.auth input', '4321'); page.click('.auth >> text=Войти'); page.wait_for_selector('.tabbar')
-    ok('у тренера нет вкладки «Доход»', page.locator('.tab').count() == 4 and 'Доход' not in page.inner_text('.tabbar'))
+    page.wait_for_function("document.querySelectorAll('.tab').length===4"); ok('у тренера нет вкладки «Доход»', page.locator('.tab').count() == 4 and 'Доход' not in page.inner_text('.tabbar'))
     page.goto(BASE + '#/income'); page.wait_for_selector('text=Только для администратора')
     ok('прямой переход к доходу закрыт для тренера', True)
     page.goto(BASE + '#/clients'); page.click('text=Айгуль Ким'); page.wait_for_selector('text=Клиент с')

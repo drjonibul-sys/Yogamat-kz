@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.8.1';
+  const APP_VERSION = '1.8.2';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -114,10 +114,16 @@
     (typeof crypto !== 'undefined' ? crypto : require('crypto').webcrypto).getRandomValues(a);
     return hex(a);
   };
-  async function hashPin(secret, salt) {
+  async function hashPin(secret, salt) { /* прежний способ (2000 последовательных SHA-256) — только для проверки старых записей */
     let h = salt + ':' + secret;
     for (let i = 0; i < 2000; i++) h = await sha256(h + salt);
     return h;
+  }
+  async function hashPin2(secret, salt) { /* PBKDF2: один встроенный вызов, быстро на iPhone/iPad */
+    const s = subtle(); if (!s) throw new Error('Для входа по PIN нужен защищённый адрес (https)');
+    const enc = new TextEncoder();
+    const key = await s.importKey('raw', enc.encode(secret), 'PBKDF2', false, ['deriveBits']);
+    return hex(await s.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: 100000 }, key, 256));
   }
 
   /* ---------- Хранилище ---------- */
@@ -211,11 +217,14 @@
 
     const pins = () => { const p = read(KEYS.pins, {}); if (p['recovery.code']) { delete p['recovery.code']; write(KEYS.pins, p); } return p; }; /* код восстановления отменён: старый удаляется */
     const setVault = (account, value) => { const p = pins(); p[account] = value; write(KEYS.pins, p); };
-    async function makeRecord(secret) { const salt = makeSalt(); return salt + ':' + (await hashPin(secret, salt)); }
+    async function makeRecord(secret) { const salt = makeSalt(); return 'v2$' + salt + ':' + (await hashPin2(secret, salt)); }
+    const isV2 = (record) => typeof record === 'string' && record.startsWith('v2$');
     async function matches(secret, record) {
       if (!record) return false;
-      const i = record.indexOf(':'); if (i < 0) return false;
-      return (await hashPin(secret, record.slice(0, i))) === record.slice(i + 1);
+      const v2 = isV2(record); const body = v2 ? record.slice(3) : record;
+      const i = body.indexOf(':'); if (i < 0) return false;
+      const salt = body.slice(0, i);
+      return (await (v2 ? hashPin2 : hashPin)(secret, salt)) === body.slice(i + 1);
     }
     const attempts = () => read(KEYS.auth, {});
     const setAttempts = (a) => write(KEYS.auth, a);
@@ -308,7 +317,9 @@
         a[userID] = cur; setAttempts(a);
         fail('Неверный PIN. Осталось попыток: ' + Math.max(0, 5 - cur.count) + '.');
       }
-      clearAttempts(userID); startSession(userID);
+      clearAttempts(userID);
+      if (!isV2(record)) { try { setVault('pin.' + userID, await makeRecord(pin)); } catch (e) { /* остаётся прежняя запись */ } } /* тихий переход на быстрый хэш */
+      startSession(userID);
     };
     /* общий счётчик попыток с входом: 5 неверных — пауза 30 с */
     function failAttempt(userID, message) {

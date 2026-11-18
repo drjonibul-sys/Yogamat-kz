@@ -3,7 +3,7 @@
    и отмечайте это в CHANGELOG-PWA.md. Тест pwa-tests/store.test.js проверяет, что инструкция подключена. */
 (function () {
   'use strict';
-  const GUIDE_REV = '1.8.1';
+  const GUIDE_REV = '1.8.2';
 
   /* [заголовок, [абзацы…]] — абзац, начинающийся с «• », выводится пунктом списка */
   const TRAINER = [
