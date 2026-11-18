@@ -20,13 +20,16 @@
     const raw = (location.hash || '#/overview').slice(1); const parts = raw.split('/').filter(Boolean);
     return { path: '/' + (parts[0] || 'overview'), param: parts[1] ? decodeURIComponent(parts[1]) : null };
   }
-  let lastKey = null; let queued = false;
+  let lastKey = null; let queued = false; const positions = {}; let cameBack = false;
+  window.addEventListener('popstate', () => { cameBack = true; });
   function render() {
     queued = false;
     if (!store.currentUser) { showAuth(); return; }
     if (!authRoot.hidden) { authRoot.hidden = true; clear(authRoot); authDrawn = false; clearInterval(timer); document.body.classList.remove('locked'); }
     const { path, param } = parse(); const route = App.routes[path] || App.routes['/overview'];
-    const key = path + '/' + (param || ''); const keep = key === lastKey ? scroller.scrollTop : 0; lastKey = key;
+    const key = path + '/' + (param || ''); let keep;
+    if (key === lastKey) keep = scroller.scrollTop;
+    else { if (lastKey) positions[lastKey] = scroller.scrollTop; keep = cameBack ? (positions[key] || 0) : 0; cameBack = false; lastKey = key; }
     let node; try { node = route.build(param); } catch (e) { console.error(e); node = h('div', { class: 'page' }, h('div', { class: 'card warn' }, 'Не удалось показать экран: ' + e.message)); }
     clear(scroller); scroller.append(node, UI.footer(Studio.APP_VERSION)); scroller.scrollTop = keep;
     clear(tabbar);
