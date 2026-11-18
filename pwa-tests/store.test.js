@@ -319,6 +319,30 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     assert.strictEqual(a.state.studioName, 'Студия yoga_matkz');
     a.importSnapshot(Object.assign({}, a.snapshot(), { studioName: 'Моя студия' })); assert.strictEqual(a.state.studioName, 'Моя студия');
   });
+  const legacyFixture = () => ({ exportedAt: '2026-11-18T09:55:58.776Z',
+    clients: [{ id: 'c1', name: 'Клиент Один', phone: '+7 700 000-00-01', notes: 'заметка', attendanceNote: 'по вторникам', createdAt: '2026-09-16' }, { id: 'c2', name: 'Клиент Два', phone: '', notes: '', createdAt: '2026-10-01' }],
+    plans: [{ id: 'p1', name: '8 занятий / месяц', visitsCount: 8, durationDays: 30, price: 20000 }],
+    subscriptions: [{ id: 's1', clientId: 'c1', planId: 'p1', purchaseDate: '2026-10-05', expiryDate: '2026-11-12', visitsTotal: 8, visitsLeft: 6, price: 20000, paid: true, paidDate: '2026-10-05' }, { id: 's2', clientId: 'c2', planId: 'p1', purchaseDate: '2026-11-02', expiryDate: '2026-12-02', visitsTotal: 8, visitsLeft: 8, price: 20000, paid: false, paidDate: null }],
+    visits: [{ id: 'v1', clientId: 'c1', subscriptionId: 's1', date: '2026-10-06', createdAt: '2026-10-06T10:00:00.000Z' }, { id: 'v2', clientId: 'c1', subscriptionId: 's1', date: '2026-10-13', createdAt: '2026-10-13T10:00:00.000Z' }],
+    transfers: [{ id: 't1', clientId: 'c1', subscriptionId: 's1', date: '2026-10-21', daysAdded: 2, comment: 'Отпуск' }],
+    rent: { defaultAmount: 60000, startMonth: '2026-11', payments: [{ id: 'r1', month: '2026-11', amount: 60000, paid: true, paidDate: '2026-11-15' }, { id: 'r2', month: '2026-12', amount: 60000, paid: false, paidDate: null }] } });
+  await test('импорт копии прежнего приложения (yoga-tracker): данные, аренда, сохранение аккаунтов', async () => {
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'Город?', 'Астана'); const staff = s.state.staff.length; const classes = s.state.classes.length;
+    assert(s.isLegacyBackup(legacyFixture())); const r = s.importSnapshot(JSON.stringify(legacyFixture()));
+    assert.deepStrictEqual([r.legacy, r.clients, r.subscriptions, r.visits, r.transfers], [true, 2, 2, 2, 1]);
+    assert.strictEqual(s.state.clients[0].note, 'заметка\nпо вторникам'); assert.strictEqual(s.state.clients[1].note, ''); assert.strictEqual(s.state.clients[0].since, '2026-09-16');
+    assert.strictEqual(s.state.subscriptions[0].tariffName, '8 занятий / месяц'); assert.strictEqual(s.state.subscriptions[0].clientID, 'c1'); assert.strictEqual(s.state.subscriptions[0].visitsLeft, 6);
+    assert.strictEqual(s.state.transfers[0].days, 2); assert.strictEqual(s.state.transfers[0].note, 'Отпуск'); assert.strictEqual(s.state.tariffs.length, 1);
+    assert.deepStrictEqual(s.state.rentSettings, { monthlyAmount: 60000, startYear: 2026, startMonth: 11 }); assert(s.state.rentPeriods.find((p) => p.year === 2026 && p.month === 11).paid);
+    assert.strictEqual(s.state.staff.length, staff); assert.strictEqual(s.state.classes.length, classes); assert(s.currentUser, 'остался в системе');
+    assert.strictEqual(s.paidSubscriptions().length, 1); assert.strictEqual(s.unpaidSubscriptions().length, 1);
+    assert.strictEqual(s.importSnapshot(s.snapshot()).legacy, false);
+  });
+  await test('импорт копии прежнего приложения: повреждённый файл отклоняется понятной ошибкой', async () => {
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'Город?', 'Астана'); const bad = legacyFixture(); bad.subscriptions[0].clientId = 'нет';
+    assert.throws(() => s.importSnapshot(bad), /без клиента/); const bad2 = legacyFixture(); bad2.visits[0].subscriptionId = 'нет'; assert.throws(() => s.importSnapshot(bad2), /неизвестным/);
+    assert.strictEqual(s.state.clients.length, 0);
+  });
   await test('версия в version.json совпадает', () => {
     assert.strictEqual(JSON.parse(require('fs').readFileSync(__dirname + '/../docs/version.json', 'utf8')).version, require('../docs/store.js').APP_VERSION);
   });

@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.6.0';
+  const APP_VERSION = '1.6.1';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -170,9 +170,9 @@
     function apply(snap) {
       S.clients = snap.clients || []; S.subscriptions = snap.subscriptions || []; S.visits = snap.visits || [];
       S.transfers = snap.transfers || [];
-      S.classes = snap.classes || defaultClasses();
+      S.classes = snap.classes || S.classes || defaultClasses();
       S.tariffs = snap.tariffs || []; S.rentSettings = snap.rentSettings || null; S.rentPeriods = snap.rentPeriods || [];
-      S.staff = snap.staff || []; S.favoriteAsanas = snap.favoriteAsanas || [];
+      S.staff = snap.staff || S.staff || []; S.favoriteAsanas = snap.favoriteAsanas || S.favoriteAsanas || [];
       if (snap.studioName) S.studioName = snap.studioName === 'Студия Yogamat.kz' ? 'Студия yoga_matkz' : snap.studioName; /* прежнее название по умолчанию */
       S.studioLogo = isLogo(snap.studioLogo) ? snap.studioLogo : null;
     }
@@ -706,14 +706,40 @@
       (snap.tariffs || []).forEach((t) => { if (!(t.visitsCount >= 1 && t.durationDays >= 1 && t.price >= 0)) fail('В тарифах есть некорректная запись'); });
       if (snap.rentSettings && !(snap.rentSettings.monthlyAmount >= 0 && snap.rentSettings.startMonth >= 1 && snap.rentSettings.startMonth <= 12)) fail('В настройках аренды некорректные данные');
     }
+    /* копия из прежнего приложения (yoga-tracker): clients/plans/subscriptions/visits/transfers/rent */
+    const isLegacy = (s) => !!s && typeof s === 'object' && !Array.isArray(s.tariffs) && (Array.isArray(s.plans) || (s.rent && typeof s.rent === 'object') || (Array.isArray(s.clients) && s.clients[0] && 'clientId' in (Array.isArray(s.subscriptions) && s.subscriptions[0] || {})));
+    api.isLegacyBackup = isLegacy;
+    api.convertLegacyBackup = (old) => {
+      const arr = (k) => (Array.isArray(old[k]) ? old[k] : []); const day = (v) => (typeof v === 'string' ? v.slice(0, 10) : '');
+      const plans = arr('plans'); const planName = new Map(plans.map((p) => [p.id, p.name]));
+      const clients = arr('clients').map((c) => ({ id: String(c.id), name: trim(c.name), phone: trim(c.phone), note: [trim(c.notes), trim(c.attendanceNote)].filter(Boolean).join('\n'), since: RU.isValidDay(day(c.createdAt)) ? day(c.createdAt) : todayKey() }));
+      const cids = new Set(clients.map((c) => c.id));
+      const subscriptions = arr('subscriptions').map((s) => ({ id: String(s.id), clientID: String(s.clientId), tariffName: trim(planName.get(s.planId) || s.tariffName || s.planName || 'Абонемент'), purchaseDate: day(s.purchaseDate), expiryDate: day(s.expiryDate), visitsTotal: Number(s.visitsTotal), visitsLeft: Number(s.visitsLeft), price: Number(s.price) || 0, paid: !!s.paid, paidDate: s.paid ? (day(s.paidDate) || day(s.purchaseDate)) : null }));
+      const sids = new Set(subscriptions.map((s) => s.id));
+      const orphanSubs = subscriptions.filter((s) => !cids.has(s.clientID)).length; if (orphanSubs) fail('В файле ' + orphanSubs + ' абонемент(а) без клиента — файл повреждён');
+      const visits = arr('visits').map((v) => ({ id: String(v.id), clientID: String(v.clientId), subscriptionID: String(v.subscriptionId), date: day(v.date), classID: v.classId || null, createdAt: v.createdAt || (day(v.date) + 'T00:00:00.000Z') }));
+      const transfers = arr('transfers').map((t) => ({ id: String(t.id), clientID: String(t.clientId), subscriptionID: String(t.subscriptionId), days: Number(t.daysAdded != null ? t.daysAdded : t.days), date: day(t.date), note: trim(t.comment || t.note) }));
+      const tariffs = plans.map((p) => ({ id: String(p.id), name: trim(p.name), visitsCount: Number(p.visitsCount), durationDays: Number(p.durationDays), price: Number(p.price) || 0 }));
+      let rentSettings = null; let rentPeriods = [];
+      if (old.rent && typeof old.rent === 'object') {
+        const [sy, sm] = String(old.rent.startMonth || '').split('-').map(Number);
+        if (sy && sm >= 1 && sm <= 12) rentSettings = { monthlyAmount: Number(old.rent.defaultAmount) || 0, startYear: sy, startMonth: sm };
+        rentPeriods = (Array.isArray(old.rent.payments) ? old.rent.payments : []).map((p) => { const [y, m] = String(p.month).split('-').map(Number); return { id: String(p.id), year: y, month: m, paid: !!p.paid, paidDate: p.paid ? (day(p.paidDate) || null) : null }; }).filter((p) => p.year && p.month >= 1 && p.month <= 12);
+      }
+      /* учётные записи, направления, избранное, название и логотип остаются текущими */
+      const cur = snapshot();
+      return Object.assign({}, cur, { version: 1, clients, subscriptions, visits, transfers, tariffs, rentSettings, rentPeriods });
+    };
     api.importSnapshot = (snap) => {
       if (typeof snap === 'string') { try { snap = JSON.parse(snap); } catch (e) { fail('Файл не похож на копию базы'); } }
+      const legacy = isLegacy(snap); if (legacy) snap = api.convertLegacyBackup(snap);
       validate(snap);
       try { api.createBackup(); } catch (e) { /* копия перед заменой — по возможности */ }
       apply(JSON.parse(JSON.stringify(snap)));
       ensureRentPeriods(true);
       persist();
       if (currentUserID && !S.staff.some((u) => u.id === currentUserID && u.active)) api.logOut();
+      return { legacy, clients: S.clients.length, subscriptions: S.subscriptions.length, visits: S.visits.length, transfers: S.transfers.length };
     };
     api.exportJSON = () => JSON.stringify(snapshot(), null, 1);
 

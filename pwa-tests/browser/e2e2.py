@@ -62,9 +62,9 @@ with sync_playwright() as p:
     page.click('.head.sticky [aria-label="Назад"]'); page.wait_for_timeout(200)
     # версии
     page.goto(BASE + '#/settings'); page.wait_for_selector('text=Проверить обновление'); page.wait_for_timeout(600)
-    ok('та же версия на сайте — не «обновление»', 'актуальная версия 1.6.0' in page.inner_text('.page') and 'Обновить до' not in page.inner_text('.page'))
+    ok('та же версия на сайте — не «обновление»', 'актуальная версия 1.6.1' in page.inner_text('.page') and 'Обновить до' not in page.inner_text('.page'))
     page.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"1.10.0"}'))
-    page.click('text=Проверить обновление'); page.wait_for_selector('text=Обновить до 1.10.0'); ok('1.10.0 новее 1.6.0 (числовое сравнение)', True)
+    page.click('text=Проверить обновление'); page.wait_for_selector('text=Обновить до 1.10.0'); ok('1.10.0 новее 1.6.1 (числовое сравнение)', True)
     page.unroute('**/version.json*'); page.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"1.0.9"}'))
     page.click('text=Проверить обновление'); page.wait_for_timeout(500); ok('старая версия на сайте не считается обновлением', 'Обновить до' not in page.inner_text('.page'))
     page.unroute('**/version.json*'); page.route('**/version.json*', lambda r: r.abort())
