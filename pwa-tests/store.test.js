@@ -259,6 +259,24 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     assert.strictEqual(f('701 234 56 78'), '+7 701 234 56 78'); assert.strictEqual(f('77012345678'), '+7 701 234 56 78');
     assert.strictEqual(f('+7 70'), '+7 70'); assert.strictEqual(f(''), ''); assert.strictEqual(f('+380 44 123'), '+380 44 123');
   });
+  await test('логотип студии: только админ, проверка формата, сохранение, копия, возврат', async () => {
+    const storage = memoryStorage(); const a = createStore({ storage, now: () => t0 }); a.load();
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    assert.strictEqual(a.logoSrc(), 'icons/logo.png');
+    await a.setupAdmin('Анна', '1234', 'ABCD-EFGH');
+    a.setStudioLogo(png); assert.strictEqual(a.logoSrc(), png);
+    for (const bad of ['http://x/y.png', 'data:text/html;base64,AAAA', 'data:image/svg+xml;base64,AAAA', 'data:image/png;base64,' + 'A'.repeat(260000)]) assert.throws(() => a.setStudioLogo(bad), /Логотип/);
+    const b = createStore({ storage, now: () => t0 }); b.load(); assert.strictEqual(b.logoSrc(), png);
+    assert.strictEqual(a.snapshot().studioLogo, png);
+    assert.throws(() => a.importSnapshot(Object.assign({}, a.snapshot(), { studioLogo: 'javascript:alert(1)' })), /логотип/);
+    a.setStudioLogo(null); assert.strictEqual(a.logoSrc(), 'icons/logo.png');
+  });
+  await test('инструкция подключена и охватывает обе роли', () => {
+    const fs = require('fs'); const d = __dirname + '/../docs/';
+    assert(fs.readFileSync(d + 'index.html', 'utf8').includes('guide.js')); assert(fs.readFileSync(d + 'sw.js', 'utf8').includes('guide.js'));
+    const src = fs.readFileSync(d + 'guide.js', 'utf8'); const rev = /GUIDE_REV = '([\d.]+)'/.exec(src)[1];
+    assert(rev.split('.').length === 3); assert(src.includes('Название и логотип студии') && src.includes('Вход и PIN'));
+  });
   await test('версия в version.json совпадает', () => {
     assert.strictEqual(JSON.parse(require('fs').readFileSync(__dirname + '/../docs/version.json', 'utf8')).version, require('../docs/store.js').APP_VERSION);
   });

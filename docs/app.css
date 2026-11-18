@@ -220,3 +220,17 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .logout-line { display: flex; gap: 10px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 @media print { .tabbar-wrap, .icon-btn, .btn { display: none !important; } body { background: #fff; } .bg { display: none; } #app { height: auto; } .page-scroll { overflow: visible; } }
+
+/* инструкция */
+.guide-part { font-weight: 700; padding: 6px 4px 0; }
+.guide { padding: 0 14px; }
+.guide-item { border-bottom: 1px solid var(--hairline); }
+.guide-item:last-child { border-bottom: 0; }
+.guide-item summary { cursor: pointer; padding: 13px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.guide-item summary::-webkit-details-marker { display: none; }
+.guide-item summary::after { content: '+'; font-size: 20px; color: var(--ink-soft); flex: none; }
+.guide-item[open] summary::after { content: '–'; }
+.guide-body { padding: 0 0 12px; display: grid; gap: 8px; color: var(--ink-soft); font-size: 15px; line-height: 1.45; }
+.guide-body p { margin: 0; }
+.guide-li { padding-left: 14px; text-indent: -14px; }
+.guide-li::before { content: '•\00a0\00a0'; }

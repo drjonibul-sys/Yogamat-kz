@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.3.0';
+  const APP_VERSION = '1.4.0';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -136,7 +136,7 @@
     const S = {
       clients: [], subscriptions: [], visits: [], transfers: [],
       classes: [], tariffs: [], rentSettings: null, rentPeriods: [],
-      staff: [], favoriteAsanas: [], studioName: 'Студия Yogamat.kz'
+      staff: [], favoriteAsanas: [], studioName: 'Студия Yogamat.kz', studioLogo: null
     };
     let currentUserID = null;
     let saveError = null;
@@ -161,7 +161,7 @@
     function snapshot() {
       return {
         version: 1, clients: S.clients, subscriptions: S.subscriptions, visits: S.visits, transfers: S.transfers,
-        studioName: S.studioName, classes: S.classes, tariffs: S.tariffs, rentSettings: S.rentSettings,
+        studioName: S.studioName, studioLogo: S.studioLogo || null, classes: S.classes, tariffs: S.tariffs, rentSettings: S.rentSettings,
         rentPeriods: S.rentPeriods, staff: S.staff, favoriteAsanas: S.favoriteAsanas.slice().sort()
       };
     }
@@ -174,6 +174,7 @@
       S.tariffs = snap.tariffs || []; S.rentSettings = snap.rentSettings || null; S.rentPeriods = snap.rentPeriods || [];
       S.staff = snap.staff || []; S.favoriteAsanas = snap.favoriteAsanas || [];
       if (snap.studioName) S.studioName = snap.studioName;
+      S.studioLogo = isLogo(snap.studioLogo) ? snap.studioLogo : null;
     }
 
     function persist() {
@@ -617,6 +618,15 @@
     };
 
     /* ----- настройки, копии, импорт ----- */
+    /* логотип студии: картинка data:image/… до ~250 КБ; null — вернуть стандартный */
+    const LOGO_MAX = 250000;
+    function isLogo(v) { return typeof v === 'string' && /^data:image\/(png|webp|jpeg);base64,[A-Za-z0-9+/=]+$/.test(v) && v.length <= LOGO_MAX; }
+    api.setStudioLogo = (dataUrl) => {
+      if (!api.isAdmin) fail('Менять логотип может только администратор');
+      if (dataUrl == null) S.studioLogo = null; else { if (!isLogo(dataUrl)) fail('Логотип должен быть картинкой PNG, JPEG или WebP небольшого размера'); S.studioLogo = dataUrl; }
+      persist();
+    };
+    api.logoSrc = () => (isLogo(S.studioLogo) ? S.studioLogo : 'icons/logo.png');
     api.setStudioName = (name) => { if (!trim(name)) return; S.studioName = trim(name); persist(); };
     api.backups = () => read(KEYS.backups, []).sort((a, b) => (a.at < b.at ? 1 : -1));
     api.createBackup = () => {
@@ -646,6 +656,7 @@
     };
     function validate(snap) {
       if (!snap || typeof snap !== 'object' || !Array.isArray(snap.clients) || !Array.isArray(snap.subscriptions) || !Array.isArray(snap.visits)) fail('Файл не похож на копию базы');
+      if (snap.studioLogo != null && !isLogo(snap.studioLogo)) fail('В файле некорректный логотип студии');
       const cids = new Set(snap.clients.map((c) => c.id)); const sids = new Set(snap.subscriptions.map((s) => s.id));
       snap.subscriptions.forEach((s) => {
         if (!(s.visitsTotal >= 1 && s.visitsLeft >= 0 && s.visitsLeft <= s.visitsTotal)) fail('В абонементах некорректное число занятий');

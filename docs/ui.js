@@ -212,5 +212,27 @@
     });
   }
 
-  window.UI = { h, clear, icon, avatar, pill, statusPill, empty, bar, chip, footer, field, input, textarea, select, toggle, stepper, phoneInput, phoneValue, num, moneyInput, sheet, closeAllSheets, confirmBox, toast, formSheet, saveFile, pickFile };
+  /* выбор картинки: уменьшаем до 256×256 (с прозрачностью), результат — data:URL */
+  function pickLogo() {
+    return new Promise((resolve) => {
+      const i = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp,image/*', style: { display: 'none' } });
+      i.addEventListener('change', () => {
+        const f = i.files[0]; i.remove(); if (!f) return resolve(null);
+        const url = URL.createObjectURL(f); const img = new Image();
+        img.onload = () => {
+          try {
+            const side = 256; const c = document.createElement('canvas'); c.width = side; c.height = side; const g = c.getContext('2d');
+            const k = Math.min(side / img.width, side / img.height); const w = img.width * k; const hh = img.height * k;
+            g.drawImage(img, (side - w) / 2, (side - hh) / 2, w, hh);
+            let out = c.toDataURL('image/webp', 0.92); if (!/^data:image\/webp/.test(out)) out = c.toDataURL('image/png');
+            URL.revokeObjectURL(url); resolve(out);
+          } catch (e) { resolve(null); }
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+        img.src = url;
+      });
+      document.body.appendChild(i); i.click();
+    });
+  }
+  window.UI = { pickLogo, h, clear, icon, avatar, pill, statusPill, empty, bar, chip, footer, field, input, textarea, select, toggle, stepper, phoneInput, phoneValue, num, moneyInput, sheet, closeAllSheets, confirmBox, toast, formSheet, saveFile, pickFile };
 })();

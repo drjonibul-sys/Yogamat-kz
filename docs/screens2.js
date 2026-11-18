@@ -189,7 +189,11 @@
       clear(box);
       if (store.isAdmin) {
         const name = input({ value: store.state.studioName, 'aria-label': 'Название студии', onchange: (e) => { store.setStudioName(e.target.value); toast('Название сохранено'); } });
-        box.appendChild(h('div', { class: 'card' }, field('Студия', name)));
+        const logoBox = h('div', { class: 'row', style: { gap: '14px' } }, h('img', { src: store.logoSrc(), alt: 'Логотип', width: 64, height: 64, style: { borderRadius: '14px', objectFit: 'contain', background: 'var(--card)', border: '1px solid var(--hairline)' } }),
+          h('div', { class: 'grow stack s8' },
+            h('button', { class: 'btn sm soft-btn', type: 'button', onclick: async () => { const d = await UI.pickLogo(); if (d == null) return toast('Не удалось прочитать картинку'); try { store.setStudioLogo(d); toast('Логотип обновлён'); draw(); } catch (e) { toast(e.message); } } }, icon('download'), 'Выбрать логотип'),
+            store.state.studioLogo ? h('button', { class: 'link small', type: 'button', onclick: () => { store.setStudioLogo(null); toast('Возвращён стандартный логотип'); draw(); } }, 'Вернуть стандартный') : null));
+        box.appendChild(h('div', { class: 'card' }, field('Название студии', name), logoBox, h('div', { class: 'hint' }, 'Логотип и название видны на Обзоре, фоне и экране входа. Иконка приложения на экране «Домой» не меняется.')));
       }
       box.appendChild(section('Оформление'));
       const cur = App.prefs.theme === 'light' || App.prefs.theme === 'dark' ? App.prefs.theme : 'system';
@@ -218,8 +222,15 @@
             h('button', { class: 'btn sm soft-btn', type: 'button', onclick: async () => { if (await confirmBox('Восстановить копию?', 'Текущие данные будут заменены данными копии от ' + RU.shortDate(RU.key(new Date(b.at))) + '.', 'Восстановить', true)) { try { store.restoreBackup(b.id); toast('Копия восстановлена'); draw(); } catch (e) { toast(e.message); } } } }, 'Вернуть'),
             h('button', { class: 'link danger small', type: 'button', onclick: () => { store.deleteBackup(b.id); draw(); } }, 'Удалить')]))) : h('div', { class: 'soft small' }, 'Копий пока нет. Раз в неделю при запуске создаётся автоматическая копия.')));
       }
+      box.appendChild(section('Инструкция'));
+      const role = store.isAdmin ? 'admin' : 'trainer';
+      Guide.forRole(role).forEach(([part, topics]) => {
+        box.appendChild(h('div', { class: 'guide-part' }, part));
+        box.appendChild(h('div', { class: 'card flat guide' }, topics.map(([t, paras]) => h('details', { class: 'guide-item' }, h('summary', null, t), h('div', { class: 'guide-body' }, paras.map((p) => p.startsWith('• ') ? h('div', { class: 'guide-li' }, p.slice(2)) : h('p', null, p)))))));
+      });
+      box.appendChild(h('div', { class: 'hint' }, 'Инструкция обновляется вместе с приложением (ред. ' + Guide.REV + ').'));
       box.appendChild(section('О приложении'));
-      box.appendChild(h('div', { class: 'card' }, row('Студия', 'Yogamat.kz'), row('Версия', Studio.APP_VERSION), h('div', { class: 'row between' }, h('span', { class: 'soft' }, 'Разработано'), h('em', null, 'Yogamat.kz')),
+      box.appendChild(h('div', { class: 'card' }, row('Студия', store.state.studioName), row('Версия', Studio.APP_VERSION), h('div', { class: 'row between' }, h('span', { class: 'soft' }, 'Разработано'), h('em', null, 'Yogamat.kz')),
         updateBlock(draw),
         h('div', { class: 'hint' }, 'Справочник асан: иллюстрации и источники указаны в карточках асан.')));
       box.appendChild(h('button', { class: 'btn danger', type: 'button', onclick: () => store.logOut() }, icon('logout'), 'Выйти'));

@@ -217,7 +217,7 @@
 
     const head = h('div', { class: 'row top' }, h('div', { class: 'grow stack s8' },
       h('div', { class: 'title' }, greet + (u ? ', ' + u.name.split(' ')[0] : '')), h('div', { class: 'soft' }, RU.weekdayTitle(new Date())),
-      h('div', { class: 'row soft small', style: { gap: '6px' } }, h('img', { src: 'icons/logo.png', alt: '', width: 18, height: 18, style: { borderRadius: '5px' } }), store.state.studioName)),
+      h('div', { class: 'row soft small', style: { gap: '6px' } }, h('img', { src: store.logoSrc(), alt: '', width: 18, height: 18, style: { borderRadius: '5px', objectFit: 'contain' } }), store.state.studioName)),
       h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Настройки', onclick: () => App.go('/settings') }, icon('gear')),
       h('button', { class: 'avatar', type: 'button', 'aria-label': 'Мой аккаунт', onclick: () => App.accountSheet(), style: { width: '46px', height: '46px', border: '1px solid var(--sage)' } }, (u ? u.name : '?').trim()[0].toUpperCase()));
     return h('div', { class: 'page' }, head, ...cards);
