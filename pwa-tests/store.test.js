@@ -285,7 +285,7 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
   });
   await test('инструкция подключена и охватывает обе роли', () => {
     const fs = require('fs'); const d = __dirname + '/../docs/';
-    assert(fs.readFileSync(d + 'index.html', 'utf8').includes('guide.js')); assert(fs.readFileSync(d + 'sw.js', 'utf8').includes('guide.js'));
+    assert(fs.readFileSync(d + 'index.html', 'utf8').includes('guide.js')); assert(fs.readFileSync(d + 'shell.js', 'utf8').includes('guide.js'));
     const src = fs.readFileSync(d + 'guide.js', 'utf8'); const rev = /GUIDE_REV = '([\d.]+)'/.exec(src)[1];
     assert(rev.split('.').length === 3); assert(src.includes('Как изменить название и логотип студии?') && src.includes('Как войти в приложение?'));
   });
@@ -342,6 +342,15 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     const s = mk(); await s.setupAdmin('Анна', '1234', 'Город?', 'Астана'); const bad = legacyFixture(); bad.subscriptions[0].clientId = 'нет';
     assert.throws(() => s.importSnapshot(bad), /без клиента/); const bad2 = legacyFixture(); bad2.visits[0].subscriptionId = 'нет'; assert.throws(() => s.importSnapshot(bad2), /неизвестным/);
     assert.strictEqual(s.state.clients.length, 0);
+  });
+  await test('офлайн: все файлы из shell.js существуют, скрипты index.html и sw.js согласованы', () => {
+    const fs = require('fs'); const d = __dirname + '/../docs/'; const shell = fs.readFileSync(d + 'shell.js', 'utf8');
+    const files = (/\[([\s\S]*?)\];/.exec(shell)[1].match(/'([^']+)'/g) || []).map((x) => x.slice(1, -1));
+    for (const f of files) if (f !== './') assert(fs.existsSync(d + f), 'нет файла из списка офлайн: ' + f);
+    const html = fs.readFileSync(d + 'index.html', 'utf8'); for (const m of html.matchAll(/<script src="([^"]+)"/g)) assert(files.includes(m[1]), 'скрипт не в списке офлайн: ' + m[1]);
+    assert(files.includes('app.css') && files.includes('manifest.webmanifest') && files.includes('data/asanas.json'));
+    const sw = fs.readFileSync(d + 'sw.js', 'utf8'); assert(sw.includes("importScripts('shell.js')") && sw.includes('IMG_CACHE'));
+    const asanas = JSON.parse(fs.readFileSync(d + 'data/asanas.json', 'utf8')); for (const a of asanas) for (const k of ['a', 't']) assert(fs.existsSync(d + 'images/' + k + '/' + a.imageKey + '.webp'), 'нет картинки ' + a.imageKey);
   });
   await test('версия в version.json совпадает', () => {
     assert.strictEqual(JSON.parse(require('fs').readFileSync(__dirname + '/../docs/version.json', 'utf8')).version, require('../docs/store.js').APP_VERSION);

@@ -256,3 +256,17 @@ textarea.inp { min-height: 84px; resize: vertical; }
 @keyframes upd-shift { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .upd-ring::before, .upd-bar i { animation: none; } .upd-bar i { transition: none; } }
 .upd.err .upd-pct, .upd.err .hint { display: none; }
+
+/* готовность к работе без интернета */
+.off-badge { display: inline-flex; align-items: center; gap: 7px; align-self: flex-start; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--hairline); background: var(--card); color: var(--ink); }
+.off-badge i { width: 9px; height: 9px; border-radius: 50%; background: var(--ink-soft); flex: none; }
+.off-badge.ready i { background: #3f9b52; } .off-badge.partial i { background: #d9a03a; }
+.off-badge.preparing i, .off-badge.loading i { background: var(--sage-deep); animation: off-pulse 1.1s ease-in-out infinite; }
+.off-badge.offline i { background: #c25b4a; } .off-badge.unsupported i { background: #c25b4a; }
+.off-head { font-size: 17px; } .off-head.ready { color: #2f7d42; } .off-head.partial { color: #a8741b; }
+:root[data-theme="dark"] .off-head.ready { color: #7fd195; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .off-head.ready { color: #7fd195; } }
+.off-row { display: flex; gap: 10px; align-items: flex-start; }
+.off-row i { width: 12px; height: 12px; margin-top: 6px; border-radius: 50%; flex: none; background: #d9a03a; } .off-row i.ok { background: #3f9b52; }
+@keyframes off-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .off-badge i { animation: none !important; } }

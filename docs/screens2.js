@@ -270,6 +270,8 @@
             h('button', { class: 'btn sm soft-btn', type: 'button', onclick: async () => { if (await confirmBox('Восстановить копию?', 'Текущие данные будут заменены данными копии от ' + RU.shortDate(RU.key(new Date(b.at))) + '.', 'Восстановить', true)) { try { store.restoreBackup(b.id); toast('Копия восстановлена'); draw(); } catch (e) { toast(e.message); } } } }, 'Вернуть'),
             h('button', { class: 'link danger small', type: 'button', onclick: () => { store.deleteBackup(b.id); draw(); } }, 'Удалить')]))) : h('div', { class: 'soft small' }, 'Копий пока нет. Раз в неделю при запуске создаётся автоматическая копия.')));
       }
+      box.appendChild(section('Работа без интернета'));
+      box.appendChild(h('div', { class: 'card' }, App.offlineBlock()));
       box.appendChild(section('О приложении'));
       box.appendChild(h('div', { class: 'card' }, row('Студия', store.state.studioName), row('Версия', Studio.APP_VERSION), h('div', { class: 'row between' }, h('span', { class: 'soft' }, 'Разработано'), h('em', null, 'yoga_matkz')),
         updateBlock(draw),
@@ -301,13 +303,13 @@
     };
     try {
       set(2, 'Проверяем список файлов…');
-      const sw = await (await fetch('sw.js?t=' + Date.now(), { cache: 'no-store' })).text(); const m = /const SHELL = \[([\s\S]*?)\];/.exec(sw);
+      const list = await (await fetch('shell.js?t=' + Date.now(), { cache: 'no-store' })).text(); const m = /\[([\s\S]*?)\];/.exec(list);
       const files = m ? (m[1].match(/'([^']+)'/g) || []).map((x) => x.slice(1, -1)) : []; files.push('version.json');
       let done = 0; const total = files.length;
       for (const f of files) { set(5 + (done / total) * 80, 'Загрузка новой версии: ' + done + ' из ' + total); await timed(f === './' ? './' : f); done++; }
       set(88, 'Установка…'); await pause(250);
       try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map((r) => r.unregister())); } catch (e) { /* ок */ }
-      set(94, 'Очистка старых данных кэша…'); try { const keys = await caches.keys(); await Promise.all(keys.map((k) => caches.delete(k))); } catch (e) { /* ок */ }
+      set(94, 'Очистка старых данных кэша…'); try { const keys = await caches.keys(); await Promise.all(keys.filter((k) => k !== 'yogamat-img').map((k) => caches.delete(k))); } catch (e) { /* ок */ }
       await pause(250); set(100, 'Перезапуск приложения…'); await pause(500);
       location.reload();
     } catch (e) { fail(e); }

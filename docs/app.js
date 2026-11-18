@@ -123,6 +123,7 @@
   if (!location.hash) history.replaceState(null, '', '#/overview');
   render();
   if (navigator.onLine !== false) App.checkUpdate();
+  App.offline.start();
   window.addEventListener('online', () => App.checkUpdate());
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
