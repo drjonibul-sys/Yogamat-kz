@@ -9,7 +9,7 @@
   const prefs = (() => { try { return JSON.parse(localStorage.getItem(prefsKey)) || {}; } catch (e) { return {}; } })();
   const setPref = (k, v) => { prefs[k] = v; try { localStorage.setItem(prefsKey, JSON.stringify(prefs)); } catch (e) { /* ок */ } };
 
-  const App = { store, prefs, setPref, routes: {}, rerender: () => {}, go: (path) => { location.hash = '#' + path; } };
+  const App = { hasPrev: false, store, prefs, setPref, routes: {}, rerender: () => {}, go: (path) => { location.hash = '#' + path; } };
   window.App = App;
   const today = () => RU.key(new Date());
   const monthlyCard = (...kids) => h('div', { class: 'card' }, ...kids);
@@ -18,7 +18,7 @@
   function page(title, opts, ...kids) {
     opts = opts || {};
     const head = h('div', { class: 'head' },
-      opts.back ? h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Назад', onclick: () => (opts.back === true ? history.back() : App.go(opts.back)) }, icon('back')) : null,
+      opts.back ? h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Назад', onclick: () => (App.hasPrev ? history.back() : App.go(typeof opts.back === 'string' ? opts.back : '/overview')) }, icon('back')) : null,
       h('h1', { class: opts.back ? '' : 'title' }, title), opts.right || null);
     return h('div', { class: 'page' }, head, ...kids);
   }
@@ -60,12 +60,12 @@
   function clientForm(client) {
     formSheet(client ? 'Клиент' : 'Новый клиент', 'Сохранить', (s) => {
       const name = input({ value: client ? client.name : '', placeholder: 'Имя и фамилия', autocapitalize: 'words' });
-      const phone = input({ value: client ? client.phone : '', placeholder: '+7 …', type: 'tel', inputmode: 'tel' });
+      const phone = UI.phoneInput(client ? client.phone : '');
       const since = input({ type: 'date', value: client ? client.since : today() });
       const note = textarea({ placeholder: 'Например: беременность, ограничения', value: client ? client.note : '' });
       s.body.append(field('Имя', name), field('Телефон', phone), field('Клиент с', since), field('Заметка', note));
       return { save() {
-        const data = { name: name.value, phone: phone.value, note: note.value, since: since.value };
+        const data = { name: name.value, phone: UI.phoneValue(phone), note: note.value, since: since.value };
         if (client) store.updateClient(client.id, data); else { const c = store.addClient(data); toast('Клиент добавлен'); App.go('/client/' + c.id); }
       } };
     });
@@ -77,7 +77,7 @@
     formSheet(fixed ? 'Новый абонемент' : 'Быстрая продажа', fixed ? 'Сохранить абонемент' : 'Создать клиента и абонемент', (s) => {
       const tariffs = store.orderedTariffs();
       const name = input({ placeholder: 'Имя и фамилия', autocapitalize: 'words' });
-      const phone = input({ type: 'tel', inputmode: 'tel', placeholder: '+7 …' });
+      const phone = UI.phoneInput('');
       const tName = input({ placeholder: 'Например: 8 занятий / месяц' });
       const visits = input({ type: 'number', inputmode: 'numeric', min: 1, value: '8' });
       const days = input({ type: 'number', inputmode: 'numeric', min: 1, value: '30' });
@@ -105,7 +105,7 @@
         if (!isFinite(o.price)) throw new Error('Укажите цену числом');
         if (!(o.visitsTotal >= 1)) throw new Error('Занятий должно быть не меньше одного');
         if (fixed) { store.addSubscription(Object.assign(o, { clientID: fixed.id })); toast('Абонемент добавлен'); }
-        else { const c = store.addQuickSale(Object.assign(o, { name: name.value, phone: phone.value })); toast('Клиент и абонемент сохранены'); App.go('/client/' + c.id); }
+        else { const c = store.addQuickSale(Object.assign(o, { name: name.value, phone: UI.phoneValue(phone) })); toast('Клиент и абонемент сохранены'); App.go('/client/' + c.id); }
       } };
     });
   }
@@ -172,6 +172,7 @@
     const ending = store.endingSoon(); const tv = store.todayVisits();
     cards.push(h('div', { class: 'stats' }, stat('people', 'Клиентов', store.state.clients.length, () => App.go('/clients')),
       stat('calendar', 'Занятий сегодня', tv.length, () => App.go('/visits')), stat('alert', 'Заканчиваются', ending.length, () => document.getElementById('ending') && document.getElementById('ending').scrollIntoView({ behavior: 'smooth' }))));
+    if (App.update && App.update.state === 'new') cards.push(h('div', { class: 'card tint' }, h('div', { class: 'h3' }, 'Доступна версия ' + App.update.version), h('div', { class: 'small soft' }, 'Установлена ' + Studio.APP_VERSION + '. Обновление применится после перезапуска.'), h('button', { class: 'btn', type: 'button', onclick: () => App.applyUpdate() }, 'Обновить')));
     if (store.saveError) cards.push(h('div', { class: 'card warn' }, h('div', { class: 'row top' }, icon('alert'), h('div', { class: 'small' }, store.saveError))));
     cards.push(h('div', { class: 'row' },
       h('button', { class: 'btn', type: 'button', onclick: () => saleForm(null) }, icon('plus'), 'Добавить клиента'),

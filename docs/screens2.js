@@ -191,6 +191,11 @@
         const name = input({ value: store.state.studioName, 'aria-label': 'Название студии', onchange: (e) => { store.setStudioName(e.target.value); toast('Название сохранено'); } });
         box.appendChild(h('div', { class: 'card' }, field('Студия', name)));
       }
+      box.appendChild(section('Оформление'));
+      const cur = App.prefs.theme === 'light' || App.prefs.theme === 'dark' ? App.prefs.theme : 'system';
+      const themeChips = h('div', { class: 'seg' });
+      [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].forEach(([k, l]) => themeChips.appendChild(chip(l, cur === k, () => { App.setTheme(k); draw(); })));
+      box.appendChild(h('div', { class: 'card' }, themeChips));
       box.appendChild(section('Расписание'));
       const trainerOnly = store.currentUser && store.currentUser.role === 'trainer';
       box.appendChild(h('div', { class: 'card' }, toggle('Скрывать прошедшие занятия', !!App.prefs.hidePast, (v) => App.setPref('hidePast', v), 'Только на сегодняшний день'),
@@ -214,13 +219,25 @@
       }
       box.appendChild(section('О приложении'));
       box.appendChild(h('div', { class: 'card' }, row('Студия', 'Yogamat.kz'), row('Версия', Studio.APP_VERSION), h('div', { class: 'row between' }, h('span', { class: 'soft' }, 'Разработано'), h('em', null, 'Yogamat.kz')),
-        h('div', { class: 'row', style: { gap: '8px' } }, h('button', { class: 'btn soft-btn', type: 'button', onclick: async () => { try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map((r) => r.update())); const keys = await caches.keys(); await Promise.all(keys.map((k) => caches.delete(k))); toast('Обновление загружено — перезапустите приложение'); setTimeout(() => location.reload(), 900); } catch (e) { location.reload(); } } }, 'Проверить обновление')),
+        updateBlock(draw),
         h('div', { class: 'hint' }, 'Справочник асан: иллюстрации и источники указаны в карточках асан.')));
       box.appendChild(h('button', { class: 'btn danger', type: 'button', onclick: () => store.logOut() }, icon('logout'), 'Выйти'));
     };
     draw(); return page('Настройки', { back: '/overview' }, box);
   }
 
+  function applyUpdate() {
+    return (async () => { try { const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map((r) => r.unregister())); const keys = await caches.keys(); await Promise.all(keys.map((k) => caches.delete(k))); } catch (e) { /* ок */ } location.reload(); })();
+  }
+  App.applyUpdate = applyUpdate;
+  function updateBlock(redraw) {
+    const u = App.update; const box = h('div', { class: 'stack s8' });
+    const line = h('div', { class: 'small' }, !u ? 'Проверка обновлений не выполнялась.' : u.state === 'new' ? 'Доступна новая версия ' + u.version + ' (установлена ' + Studio.APP_VERSION + ').' : u.state === 'same' ? 'Установлена актуальная версия ' + Studio.APP_VERSION + '. Версия на сайте: ' + u.version + '.' : u.state === 'older' ? 'Установленная версия (' + Studio.APP_VERSION + ') новее, чем на сайте (' + u.version + ').' : 'Не удалось проверить: нет связи с сайтом.');
+    box.appendChild(line);
+    if (u && u.state === 'new') box.appendChild(h('button', { class: 'btn', type: 'button', onclick: applyUpdate }, 'Обновить до ' + u.version));
+    box.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: async () => { await App.checkUpdate(); redraw(); } }, 'Проверить обновление'));
+    return box;
+  }
   App.routes['/income'] = { tab: 'income', build: gate(income) };
   App.routes['/payments'] = { tab: 'income', build: gate(payments) };
   App.routes['/debts'] = { tab: 'income', build: gate(debts) };

@@ -112,6 +112,14 @@
     const set = (n) => { v = Math.max(min, Math.min(max, n)); out.textContent = fmt ? fmt(v) : String(v); onchange(v); };
     return h('div', { class: 'stepper' }, h('button', { type: 'button', 'aria-label': 'Меньше', onclick: () => set(v - step) }, '−'), out, h('button', { type: 'button', 'aria-label': 'Больше', onclick: () => set(v + step) }, '+'));
   }
+  function phoneInput(value) {
+    const i = input({ type: 'tel', inputmode: 'tel', placeholder: '+7 701 234 56 78', autocomplete: 'tel', value: Studio.formatPhone(value || '') });
+    i.addEventListener('focus', () => { if (!i.value.trim()) { i.value = '+7 '; setTimeout(() => { try { i.setSelectionRange(3, 3); } catch (e) { /* ок */ } }, 0); } });
+    i.addEventListener('input', () => { const v = i.value; i.value = (v.trim() === '+' || v.trim() === '') ? v : Studio.formatPhone(v); });
+    i.addEventListener('blur', () => { if (i.value.replace(/\D/g, '') === '7' && /^\+7\s*$/.test(i.value)) i.value = ''; });
+    return i;
+  }
+  const phoneValue = (i) => (/^\+7\s*$/.test(i.value) ? '' : i.value.trim());
   const num = (s) => { const n = Number(String(s).replace(/[\s ]/g, '').replace(',', '.')); return isFinite(n) ? n : NaN; };
   const moneyInput = (value) => input({ type: 'text', inputmode: 'numeric', value: value == null || value === '' ? '' : String(value), placeholder: '15 000' });
 
@@ -185,5 +193,5 @@
     });
   }
 
-  window.UI = { h, clear, icon, avatar, pill, statusPill, empty, bar, chip, footer, field, input, textarea, select, toggle, stepper, num, moneyInput, sheet, closeAllSheets, confirmBox, toast, formSheet, saveFile, pickFile };
+  window.UI = { h, clear, icon, avatar, pill, statusPill, empty, bar, chip, footer, field, input, textarea, select, toggle, stepper, phoneInput, phoneValue, num, moneyInput, sheet, closeAllSheets, confirmBox, toast, formSheet, saveFile, pickFile };
 })();

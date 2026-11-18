@@ -57,7 +57,7 @@
   }
 
   /* ---------- Практики ---------- */
-  const GROUPS = [['easyToMedium', 'Лёгкая → средняя'], ['mediumToHard', 'Средняя → тяжёлая'], ['easy', 'Лёгкая'], ['medium', 'Средняя'], ['hard', 'Тяжёлая']];
+  const GROUPS = [['easy', 'Лёгкая'], ['easyToMedium', 'Лёгкая → средняя'], ['medium', 'Средняя'], ['mediumToHard', 'Средняя → тяжёлая'], ['hard', 'Тяжёлая']];
   const groupOf = (p) => (p.kind === 'transition' ? (p.level >= 3 ? 'mediumToHard' : 'easyToMedium') : p.level === 1 ? 'easy' : p.level === 2 ? 'medium' : 'hard');
   const groupKind = (g) => (g === 'easy' ? '' : g === 'hard' ? 'warn' : g === 'medium' || g === 'easyToMedium' ? 'warn' : 'sand');
   function practices() {

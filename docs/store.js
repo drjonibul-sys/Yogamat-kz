@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.1.0';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -705,5 +705,24 @@
     return api;
   }
 
-  return { createStore, RU, APP_VERSION, KEYS, memoryStorage, uid };
+  /** Сравнение версий X.Y.Z по числам: 1 — a новее, -1 — b новее, 0 — равны. */
+  function cmpVersion(a, b) {
+    const pa = String(a).split('.').map((x) => parseInt(x, 10) || 0), pb = String(b).split('.').map((x) => parseInt(x, 10) || 0);
+    for (let i = 0; i < Math.max(pa.length, pb.length, 3); i++) { const d = (pa[i] || 0) - (pb[i] || 0); if (d) return d > 0 ? 1 : -1; }
+    return 0;
+  }
+  /** Приводит телефон к виду «+7 701 234 56 78»; чужие коды стран не трогает. */
+  function formatPhone(v) {
+    v = String(v == null ? '' : v).trim(); if (!v) return '';
+    if (/^\+/.test(v) && !/^\+7/.test(v) && v.replace(/\D/g, '').length > 0 && v[1] !== '7') return v;
+    let d = v.replace(/\D/g, '');
+    if (!d) return '';
+    if (/^\+/.test(v) || d[0] === '8' || (d.length === 11 && d[0] === '7')) d = d.slice(1);
+    d = d.slice(0, 10);
+    let out = '+7'; if (d.length) out += ' ' + d.slice(0, 3); if (d.length > 3) out += ' ' + d.slice(3, 6);
+    if (d.length > 6) out += ' ' + d.slice(6, 8); if (d.length > 8) out += ' ' + d.slice(8, 10);
+    return out;
+  }
+
+  return { createStore, cmpVersion, formatPhone, RU, APP_VERSION, KEYS, memoryStorage, uid };
 });

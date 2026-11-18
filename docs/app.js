@@ -37,7 +37,7 @@
   }
   const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(render); } };
   App.rerender = schedule;
-  window.addEventListener('hashchange', schedule);
+  window.addEventListener('hashchange', () => { App.hasPrev = true; schedule(); });
   store.subscribe(schedule);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (store.currentUser) { store.refreshRentWindow(); store.maintainAutomaticBackup(); } schedule(); } });
 
@@ -91,12 +91,37 @@
     go.addEventListener('click', async () => { if (pin.value !== pin2.value) return showErr(err, 'PIN не совпадает с повтором'); go.disabled = true; try { await store.resetPIN(user.id, code.value, pin.value); await store.logIn(user.id, pin.value); } catch (e) { showErr(err, e.message); go.disabled = false; } });
     authShell('Восстановление доступа', user.name + ': введите код восстановления и задайте новый PIN.', field('Код восстановления', code), field('Новый PIN', pin), field(null, pin2), err, go, h('button', { class: 'link', type: 'button', style: { color: 'var(--ink-soft)' }, onclick: () => authPin(user) }, 'Назад'));
   }
+  /* ---------- тема ---------- */
+  const metas = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map((m) => ({ m, media: m.getAttribute('media'), content: m.getAttribute('content') }));
+  App.setTheme = (mode) => {
+    App.setPref('theme', mode);
+    const el = document.documentElement; const explicit = mode === 'light' || mode === 'dark';
+    if (explicit) el.setAttribute('data-theme', mode); else el.removeAttribute('data-theme');
+    metas.forEach((x) => { if (explicit) { x.m.removeAttribute('media'); x.m.setAttribute('content', mode === 'dark' ? '#141B16' : '#F3F6EF'); } else { if (x.media) x.m.setAttribute('media', x.media); x.m.setAttribute('content', x.content); } });
+  };
+  if (App.prefs.theme === 'light' || App.prefs.theme === 'dark') App.setTheme(App.prefs.theme);
+
+  /* ---------- проверка версии на сайте ---------- */
+  App.update = null;
+  App.checkUpdate = async () => {
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const v = String((await r.json()).version || '');
+      const c = Studio.cmpVersion(v, Studio.APP_VERSION);
+      App.update = { version: v, state: c > 0 ? 'new' : c < 0 ? 'older' : 'same' };
+    } catch (e) { App.update = { state: 'offline' }; }
+    schedule(); return App.update;
+  };
+
   /* ---------- запуск ---------- */
   store.load();
   store.refreshRentWindow();
   if (store.currentUser) store.maintainAutomaticBackup();
   if (!location.hash) history.replaceState(null, '', '#/overview');
   render();
+  if (navigator.onLine !== false) App.checkUpdate();
+  window.addEventListener('online', () => App.checkUpdate());
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* офлайн-режим недоступен */ }); });

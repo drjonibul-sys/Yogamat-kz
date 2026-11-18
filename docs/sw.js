@@ -1,5 +1,5 @@
 /* Йога-студия Yogamat.kz — офлайн-режим. Версия кэша совпадает с версией приложения (проверяется тестом). */
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const CACHE = 'yogamat-' + VERSION;
 const SHELL = ['./', 'index.html', 'app.css', 'store.js', 'ui.js', 'screens.js', 'screens2.js', 'catalog.js', 'app.js', 'manifest.webmanifest',
   'icons/logo.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'data/asanas.json', 'data/practices.json', 'data/images.json'];
@@ -12,7 +12,7 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const req = e.request; const url = new URL(req.url);
-  if (req.method !== 'GET' || url.origin !== location.origin) return;
+  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.endsWith('/version.json')) return;
   const heavy = url.pathname.includes('/images/');
   if (heavy) { // картинки: из кэша, при отсутствии — из сети с сохранением
     e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); } return res; })));

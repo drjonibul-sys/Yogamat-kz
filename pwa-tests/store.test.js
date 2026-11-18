@@ -248,6 +248,20 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     assert.strictEqual(b.state.clients.length, 1); assert.strictEqual(b.state.studioName, 'Моя студия');
   });
 
+  await test('сравнение версий: числами, а не строками', () => {
+    const { cmpVersion } = require('../docs/store.js');
+    assert.strictEqual(cmpVersion('1.1.0', '1.1.0'), 0); assert.strictEqual(cmpVersion('1.10.0', '1.9.0'), 1);
+    assert.strictEqual(cmpVersion('1.0.0', '1.0.1'), -1); assert.strictEqual(cmpVersion('2.0', '1.9.9'), 1); assert.strictEqual(cmpVersion('1.0', '1.0.0'), 0);
+  });
+  await test('телефон: подстановка +7 и форматирование', () => {
+    const { formatPhone: f } = require('../docs/store.js');
+    assert.strictEqual(f('87012345678'), '+7 701 234 56 78'); assert.strictEqual(f('+7 701 234 5678'), '+7 701 234 56 78');
+    assert.strictEqual(f('701 234 56 78'), '+7 701 234 56 78'); assert.strictEqual(f('77012345678'), '+7 701 234 56 78');
+    assert.strictEqual(f('+7 70'), '+7 70'); assert.strictEqual(f(''), ''); assert.strictEqual(f('+380 44 123'), '+380 44 123');
+  });
+  await test('версия в version.json совпадает', () => {
+    assert.strictEqual(JSON.parse(require('fs').readFileSync(__dirname + '/../docs/version.json', 'utf8')).version, require('../docs/store.js').APP_VERSION);
+  });
   await test('версия в sw.js, store.js и index совпадает', () => {
     const fs = require('fs'); const sw = fs.readFileSync(__dirname + '/../docs/sw.js', 'utf8');
     assert.strictEqual(/VERSION = '([\d.]+)'/.exec(sw)[1], require('../docs/store.js').APP_VERSION);
