@@ -1,0 +1,602 @@
+[
+  {
+    "id": "tadasana",
+    "level": 1,
+    "russian": "Поза горы",
+    "hindi": "ताड़ासन"
+  },
+  {
+    "id": "sukhasana",
+    "level": 1,
+    "russian": "Удобная поза сидя",
+    "hindi": "सुखासन"
+  },
+  {
+    "id": "shavasana",
+    "level": 1,
+    "russian": "Поза полного отдыха",
+    "hindi": "शवासन"
+  },
+  {
+    "id": "balasana",
+    "level": 1,
+    "russian": "Поза ребёнка",
+    "hindi": "बालासन"
+  },
+  {
+    "id": "vajrasana",
+    "level": 1,
+    "russian": "Алмазная поза",
+    "hindi": "वज्रासन"
+  },
+  {
+    "id": "marjaryasana",
+    "level": 1,
+    "russian": "Поза кошки",
+    "hindi": "मार्जर्यासन"
+  },
+  {
+    "id": "bitilasana",
+    "level": 1,
+    "russian": "Поза коровы",
+    "hindi": "बिटिलासन"
+  },
+  {
+    "id": "dandasana",
+    "level": 1,
+    "russian": "Поза посоха",
+    "hindi": "दण्डासन"
+  },
+  {
+    "id": "baddha-konasana",
+    "level": 1,
+    "russian": "Поза связанного угла (бабочка)",
+    "hindi": "बद्ध कोणासन"
+  },
+  {
+    "id": "bhujangasana",
+    "level": 1,
+    "russian": "Поза кобры",
+    "hindi": "भुजंगासन"
+  },
+  {
+    "id": "makarasana",
+    "level": 1,
+    "russian": "Поза крокодила",
+    "hindi": "मकरासन"
+  },
+  {
+    "id": "urdhva-hastasana",
+    "level": 1,
+    "russian": "Поза с поднятыми руками",
+    "hindi": "ऊर्ध्व हस्तासन"
+  },
+  {
+    "id": "ardha-kati-chakrasana",
+    "level": 1,
+    "russian": "Боковой наклон стоя",
+    "hindi": "अर्ध कटिचक्रासन"
+  },
+  {
+    "id": "uttanasana",
+    "level": 1,
+    "russian": "Наклон вперёд стоя",
+    "hindi": "उत्तानासन"
+  },
+  {
+    "id": "ardha-uttanasana",
+    "level": 1,
+    "russian": "Половинный наклон стоя",
+    "hindi": "अर्ध उत्तानासन"
+  },
+  {
+    "id": "prasarita-padottanasana",
+    "level": 1,
+    "russian": "Наклон с широко расставленными ногами",
+    "hindi": "प्रसारित पादोत्तानासन"
+  },
+  {
+    "id": "malasana",
+    "level": 1,
+    "russian": "Поза гирлянды",
+    "hindi": "मालासन"
+  },
+  {
+    "id": "utkata-konasana",
+    "level": 1,
+    "russian": "Поза богини",
+    "hindi": "उत्कट कोणासन"
+  },
+  {
+    "id": "virasana",
+    "level": 1,
+    "russian": "Поза героя",
+    "hindi": "वीरासन"
+  },
+  {
+    "id": "svastikasana",
+    "level": 1,
+    "russian": "Благоприятная поза сидя",
+    "hindi": "स्वस्तिकासन"
+  },
+  {
+    "id": "siddhasana",
+    "level": 1,
+    "russian": "Совершенная поза сидя",
+    "hindi": "सिद्धासन"
+  },
+  {
+    "id": "supta-baddha-konasana",
+    "level": 1,
+    "russian": "Бабочка лёжа",
+    "hindi": "सुप्त बद्ध कोणासन"
+  },
+  {
+    "id": "supta-padangusthasana",
+    "level": 1,
+    "russian": "Захват большого пальца лёжа",
+    "hindi": "सुप्त पादांगुष्ठासन"
+  },
+  {
+    "id": "apanasana",
+    "level": 1,
+    "russian": "Колени к груди",
+    "hindi": "अपानासन"
+  },
+  {
+    "id": "pavanamuktasana",
+    "level": 1,
+    "russian": "Поза освобождения ветра, одна нога",
+    "hindi": "पवनमुक्तासन"
+  },
+  {
+    "id": "supta-matsyendrasana",
+    "level": 1,
+    "russian": "Скрутка лёжа с одной согнутой ногой",
+    "hindi": "सुप्त मत्स्येन्द्रासन"
+  },
+  {
+    "id": "ananda-balasana",
+    "level": 1,
+    "russian": "Поза счастливого ребёнка",
+    "hindi": "आनन्द बालासन"
+  },
+  {
+    "id": "jathara-parivartanasana",
+    "level": 1,
+    "russian": "Поворот живота лёжа",
+    "hindi": "जठर परिवर्तनासन"
+  },
+  {
+    "id": "matsya-kridasana",
+    "level": 1,
+    "russian": "Поза отдыха играющей рыбы",
+    "hindi": "मत्स्य क्रीड़ासन"
+  },
+  {
+    "id": "ardha-salabhasana",
+    "level": 1,
+    "russian": "Половинная поза саранчи",
+    "hindi": "अर्ध शलभासन"
+  },
+  {
+    "id": "salamba-bhujangasana",
+    "level": 1,
+    "russian": "Поза сфинкса",
+    "hindi": "सालम्ब भुजंगासन"
+  },
+  {
+    "id": "simhasana",
+    "level": 1,
+    "russian": "Поза льва",
+    "hindi": "सिंहासन"
+  },
+  {
+    "id": "uttana-shishosana",
+    "level": 1,
+    "russian": "Поза вытягивающегося щенка",
+    "hindi": "उत्तान शिशु आसन"
+  },
+  {
+    "id": "anjaneyasana",
+    "level": 1,
+    "russian": "Низкий выпад с поднятыми руками",
+    "hindi": "अञ्जनेयासन"
+  },
+  {
+    "id": "ashwa-sanchalanasana",
+    "level": 1,
+    "russian": "Поза всадника",
+    "hindi": "अश्व संचालनासन"
+  },
+  {
+    "id": "parighasana",
+    "level": 1,
+    "russian": "Поза засова",
+    "hindi": "परिघासन"
+  },
+  {
+    "id": "parvatasana",
+    "level": 1,
+    "russian": "Поза горы сидя",
+    "hindi": "पर्वतासन"
+  },
+  {
+    "id": "supta-tadasana",
+    "level": 1,
+    "russian": "Поза горы лёжа",
+    "hindi": "सुप्त ताड़ासन"
+  },
+  {
+    "id": "shithila-dandasana",
+    "level": 1,
+    "russian": "Расслабленная поза посоха",
+    "hindi": "शिथिल दण्डासन"
+  },
+  {
+    "id": "chatushpadasana",
+    "level": 1,
+    "russian": "Нейтральное положение на четвереньках",
+    "hindi": "भरमानासन"
+  },
+  {
+    "id": "adho-mukha-svanasana",
+    "level": 2,
+    "russian": "Собака мордой вниз",
+    "hindi": "अधोमुख श्वानासन"
+  },
+  {
+    "id": "vrikshasana",
+    "level": 2,
+    "russian": "Поза дерева",
+    "hindi": "वृक्षासन"
+  },
+  {
+    "id": "utkatasana",
+    "level": 2,
+    "russian": "Поза стула",
+    "hindi": "उत्कटासन"
+  },
+  {
+    "id": "virabhadrasana-2",
+    "level": 2,
+    "russian": "Поза воина II",
+    "hindi": "वीरभद्रासन २"
+  },
+  {
+    "id": "trikonasana",
+    "level": 2,
+    "russian": "Поза вытянутого треугольника",
+    "hindi": "उत्थित त्रिकोणासन"
+  },
+  {
+    "id": "parsvakonasana",
+    "level": 2,
+    "russian": "Поза вытянутого бокового угла",
+    "hindi": "उत्थित पार्श्वकोणासन"
+  },
+  {
+    "id": "setu-bandhasana",
+    "level": 2,
+    "russian": "Поза моста (полумост)",
+    "hindi": "सेतु बन्ध सर्वाङ्गासन"
+  },
+  {
+    "id": "paschimottanasana",
+    "level": 2,
+    "russian": "Наклон к ногам сидя",
+    "hindi": "पश्चिमोत्तानासन"
+  },
+  {
+    "id": "ardha-matsyendrasana",
+    "level": 2,
+    "russian": "Половинная поза царя рыб",
+    "hindi": "अर्ध मत्स्येन्द्रासन"
+  },
+  {
+    "id": "salabhasana",
+    "level": 2,
+    "russian": "Поза саранчи",
+    "hindi": "शलभासन"
+  },
+  {
+    "id": "dhanurasana",
+    "level": 2,
+    "russian": "Поза лука",
+    "hindi": "धनुरासन"
+  },
+  {
+    "id": "ustrasana",
+    "level": 2,
+    "russian": "Поза верблюда",
+    "hindi": "उष्ट्रासन"
+  },
+  {
+    "id": "garudasana",
+    "level": 2,
+    "russian": "Поза орла",
+    "hindi": "गरुड़ासन"
+  },
+  {
+    "id": "virabhadrasana-1",
+    "level": 2,
+    "russian": "Поза воина I",
+    "hindi": "वीरभद्रासन १"
+  },
+  {
+    "id": "virabhadrasana-3",
+    "level": 2,
+    "russian": "Поза воина III",
+    "hindi": "वीरभद्रासन ३"
+  },
+  {
+    "id": "parsvottanasana",
+    "level": 2,
+    "russian": "Поза интенсивного бокового вытяжения",
+    "hindi": "पार्श्वोत्तानासन"
+  },
+  {
+    "id": "ardha-chandrasana",
+    "level": 2,
+    "russian": "Поза полумесяца",
+    "hindi": "अर्ध चन्द्रासन"
+  },
+  {
+    "id": "gomukhasana",
+    "level": 2,
+    "russian": "Поза коровьей головы",
+    "hindi": "गोमुखासन"
+  },
+  {
+    "id": "janu-sirsasana",
+    "level": 2,
+    "russian": "Наклон головы к колену",
+    "hindi": "जानु शीर्षासन"
+  },
+  {
+    "id": "trianga-mukhaikapada-paschimottanasana",
+    "level": 2,
+    "russian": "Наклон сидя с одной ногой назад",
+    "hindi": "त्र्यङ्गमुखैकपाद पश्चिमोत्तानासन"
+  },
+  {
+    "id": "upavistha-konasana",
+    "level": 2,
+    "russian": "Наклон сидя с широко разведёнными ногами",
+    "hindi": "उपविष्ट कोणासन"
+  },
+  {
+    "id": "navasana",
+    "level": 2,
+    "russian": "Поза лодки",
+    "hindi": "नावासन"
+  },
+  {
+    "id": "ardha-navasana",
+    "level": 2,
+    "russian": "Низкая лодка",
+    "hindi": "अर्ध नावासन"
+  },
+  {
+    "id": "purvottanasana",
+    "level": 2,
+    "russian": "Поза вытяжения передней поверхности тела",
+    "hindi": "पूर्वोत्तानासन"
+  },
+  {
+    "id": "phalakasana",
+    "level": 2,
+    "russian": "Планка на прямых руках",
+    "hindi": "फलकासन"
+  },
+  {
+    "id": "chaturanga-dandasana",
+    "level": 2,
+    "russian": "Посох на четырёх опорах",
+    "hindi": "चतुरंग दंडासन"
+  },
+  {
+    "id": "vasisthasana",
+    "level": 2,
+    "russian": "Боковая планка",
+    "hindi": "वसिष्ठासन"
+  },
+  {
+    "id": "makara-adho-mukha-svanasana",
+    "level": 2,
+    "russian": "Планка на предплечьях",
+    "hindi": "मकर अधोमुख श्वानासन"
+  },
+  {
+    "id": "ardha-pincha-mayurasana",
+    "level": 2,
+    "russian": "Поза дельфина",
+    "hindi": "अर्ध पिंच मयूरासन"
+  },
+  {
+    "id": "matsyasana",
+    "level": 2,
+    "russian": "Поза рыбы",
+    "hindi": "मत्स्यासन"
+  },
+  {
+    "id": "mandukasana",
+    "level": 2,
+    "russian": "Поза лягушки с широкими коленями",
+    "hindi": "मण्डूकासन"
+  },
+  {
+    "id": "ardha-purvottanasana",
+    "level": 2,
+    "russian": "Обратный стол",
+    "hindi": "अर्ध पूर्वोत्तानासन"
+  },
+  {
+    "id": "vyaghrasana",
+    "level": 2,
+    "russian": "Поза тигра",
+    "hindi": "व्याघ्रासन"
+  },
+  {
+    "id": "ardha-hanumanasana",
+    "level": 2,
+    "russian": "Полушпагат",
+    "hindi": "अर्ध हनुमानासन"
+  },
+  {
+    "id": "padmasana",
+    "level": 2,
+    "russian": "Поза лотоса",
+    "hindi": "पद्मासन"
+  },
+  {
+    "id": "bakasana",
+    "level": 3,
+    "russian": "Поза журавля",
+    "hindi": "बकासन"
+  },
+  {
+    "id": "sirsasana",
+    "level": 3,
+    "russian": "Стойка на голове с поддержкой рук",
+    "hindi": "सालम्ब शीर्षासन"
+  },
+  {
+    "id": "pincha-mayurasana",
+    "level": 3,
+    "russian": "Стойка на предплечьях",
+    "hindi": "पिंच मयूरासन"
+  },
+  {
+    "id": "adho-mukha-vrksasana",
+    "level": 3,
+    "russian": "Стойка на руках",
+    "hindi": "अधोमुख वृक्षासन"
+  },
+  {
+    "id": "salamba-sarvangasana",
+    "level": 3,
+    "russian": "Стойка на плечах с поддержкой",
+    "hindi": "सालम्ब सर्वाङ्गासन"
+  },
+  {
+    "id": "halasana",
+    "level": 3,
+    "russian": "Поза плуга",
+    "hindi": "हलासन"
+  },
+  {
+    "id": "karnapidasana",
+    "level": 3,
+    "russian": "Поза давления коленями у ушей",
+    "hindi": "कर्णपीडासन"
+  },
+  {
+    "id": "urdhva-dhanurasana",
+    "level": 3,
+    "russian": "Поза перевёрнутого лука (мост)",
+    "hindi": "ऊर्ध्व धनुरासन"
+  },
+  {
+    "id": "eka-pada-rajakapotasana",
+    "level": 3,
+    "russian": "Поза короля голубей на одной ноге",
+    "hindi": "एक पाद राजकपोतासन"
+  },
+  {
+    "id": "kapotasana",
+    "level": 3,
+    "russian": "Полная поза голубя на коленях",
+    "hindi": "कपोतासन"
+  },
+  {
+    "id": "hanumanasana",
+    "level": 3,
+    "russian": "Продольный шпагат",
+    "hindi": "हनुमानासन"
+  },
+  {
+    "id": "samakonasana",
+    "level": 3,
+    "russian": "Поперечный шпагат",
+    "hindi": "समकोणासन"
+  },
+  {
+    "id": "mayurasana",
+    "level": 3,
+    "russian": "Поза павлина",
+    "hindi": "मयूरासन"
+  },
+  {
+    "id": "astavakrasana",
+    "level": 3,
+    "russian": "Поза восьми углов",
+    "hindi": "अष्टावक्रासन"
+  },
+  {
+    "id": "tittibhasana",
+    "level": 3,
+    "russian": "Поза светлячка",
+    "hindi": "टिट्टिभासन"
+  },
+  {
+    "id": "parsva-bakasana",
+    "level": 3,
+    "russian": "Боковая поза журавля",
+    "hindi": "पार्श्व बकासन"
+  },
+  {
+    "id": "eka-pada-koundinyasana-1",
+    "level": 3,
+    "russian": "Поза Каундиньи I",
+    "hindi": "एक पाद कौण्डिन्यासन १"
+  },
+  {
+    "id": "eka-pada-koundinyasana-2",
+    "level": 3,
+    "russian": "Поза Каундиньи II (летящий шпагат)",
+    "hindi": "एक पाद कौण्डिन्यासन २"
+  },
+  {
+    "id": "eka-pada-galavasana",
+    "level": 3,
+    "russian": "Поза летящего голубя",
+    "hindi": "एक पाद गालवासन"
+  },
+  {
+    "id": "tolasana",
+    "level": 3,
+    "russian": "Поза весов",
+    "hindi": "तोलासन"
+  },
+  {
+    "id": "baddha-padmasana",
+    "level": 3,
+    "russian": "Поза связанного лотоса",
+    "hindi": "बद्ध पद्मासन"
+  },
+  {
+    "id": "natarajasana",
+    "level": 3,
+    "russian": "Поза танцора",
+    "hindi": "नटराजासन"
+  },
+  {
+    "id": "utthita-hasta-padangusthasana",
+    "level": 3,
+    "russian": "Поза вытянутой руки и большого пальца стопы",
+    "hindi": "उत्थित हस्त पादाङ्गुष्ठासन"
+  },
+  {
+    "id": "parivrtta-trikonasana",
+    "level": 3,
+    "russian": "Поза повёрнутого треугольника",
+    "hindi": "परिवृत्त त्रिकोणासन"
+  },
+  {
+    "id": "parivrtta-parsvakonasana",
+    "level": 3,
+    "russian": "Поза повёрнутого бокового угла",
+    "hindi": "परिवृत्त पार्श्वकोणासन"
+  }
+]

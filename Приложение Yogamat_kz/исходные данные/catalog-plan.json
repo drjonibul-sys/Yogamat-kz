@@ -1,0 +1,839 @@
+{
+  "newCount": 74,
+  "totalCount": 100,
+  "newPoses": [
+    {
+      "id": "urdhva-hastasana",
+      "level": 1,
+      "english": "Raised Arms Standing Pose"
+    },
+    {
+      "id": "ardha-kati-chakrasana",
+      "level": 1,
+      "english": "Standing Side Bend, one arm overhead"
+    },
+    {
+      "id": "uttanasana",
+      "level": 1,
+      "english": "Standing Forward Fold"
+    },
+    {
+      "id": "ardha-uttanasana",
+      "level": 1,
+      "english": "Half Standing Forward Fold, flat back"
+    },
+    {
+      "id": "prasarita-padottanasana",
+      "level": 1,
+      "english": "Wide-Leg Standing Forward Fold"
+    },
+    {
+      "id": "malasana",
+      "level": 1,
+      "english": "Garland Yoga Squat, palms together"
+    },
+    {
+      "id": "utkata-konasana",
+      "level": 1,
+      "english": "Goddess Squat, wide feet, cactus arms"
+    },
+    {
+      "id": "virasana",
+      "level": 1,
+      "english": "Hero Pose, kneeling seat between heels"
+    },
+    {
+      "id": "svastikasana",
+      "level": 1,
+      "english": "Auspicious Cross-Legged Seat, feet tucked between calves"
+    },
+    {
+      "id": "siddhasana",
+      "level": 1,
+      "english": "Accomplished Seat, one heel in front of the other"
+    },
+    {
+      "id": "supta-baddha-konasana",
+      "level": 1,
+      "english": "Reclining Bound Angle, soles together knees apart"
+    },
+    {
+      "id": "supta-padangusthasana",
+      "level": 1,
+      "english": "Supine Big Toe Pose, one straight leg raised with strap"
+    },
+    {
+      "id": "apanasana",
+      "level": 1,
+      "english": "Both Knees to Chest, lying on back"
+    },
+    {
+      "id": "pavanamuktasana",
+      "level": 1,
+      "english": "One Knee to Chest, other leg straight on floor"
+    },
+    {
+      "id": "supta-matsyendrasana",
+      "level": 1,
+      "english": "Supine Twist, one bent knee crossed over opposite straight leg"
+    },
+    {
+      "id": "ananda-balasana",
+      "level": 1,
+      "english": "Happy Baby, back on floor, hands holding feet"
+    },
+    {
+      "id": "jathara-parivartanasana",
+      "level": 1,
+      "english": "Supine Belly Twist, both bent knees dropped to one side"
+    },
+    {
+      "id": "matsya-kridasana",
+      "level": 1,
+      "english": "Flapping Fish Relaxation, side-prone, upper knee bent"
+    },
+    {
+      "id": "ardha-salabhasana",
+      "level": 1,
+      "english": "Half Locust, prone with one leg raised"
+    },
+    {
+      "id": "salamba-bhujangasana",
+      "level": 1,
+      "english": "Sphinx Pose, prone with forearms grounded"
+    },
+    {
+      "id": "simhasana",
+      "level": 1,
+      "english": "Lion Pose, kneeling, palms on knees, tongue extended"
+    },
+    {
+      "id": "uttana-shishosana",
+      "level": 1,
+      "english": "Extended Puppy, knees grounded, hips high, chest toward floor"
+    },
+    {
+      "id": "anjaneyasana",
+      "level": 1,
+      "english": "Low Lunge, back knee on floor, torso upright arms overhead"
+    },
+    {
+      "id": "ashwa-sanchalanasana",
+      "level": 1,
+      "english": "Equestrian Lunge, back knee down, hands either side front foot"
+    },
+    {
+      "id": "parighasana",
+      "level": 1,
+      "english": "Gate Pose, one knee down other leg straight to side, side bend"
+    },
+    {
+      "id": "parvatasana",
+      "level": 1,
+      "english": "Seated Mountain, cross-legged seat with interlaced hands overhead"
+    },
+    {
+      "id": "supta-tadasana",
+      "level": 1,
+      "english": "Reclining Mountain, supine straight legs and arms overhead"
+    },
+    {
+      "id": "shithila-dandasana",
+      "level": 1,
+      "english": "Relaxed Staff, seated straight legs apart, leaning back on hands"
+    },
+    {
+      "id": "chatushpadasana",
+      "level": 1,
+      "english": "Neutral Tabletop, hands under shoulders and knees under hips"
+    },
+    {
+      "id": "virabhadrasana-1",
+      "level": 2,
+      "english": "Warrior I, front knee bent, back leg straight, arms overhead"
+    },
+    {
+      "id": "virabhadrasana-3",
+      "level": 2,
+      "english": "Warrior III, standing balance, torso and back leg horizontal"
+    },
+    {
+      "id": "parsvottanasana",
+      "level": 2,
+      "english": "Pyramid Pose, staggered straight legs, forward fold"
+    },
+    {
+      "id": "ardha-chandrasana",
+      "level": 2,
+      "english": "Half Moon, balance on one leg and one hand, torso turned sideways"
+    },
+    {
+      "id": "gomukhasana",
+      "level": 2,
+      "english": "Cow Face, seated stacked crossed knees, hands clasped behind back"
+    },
+    {
+      "id": "janu-sirsasana",
+      "level": 2,
+      "english": "Head to Knee Forward Fold, one straight leg and other knee open to side"
+    },
+    {
+      "id": "trianga-mukhaikapada-paschimottanasana",
+      "level": 2,
+      "english": "Three-Limbed Forward Fold, one knee bent with foot beside hip, other leg straight"
+    },
+    {
+      "id": "upavistha-konasana",
+      "level": 2,
+      "english": "Wide-Angle Seated Forward Fold"
+    },
+    {
+      "id": "navasana",
+      "level": 2,
+      "english": "Boat Pose, seated V balance with straight raised legs"
+    },
+    {
+      "id": "ardha-navasana",
+      "level": 2,
+      "english": "Low Boat, shoulders and straight legs hovering low"
+    },
+    {
+      "id": "purvottanasana",
+      "level": 2,
+      "english": "Upward Plank, straight legs and arms, hips raised, face upward"
+    },
+    {
+      "id": "phalakasana",
+      "level": 2,
+      "english": "High Plank, straight-arm front support"
+    },
+    {
+      "id": "chaturanga-dandasana",
+      "level": 2,
+      "english": "Four-Limbed Staff, low plank elbows close to ribs"
+    },
+    {
+      "id": "vasisthasana",
+      "level": 2,
+      "english": "Side Plank, one hand and outer foot supporting, top arm raised"
+    },
+    {
+      "id": "makara-adho-mukha-svanasana",
+      "level": 2,
+      "english": "Dolphin Plank, forearms grounded, body straight"
+    },
+    {
+      "id": "ardha-pincha-mayurasana",
+      "level": 2,
+      "english": "Dolphin Pose, forearms grounded, hips high in inverted V"
+    },
+    {
+      "id": "matsyasana",
+      "level": 2,
+      "english": "Fish Pose, supine chest lifted on forearms, crown lightly touching floor"
+    },
+    {
+      "id": "mandukasana",
+      "level": 2,
+      "english": "Wide-Knee Frog, knees apart, shins parallel, forearms grounded"
+    },
+    {
+      "id": "ardha-purvottanasana",
+      "level": 2,
+      "english": "Reverse Tabletop, hands and feet grounded, knees bent and hips raised"
+    },
+    {
+      "id": "vyaghrasana",
+      "level": 2,
+      "english": "Tiger Pose, tabletop balance with one bent leg lifted backward"
+    },
+    {
+      "id": "ardha-hanumanasana",
+      "level": 2,
+      "english": "Half Splits, one knee down, front leg straight, hinge forward"
+    },
+    {
+      "id": "padmasana",
+      "level": 2,
+      "english": "Lotus Seat, each foot resting on opposite thigh"
+    },
+    {
+      "id": "pincha-mayurasana",
+      "level": 3,
+      "english": "Forearm Stand, forearms grounded, body vertical feet overhead"
+    },
+    {
+      "id": "adho-mukha-vrksasana",
+      "level": 3,
+      "english": "Handstand, straight arms and legs vertical"
+    },
+    {
+      "id": "salamba-sarvangasana",
+      "level": 3,
+      "english": "Supported Shoulderstand, upper arms and shoulders grounded, hands on back"
+    },
+    {
+      "id": "halasana",
+      "level": 3,
+      "english": "Plough, lying shoulders grounded, legs overhead with toes on floor"
+    },
+    {
+      "id": "karnapidasana",
+      "level": 3,
+      "english": "Ear Pressure, from plough knees bent beside ears"
+    },
+    {
+      "id": "urdhva-dhanurasana",
+      "level": 3,
+      "english": "Upward Bow Wheel, hands and feet grounded, whole body in deep backbend"
+    },
+    {
+      "id": "eka-pada-rajakapotasana",
+      "level": 3,
+      "english": "One-Leg King Pigeon, front leg folded, back knee bent, hands holding back foot overhead"
+    },
+    {
+      "id": "kapotasana",
+      "level": 3,
+      "english": "Kneeling King Pigeon, knees grounded, deep backbend with hands reaching heels"
+    },
+    {
+      "id": "hanumanasana",
+      "level": 3,
+      "english": "Front Splits, front and back legs straight along floor"
+    },
+    {
+      "id": "samakonasana",
+      "level": 3,
+      "english": "Middle Splits, both straight legs spread sideways"
+    },
+    {
+      "id": "mayurasana",
+      "level": 3,
+      "english": "Peacock, palms turned back, elbows support abdomen, straight body horizontal"
+    },
+    {
+      "id": "astavakrasana",
+      "level": 3,
+      "english": "Eight-Angle Arm Balance, bent elbows, crossed ankles and legs extended to one side"
+    },
+    {
+      "id": "tittibhasana",
+      "level": 3,
+      "english": "Firefly, palms grounded, arms supporting thighs, legs straight wide forward"
+    },
+    {
+      "id": "parsva-bakasana",
+      "level": 3,
+      "english": "Side Crow, both bent knees resting on upper arms to one side"
+    },
+    {
+      "id": "eka-pada-koundinyasana-1",
+      "level": 3,
+      "english": "One-Leg Koundinya I, twisted arm balance, one leg sideways and one backward"
+    },
+    {
+      "id": "eka-pada-koundinyasana-2",
+      "level": 3,
+      "english": "Flying Splits Koundinya II, one leg forward over arm and one leg backward"
+    },
+    {
+      "id": "eka-pada-galavasana",
+      "level": 3,
+      "english": "Flying Pigeon, figure-four leg on arms, other leg extended backward"
+    },
+    {
+      "id": "tolasana",
+      "level": 3,
+      "english": "Scale Pose, lotus legs, palms grounded beside hips, whole seat lifted"
+    },
+    {
+      "id": "baddha-padmasana",
+      "level": 3,
+      "english": "Bound Lotus, lotus legs and arms crossed behind holding toes"
+    },
+    {
+      "id": "natarajasana",
+      "level": 3,
+      "english": "Dancer, one-leg standing backbend, raised back foot held by hand"
+    },
+    {
+      "id": "utthita-hasta-padangusthasana",
+      "level": 3,
+      "english": "Extended Hand-to-Big-Toe, one-leg stand holding straight raised leg forward"
+    },
+    {
+      "id": "parivrtta-trikonasana",
+      "level": 3,
+      "english": "Revolved Triangle, staggered straight legs, opposite hand down and torso twisted"
+    },
+    {
+      "id": "parivrtta-parsvakonasana",
+      "level": 3,
+      "english": "Revolved Side Angle, lunge with opposite elbow outside front knee, palms together"
+    }
+  ],
+  "batches": [
+    {
+      "atlas": 6,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "urdhva-hastasana",
+          "level": 1,
+          "english": "Raised Arms Standing Pose"
+        },
+        {
+          "id": "ardha-kati-chakrasana",
+          "level": 1,
+          "english": "Standing Side Bend, one arm overhead"
+        },
+        {
+          "id": "uttanasana",
+          "level": 1,
+          "english": "Standing Forward Fold"
+        },
+        {
+          "id": "ardha-uttanasana",
+          "level": 1,
+          "english": "Half Standing Forward Fold, flat back"
+        },
+        {
+          "id": "prasarita-padottanasana",
+          "level": 1,
+          "english": "Wide-Leg Standing Forward Fold"
+        },
+        {
+          "id": "malasana",
+          "level": 1,
+          "english": "Garland Yoga Squat, palms together"
+        }
+      ]
+    },
+    {
+      "atlas": 7,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "utkata-konasana",
+          "level": 1,
+          "english": "Goddess Squat, wide feet, cactus arms"
+        },
+        {
+          "id": "virasana",
+          "level": 1,
+          "english": "Hero Pose, kneeling seat between heels"
+        },
+        {
+          "id": "svastikasana",
+          "level": 1,
+          "english": "Auspicious Cross-Legged Seat, feet tucked between calves"
+        },
+        {
+          "id": "siddhasana",
+          "level": 1,
+          "english": "Accomplished Seat, one heel in front of the other"
+        },
+        {
+          "id": "supta-baddha-konasana",
+          "level": 1,
+          "english": "Reclining Bound Angle, soles together knees apart"
+        },
+        {
+          "id": "supta-padangusthasana",
+          "level": 1,
+          "english": "Supine Big Toe Pose, one straight leg raised with strap"
+        }
+      ]
+    },
+    {
+      "atlas": 8,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "apanasana",
+          "level": 1,
+          "english": "Both Knees to Chest, lying on back"
+        },
+        {
+          "id": "pavanamuktasana",
+          "level": 1,
+          "english": "One Knee to Chest, other leg straight on floor"
+        },
+        {
+          "id": "supta-matsyendrasana",
+          "level": 1,
+          "english": "Supine Twist, one bent knee crossed over opposite straight leg"
+        },
+        {
+          "id": "ananda-balasana",
+          "level": 1,
+          "english": "Happy Baby, back on floor, hands holding feet"
+        },
+        {
+          "id": "jathara-parivartanasana",
+          "level": 1,
+          "english": "Supine Belly Twist, both bent knees dropped to one side"
+        },
+        {
+          "id": "matsya-kridasana",
+          "level": 1,
+          "english": "Flapping Fish Relaxation, side-prone, upper knee bent"
+        }
+      ]
+    },
+    {
+      "atlas": 9,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "ardha-salabhasana",
+          "level": 1,
+          "english": "Half Locust, prone with one leg raised"
+        },
+        {
+          "id": "salamba-bhujangasana",
+          "level": 1,
+          "english": "Sphinx Pose, prone with forearms grounded"
+        },
+        {
+          "id": "simhasana",
+          "level": 1,
+          "english": "Lion Pose, kneeling, palms on knees, tongue extended"
+        },
+        {
+          "id": "uttana-shishosana",
+          "level": 1,
+          "english": "Extended Puppy, knees grounded, hips high, chest toward floor"
+        },
+        {
+          "id": "anjaneyasana",
+          "level": 1,
+          "english": "Low Lunge, back knee on floor, torso upright arms overhead"
+        },
+        {
+          "id": "ashwa-sanchalanasana",
+          "level": 1,
+          "english": "Equestrian Lunge, back knee down, hands either side front foot"
+        }
+      ]
+    },
+    {
+      "atlas": 10,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "parighasana",
+          "level": 1,
+          "english": "Gate Pose, one knee down other leg straight to side, side bend"
+        },
+        {
+          "id": "parvatasana",
+          "level": 1,
+          "english": "Seated Mountain, cross-legged seat with interlaced hands overhead"
+        },
+        {
+          "id": "supta-tadasana",
+          "level": 1,
+          "english": "Reclining Mountain, supine straight legs and arms overhead"
+        },
+        {
+          "id": "shithila-dandasana",
+          "level": 1,
+          "english": "Relaxed Staff, seated straight legs apart, leaning back on hands"
+        },
+        {
+          "id": "chatushpadasana",
+          "level": 1,
+          "english": "Neutral Tabletop, hands under shoulders and knees under hips"
+        },
+        {
+          "id": "virabhadrasana-1",
+          "level": 2,
+          "english": "Warrior I, front knee bent, back leg straight, arms overhead"
+        }
+      ]
+    },
+    {
+      "atlas": 11,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "virabhadrasana-3",
+          "level": 2,
+          "english": "Warrior III, standing balance, torso and back leg horizontal"
+        },
+        {
+          "id": "parsvottanasana",
+          "level": 2,
+          "english": "Pyramid Pose, staggered straight legs, forward fold"
+        },
+        {
+          "id": "ardha-chandrasana",
+          "level": 2,
+          "english": "Half Moon, balance on one leg and one hand, torso turned sideways"
+        },
+        {
+          "id": "gomukhasana",
+          "level": 2,
+          "english": "Cow Face, seated stacked crossed knees, hands clasped behind back"
+        },
+        {
+          "id": "janu-sirsasana",
+          "level": 2,
+          "english": "Head to Knee Forward Fold, one straight leg and other knee open to side"
+        },
+        {
+          "id": "trianga-mukhaikapada-paschimottanasana",
+          "level": 2,
+          "english": "Three-Limbed Forward Fold, one knee bent with foot beside hip, other leg straight"
+        }
+      ]
+    },
+    {
+      "atlas": 12,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "upavistha-konasana",
+          "level": 2,
+          "english": "Wide-Angle Seated Forward Fold"
+        },
+        {
+          "id": "navasana",
+          "level": 2,
+          "english": "Boat Pose, seated V balance with straight raised legs"
+        },
+        {
+          "id": "ardha-navasana",
+          "level": 2,
+          "english": "Low Boat, shoulders and straight legs hovering low"
+        },
+        {
+          "id": "purvottanasana",
+          "level": 2,
+          "english": "Upward Plank, straight legs and arms, hips raised, face upward"
+        },
+        {
+          "id": "phalakasana",
+          "level": 2,
+          "english": "High Plank, straight-arm front support"
+        },
+        {
+          "id": "chaturanga-dandasana",
+          "level": 2,
+          "english": "Four-Limbed Staff, low plank elbows close to ribs"
+        }
+      ]
+    },
+    {
+      "atlas": 13,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "vasisthasana",
+          "level": 2,
+          "english": "Side Plank, one hand and outer foot supporting, top arm raised"
+        },
+        {
+          "id": "makara-adho-mukha-svanasana",
+          "level": 2,
+          "english": "Dolphin Plank, forearms grounded, body straight"
+        },
+        {
+          "id": "ardha-pincha-mayurasana",
+          "level": 2,
+          "english": "Dolphin Pose, forearms grounded, hips high in inverted V"
+        },
+        {
+          "id": "matsyasana",
+          "level": 2,
+          "english": "Fish Pose, supine chest lifted on forearms, crown lightly touching floor"
+        },
+        {
+          "id": "mandukasana",
+          "level": 2,
+          "english": "Wide-Knee Frog, knees apart, shins parallel, forearms grounded"
+        },
+        {
+          "id": "ardha-purvottanasana",
+          "level": 2,
+          "english": "Reverse Tabletop, hands and feet grounded, knees bent and hips raised"
+        }
+      ]
+    },
+    {
+      "atlas": 14,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "vyaghrasana",
+          "level": 2,
+          "english": "Tiger Pose, tabletop balance with one bent leg lifted backward"
+        },
+        {
+          "id": "ardha-hanumanasana",
+          "level": 2,
+          "english": "Half Splits, one knee down, front leg straight, hinge forward"
+        },
+        {
+          "id": "padmasana",
+          "level": 2,
+          "english": "Lotus Seat, each foot resting on opposite thigh"
+        },
+        {
+          "id": "pincha-mayurasana",
+          "level": 3,
+          "english": "Forearm Stand, forearms grounded, body vertical feet overhead"
+        },
+        {
+          "id": "adho-mukha-vrksasana",
+          "level": 3,
+          "english": "Handstand, straight arms and legs vertical"
+        },
+        {
+          "id": "salamba-sarvangasana",
+          "level": 3,
+          "english": "Supported Shoulderstand, upper arms and shoulders grounded, hands on back"
+        }
+      ]
+    },
+    {
+      "atlas": 15,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "halasana",
+          "level": 3,
+          "english": "Plough, lying shoulders grounded, legs overhead with toes on floor"
+        },
+        {
+          "id": "karnapidasana",
+          "level": 3,
+          "english": "Ear Pressure, from plough knees bent beside ears"
+        },
+        {
+          "id": "urdhva-dhanurasana",
+          "level": 3,
+          "english": "Upward Bow Wheel, hands and feet grounded, whole body in deep backbend"
+        },
+        {
+          "id": "eka-pada-rajakapotasana",
+          "level": 3,
+          "english": "One-Leg King Pigeon, front leg folded, back knee bent, hands holding back foot overhead"
+        },
+        {
+          "id": "kapotasana",
+          "level": 3,
+          "english": "Kneeling King Pigeon, knees grounded, deep backbend with hands reaching heels"
+        },
+        {
+          "id": "hanumanasana",
+          "level": 3,
+          "english": "Front Splits, front and back legs straight along floor"
+        }
+      ]
+    },
+    {
+      "atlas": 16,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "samakonasana",
+          "level": 3,
+          "english": "Middle Splits, both straight legs spread sideways"
+        },
+        {
+          "id": "mayurasana",
+          "level": 3,
+          "english": "Peacock, palms turned back, elbows support abdomen, straight body horizontal"
+        },
+        {
+          "id": "astavakrasana",
+          "level": 3,
+          "english": "Eight-Angle Arm Balance, bent elbows, crossed ankles and legs extended to one side"
+        },
+        {
+          "id": "tittibhasana",
+          "level": 3,
+          "english": "Firefly, palms grounded, arms supporting thighs, legs straight wide forward"
+        },
+        {
+          "id": "parsva-bakasana",
+          "level": 3,
+          "english": "Side Crow, both bent knees resting on upper arms to one side"
+        },
+        {
+          "id": "eka-pada-koundinyasana-1",
+          "level": 3,
+          "english": "One-Leg Koundinya I, twisted arm balance, one leg sideways and one backward"
+        }
+      ]
+    },
+    {
+      "atlas": 17,
+      "columns": 2,
+      "rows": 3,
+      "poses": [
+        {
+          "id": "eka-pada-koundinyasana-2",
+          "level": 3,
+          "english": "Flying Splits Koundinya II, one leg forward over arm and one leg backward"
+        },
+        {
+          "id": "eka-pada-galavasana",
+          "level": 3,
+          "english": "Flying Pigeon, figure-four leg on arms, other leg extended backward"
+        },
+        {
+          "id": "tolasana",
+          "level": 3,
+          "english": "Scale Pose, lotus legs, palms grounded beside hips, whole seat lifted"
+        },
+        {
+          "id": "baddha-padmasana",
+          "level": 3,
+          "english": "Bound Lotus, lotus legs and arms crossed behind holding toes"
+        },
+        {
+          "id": "natarajasana",
+          "level": 3,
+          "english": "Dancer, one-leg standing backbend, raised back foot held by hand"
+        },
+        {
+          "id": "utthita-hasta-padangusthasana",
+          "level": 3,
+          "english": "Extended Hand-to-Big-Toe, one-leg stand holding straight raised leg forward"
+        }
+      ]
+    },
+    {
+      "atlas": 18,
+      "columns": 2,
+      "rows": 2,
+      "poses": [
+        {
+          "id": "parivrtta-trikonasana",
+          "level": 3,
+          "english": "Revolved Triangle, staggered straight legs, opposite hand down and torso twisted"
+        },
+        {
+          "id": "parivrtta-parsvakonasana",
+          "level": 3,
+          "english": "Revolved Side Angle, lunge with opposite elbow outside front knee, palms together"
+        }
+      ]
+    }
+  ]
+}

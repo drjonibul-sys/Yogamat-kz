@@ -1,0 +1,92 @@
+/* Additions preserve the original palette, cards and navigation. */
+body { padding-bottom:calc(84px + env(safe-area-inset-bottom)); }
+input, select, textarea { font-size:16px; }
+button, .sheet-close { touch-action:manipulation; }
+button:focus-visible, a:focus-visible { outline:2px solid var(--sage-dark); outline-offset:3px; }
+.tabbtn { min-height:58px; min-width:0; }
+.tabbtn .tl { font-size:10px; }
+.tabbtn.active { background:var(--sage-tint); }
+.tabbtn svg { flex-shrink:0; }
+.sheet-close { min-width:44px; min-height:44px; }
+.sheet-head { gap:12px; }
+.sheet { overscroll-behavior:contain; }
+.overlay.active { overscroll-behavior:contain; }
+.btn-add { width:44px; height:44px; }
+.att-week-nav button { min-width:44px; min-height:44px; }
+.toast { white-space:normal; text-align:center; width:max-content; max-width:calc(100vw - 32px); }
+.help-intro { background:var(--sage-tint); border-color:var(--sage); }
+.help-intro p { margin:6px 0 0; font-size:13px; }
+.help-note { color:var(--ink-soft); font-size:12px; margin:10px 0 16px; }
+.help-filters { display:flex; gap:6px; flex-wrap:wrap; margin:12px 0; }
+.help-filters .pill { min-height:40px; }
+.help-meta { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:16px 0 10px; font-size:12px; color:var(--ink-soft); }
+.asana-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+.asana-level-group { margin-bottom:24px; }
+.asana-level-heading { display:flex; align-items:center; gap:10px; margin:0 0 12px; font-size:20px; }
+.asana-card { display:grid; grid-template-columns:104px 1fr; text-align:left; gap:14px; padding:10px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); color:var(--ink); width:100%; }
+.asana-art-frame { overflow:hidden; background:#F8F4F6; }
+.asana-thumb { width:104px; height:112px; display:grid; place-items:center; border-radius:7px; }
+.asana-art { width:100%; aspect-ratio:1; flex:none; background-color:#F8F4F6; background-image:var(--art-url); background-repeat:no-repeat; background-size:calc(var(--art-cols) * 100%) calc(var(--art-rows) * 100%); background-position:var(--art-x) var(--art-y); }
+.asana-art-stage { width:100%; height:280px; display:flex; align-items:center; justify-content:center; }
+.asana-art-stage .asana-art { width:min(100%,280px); }
+.asana-card h3 { font-size:17px; margin:5px 0 3px; line-height:1.3; }
+.asana-name { font-size:13px; color:var(--sage-dark); font-weight:600; }
+.asana-hindi { font-family:system-ui,sans-serif; font-size:14px; margin-top:2px; }
+.asana-transcription { font-size:12px; color:var(--ink-soft); }
+.level-badge { display:inline-block; font-size:10.5px; padding:3px 8px; border-radius:20px; background:var(--sage-tint); color:var(--sage-dark); }
+.level-2 { background:var(--clay-tint); color:#A25D48; }
+.level-3 { background:var(--rose-tint); color:var(--rose); }
+.asana-summary { font-size:13px; margin:8px 0 0; }
+.asana-hero { margin:0 0 14px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+.asana-hero figcaption { padding:10px 14px; font-size:11px; color:var(--ink-soft); overflow-wrap:anywhere; }
+a { color:#527D67; }
+.asana-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin:14px 0; }
+.asana-heading h2 { font-size:24px; }
+.favorite-button { min-width:44px; min-height:44px; border-radius:50%; background:var(--surface); border:1px solid var(--line); color:var(--sage-dark); font-size:23px; }
+.favorite-button[aria-pressed="true"] { background:var(--sage-tint); }
+.asana-section h3 { font-size:18px; margin-bottom:8px; }
+.asana-section ol, .asana-section ul { margin:0; padding-left:22px; }
+.asana-section li + li { margin-top:8px; }
+.asana-section p { margin:0; font-size:14px; }
+.help-sources { margin-top:20px; font-size:13px; }
+.help-sources summary { cursor:pointer; padding:12px 0; font-weight:600; }
+.help-sources li { margin-bottom:7px; }
+.help-sources p { margin:6px 0; }
+.help-empty { padding:28px 14px; text-align:center; color:var(--ink-soft); }
+.compact-label { display:none; }
+@media (max-width:480px) {
+  .sales-full-label { display:none; }
+  .compact-label { display:inline; }
+}
+@media (min-width:768px) {
+  body { padding-left:88px; padding-bottom:0; }
+  .tabbar { top:0; left:0; bottom:0; right:auto; width:88px; height:100dvh; flex-direction:column; justify-content:flex-start; padding-top:24px; gap:8px; border-top:none; border-right:1px solid var(--line); }
+  .tabbtn { flex:none; padding:12px 2px; }
+  .app-header { padding:24px 32px 18px; }
+  .header-stat { max-width:720px; }
+  .page { max-width:1180px; padding:24px 32px; }
+  .overlay { align-items:center; }
+  .sheet { width:560px; max-width:88vw; border-radius:16px; max-height:86dvh; animation:none; }
+  .asana-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .asana-card { grid-template-columns:96px 1fr; gap:10px; }
+  .asana-thumb { width:96px; }
+  .asana-art-stage { height:380px; }
+  .asana-art-stage .asana-art { width:min(100%,380px); }
+  .toast { left:calc(50% + 44px); }
+  #clientList, #planList, #salesList, #visitsList, #dashAttention, #dashRecentVisits { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:10px; }
+  #clientList .list-row, #planList .card, #salesList .list-row, #visitsList .list-row { margin-bottom:0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
+}
+@media print { body { padding:0; } }
+/* iOS Safari приближает страницу при фокусе на поле с шрифтом меньше 16px (в том числе «Примечание» в таблице визитов). */
+.att-table .note-col input { font-size:16px; }
+/* iPad в портрете (834 px − боковая панель): таблица «Визиты» должна помещаться без горизонтальной прокрутки. */
+@media (min-width:768px) and (orientation:portrait) {
+  .page { padding-left:16px; padding-right:16px; }
+  table.att-table { min-width:0; }
+  table.att-table th, table.att-table td { padding:9px 5px; }
+  table.att-table td.name-col, table.att-table th.name-col { min-width:120px; }
+  table.att-table .note-col { min-width:130px; }
+}

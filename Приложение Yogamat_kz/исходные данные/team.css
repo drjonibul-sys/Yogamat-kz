@@ -1,0 +1,49 @@
+/* Roles, directions, settings footer, editing helpers. */
+input, textarea, select { -webkit-user-select:text; user-select:text; }
+.tabbtn[hidden] { display:none !important; }
+body.role-trainer .admin-only,
+body.role-trainer #rentReminderCard,
+body.role-trainer .pay-note { display:none !important; }
+body.role-trainer .header-stat .item:nth-child(-n+2) { display:none; }
+body.locked .app-header, body.locked .page, body.locked .tabbar, body.locked .toast { visibility:hidden; }
+
+.login-screen { position:fixed; inset:0; z-index:500; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:24px; overflow-y:auto; }
+.login-screen[hidden] { display:none; }
+.login-card { width:100%; max-width:380px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px 22px; }
+.login-card h2 { font-size:22px; margin-bottom:8px; }
+.login-card .btn { width:100%; }
+.login-card input { font-size:20px; letter-spacing:.12em; text-align:center; }
+.login-error { color:var(--rose); font-size:13px; min-height:20px; margin:8px 0 4px; }
+.login-link { background:none; border:none; color:var(--sage-dark); text-decoration:underline; padding:14px 0 0; width:100%; font-size:13px; cursor:pointer; }
+.recovery-code { font-family:'Fraunces',serif; font-size:30px; text-align:center; letter-spacing:.12em; padding:16px 0; margin:12px 0; background:var(--sage-tint); border-radius:10px; color:var(--sage-dark); user-select:all; -webkit-user-select:all; }
+
+.user-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); }
+.user-row .main { flex:1; min-width:0; }
+.user-row .title { font-weight:600; font-size:14.5px; }
+.user-row .sub { font-size:12px; color:var(--ink-soft); }
+
+.row-actions { display:flex; gap:6px; flex-shrink:0; }
+.class-card { cursor:pointer; }
+.class-card.inactive { opacity:.6; }
+.class-line { font-size:12.5px; color:var(--ink); margin-top:6px; }
+.class-desc { font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+.check-list { max-height:150px; overflow-y:auto; border:1px solid var(--line); border-radius:8px; padding:4px 10px; background:var(--surface); }
+.check-row { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--ink); margin:8px 0; }
+.check-row input[type=checkbox] { width:22px; height:22px; flex-shrink:0; }
+@media (min-width:768px) { #classList { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } #classList .class-card { margin-bottom:0; } }
+
+.app-footer { margin-top:32px; padding:18px 0 8px; text-align:center; font-size:12.5px; color:var(--ink-soft); }
+.app-footer .app-credit { margin-top:4px; font-style:italic; }
+.app-footer .app-credit em { font-style:italic; }
+.class-card .tag { font-size:11.5px; padding:3px 9px; border-radius:20px; flex-shrink:0; white-space:nowrap; }
+/* Девять вкладок на телефоне: компактные подписи. */
+@media (max-width:480px) {
+  .tabbtn { padding-left:0; padding-right:0; }
+  .tabbtn .tl { font-size:9px; letter-spacing:-.01em; }
+}
+
+/* кнопка «Выход» в шапке: слева от кнопки «Установка на домашний экран» */
+.logout-btn{position:absolute;top:calc(20px + var(--safe-top,0px));right:100px;height:34px;display:inline-flex;align-items:center;gap:5px;padding:0 12px;border:1px solid var(--line);border-radius:17px;background:var(--surface);color:var(--sage-dark);font:inherit;font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.logout-btn svg{width:15px;height:15px}
+.logout-btn:active{opacity:.7}
+body.locked .logout-btn{display:none}

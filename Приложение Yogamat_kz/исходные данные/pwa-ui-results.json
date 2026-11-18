@@ -1,0 +1,22 @@
+{
+  "engine": "Node.js VM with minimal DOM stubs",
+  "note": "No physical iPad or browser installation exercised",
+  "results": [
+    {
+      "name": "Home-screen launch is identified independently from network and cache readiness",
+      "status": "passed"
+    },
+    {
+      "name": "Partial copy starts image loading and shows progress without claiming full readiness",
+      "status": "passed"
+    },
+    {
+      "name": "Failed download offers retry and storage failure has a distinct explanation",
+      "status": "passed"
+    },
+    {
+      "name": "Registration failure retains an accessible retry and installation instructions",
+      "status": "passed"
+    }
+  ]
+}

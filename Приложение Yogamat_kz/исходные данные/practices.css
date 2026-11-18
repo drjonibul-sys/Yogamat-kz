@@ -1,0 +1,41 @@
+/* Practice plans reuse the app's sage, rose and clay palette. */
+.help-views { margin-bottom:20px; border-bottom:1px solid var(--line); padding-bottom:12px; }
+.help-views .pill { min-width:104px; }
+.practice-guidelines { margin:14px 0; font-size:14px; }
+.practice-guidelines summary { cursor:pointer; font-weight:600; padding:4px 0; }
+.practice-guidelines ul { padding-left:22px; margin:12px 0 0; }
+.practice-guidelines li + li { margin-top:9px; }
+.practice-level-group { margin:22px 0 30px; }
+.practice-level-group .asana-level-heading { flex-wrap:wrap; }
+.practice-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+.practice-card { display:grid; grid-template-columns:84px minmax(0,1fr); gap:12px; width:100%; padding:12px; text-align:left; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); }
+.practice-card:hover { border-color:var(--sage-dark); }
+.practice-card .asana-thumb { width:84px; height:96px; }
+.practice-card h3 { font-size:17px; margin:7px 0; line-height:1.3; }
+.practice-card p { margin:0; font-size:13px; }
+.practice-tags { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+.practice-transition { background:var(--sage-tint); color:var(--sage-dark); }
+.practice-duration { font-size:12px; font-weight:600; color:var(--ink); white-space:nowrap; }
+.practice-open { display:block; color:var(--sage-dark); font-size:12px; font-weight:600; margin-top:10px; }
+.practice-subheading { font-size:16px; color:var(--sage-dark); margin:22px 0 12px; }
+.practice-detail-meta { margin:8px 0 0; color:var(--ink-soft); font-size:14px; }
+.practice-facts { margin:12px 0 0; }
+.practice-facts dt { font-weight:600; margin:10px 0 3px; font-size:13px; }
+.practice-facts dd { margin:0; font-size:14px; }
+.practice-plan-title { font-size:20px; margin:22px 0 12px; }
+.practice-timeline { padding:0; margin:0; list-style:none; }
+.practice-stage { margin:0 0 14px; border-left:3px solid var(--sage); }
+.practice-stage-head { display:flex; align-items:center; flex-wrap:wrap; justify-content:space-between; gap:8px; }
+.practice-time { font-variant-numeric:tabular-nums; font-size:13px; font-weight:600; color:var(--sage-dark); }
+.practice-stage h3 { font-size:18px; margin:10px 0 8px; }
+.practice-stage p, .practice-stage dd { font-size:14px; line-height:1.6; }
+.practice-stage p { margin:0; }
+.practice-stage dl { margin:12px 0 0; }
+.practice-stage dt { font-size:13px; font-weight:600; margin-top:10px; }
+.practice-stage dd { margin:3px 0 0; }
+.practice-pose-links { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.practice-pose-links .practice-pose { white-space:normal; height:auto; min-height:44px; max-width:100%; text-align:left; font-size:12px; line-height:1.4; }
+.practice-finish p { font-size:13px; margin:8px 0 14px; }
+@media (min-width:768px) { .practice-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:360px) { .practice-card { grid-template-columns:minmax(0,1fr); } .practice-card .asana-thumb { display:none; } }
+@media print { .help-views, .practice-pose-links, #practiceBack, #practiceBackBottom { display:none; } .practice-stage { break-inside:avoid; } }

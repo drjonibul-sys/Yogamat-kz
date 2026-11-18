@@ -1,0 +1,70 @@
+{
+  "engine": "Node.js VM with minimal DOM",
+  "note": "Rent ledger, net income and backups; no browser or iOS execution",
+  "results": [
+    {
+      "name": "Configuring rent creates unpaid monthly entries and a dashboard reminder without reducing income",
+      "status": "passed"
+    },
+    {
+      "name": "Paid rent reduces its month and all-time net income once; clearing the switch restores both",
+      "status": "passed"
+    },
+    {
+      "name": "After setup the rent amount cannot be corrected or re-saved: only payment confirmation remains",
+      "status": "passed"
+    },
+    {
+      "name": "Future periods keep the amount set at setup and paid amounts remain unchanged",
+      "status": "passed"
+    },
+    {
+      "name": "Six future months are created across year boundaries and advance automatically without duplicate expenses",
+      "status": "passed"
+    },
+    {
+      "name": "Previously saved rent gains a six-month horizon without overwriting paid or corrected records",
+      "status": "passed"
+    },
+    {
+      "name": "Paying an older rental period corrects that month rather than the actual activation month",
+      "status": "passed"
+    },
+    {
+      "name": "A storage failure while confirming payment rolls the ledger back",
+      "status": "passed"
+    },
+    {
+      "name": "Payment confirmation works independently for each period without any draft state",
+      "status": "passed"
+    },
+    {
+      "name": "Foreground month rollover creates the new reminder and keeps existing amounts",
+      "status": "passed"
+    },
+    {
+      "name": "Rent snapshots, manual backups and restore preserve configuration and payments; old backups migrate empty",
+      "status": "passed"
+    },
+    {
+      "name": "Reloading saved data preserves paid rent and creates only new unpaid periods on a later month",
+      "status": "passed"
+    },
+    {
+      "name": "Malformed or duplicate rent periods cannot replace valid data during import",
+      "status": "passed"
+    },
+    {
+      "name": "Zero rent remains a paid status without generating a deduction or reminder for a future month",
+      "status": "passed"
+    },
+    {
+      "name": "Rent-only months produce negative income and visible bounded negative bars and cumulative line",
+      "status": "passed"
+    },
+    {
+      "name": "Mixed income across zero keeps both positive and negative bars visible and historical cumulative totals correct",
+      "status": "passed"
+    }
+  ]
+}

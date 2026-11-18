@@ -1,0 +1,32 @@
+{
+  "results": [
+    {
+      "name": "SHA-256 matches Node crypto for short, long and Unicode input",
+      "status": "passed"
+    },
+    {
+      "name": "Without a session the app is locked: nobody counts as administrator",
+      "status": "passed"
+    },
+    {
+      "name": "Administrator can open every section and call guarded functions",
+      "status": "passed"
+    },
+    {
+      "name": "Trainer sees class work only; finance, tariffs, sales, rent and admin functions are blocked",
+      "status": "passed"
+    },
+    {
+      "name": "A deactivated trainer cannot resume a stored session",
+      "status": "passed"
+    },
+    {
+      "name": "Trainer list for directions excludes deactivated trainers",
+      "status": "passed"
+    },
+    {
+      "name": "Access records are not part of exported snapshots",
+      "status": "passed"
+    }
+  ]
+}

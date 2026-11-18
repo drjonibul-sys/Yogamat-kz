@@ -1,0 +1,9 @@
+/* Водяной знак: логотип под всеми разделами, не перехватывает нажатия */
+#appWatermark { position:fixed; left:50%; top:50%; width:min(74vw,440px); height:auto; transform:translate(-50%,-50%); opacity:.07; mix-blend-mode:multiply; pointer-events:none; user-select:none; -webkit-user-select:none; z-index:10; }
+#appWatermark[hidden], body.locked #appWatermark { display:none; }
+@media (min-width:900px) { #appWatermark { left:calc(50% + 40px); width:min(46vw,520px); } }
+.login-logo { display:block; width:92px; height:auto; margin:0 auto 10px; }
+.logo-preview { display:flex; gap:14px; align-items:center; margin-bottom:12px; }
+.logo-preview .logo-thumb { width:84px; height:84px; object-fit:contain; border:1px solid var(--line); border-radius:12px; background:#fff; padding:4px; flex-shrink:0; }
+.logo-preview .logo-thumb.wm { object-fit:contain; }
+.logo-note { font-size:12.5px; color:var(--ink-soft); line-height:1.45; margin-top:8px; }

@@ -1,0 +1,40 @@
+/* Safe areas apply to Safari standalone as well as regular browser windows. */
+:root { --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px); --safe-left:env(safe-area-inset-left,0px); --safe-right:env(safe-area-inset-right,0px); }
+body { padding-left:var(--safe-left); padding-right:var(--safe-right); padding-bottom:calc(84px + var(--safe-bottom)); }
+.app-header { padding-top:calc(22px + var(--safe-top)); }
+.app-header h1 { padding-right:66px; }
+.header-settings-btn { top:calc(20px + var(--safe-top)); }
+.pwa-install-header { position:absolute; top:calc(20px + var(--safe-top)); right:58px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:50%; color:var(--sage-dark); background:var(--surface); }
+.pwa-install-header svg { width:18px; height:18px; }
+.tabbar { padding-left:var(--safe-left); padding-right:var(--safe-right); padding-bottom:var(--safe-bottom); }
+.toast { bottom:calc(88px + var(--safe-bottom)); }
+.overlay { top:0; bottom:0; height:auto; }
+.sheet { padding-bottom:calc(20px + var(--safe-bottom)); max-height:calc(100dvh - var(--safe-top) - 20px); }
+.pwa-status { margin-top:12px; }
+.pwa-status h3 { font-size:16px; margin:0 0 4px; }
+.pwa-status p { font-size:12.5px; color:var(--ink-soft); margin:0; }
+.pwa-status[data-offline-ready="true"] { border-color:var(--sage); }
+.pwa-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.pwa-actions [hidden] { display:none; }
+.pwa-install-steps { padding-left:22px; }
+.pwa-install-steps li + li { margin-top:10px; }
+.pwa-status .btn { min-height:40px; }
+.pwa-storage-conflict { position:fixed; inset:0; z-index:1000; background:rgba(43,46,40,.65); display:grid; place-items:center; padding:24px; }
+.pwa-storage-conflict .card { max-width:460px; }
+@media (min-width:768px) {
+  body { padding-left:calc(88px + var(--safe-left)); padding-bottom:var(--safe-bottom); }
+  .app-header { padding-top:calc(24px + var(--safe-top)); }
+  .tabbar { width:calc(88px + var(--safe-left)); padding-top:calc(24px + var(--safe-top)); padding-bottom:var(--safe-bottom); padding-left:var(--safe-left); padding-right:0; }
+  .toast { bottom:calc(28px + var(--safe-bottom)); left:calc(50% + 44px + var(--safe-left)/2); }
+  .pwa-status { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+  .pwa-actions { margin-top:0; flex-shrink:0; }
+  .sheet { max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 40px); }
+}
+@media (max-height:520px) { .app-header .header-stat { display:none; } .sheet { max-height:calc(100dvh - 12px); } }
+@media print { body { padding:0!important; } }
+
+.pwa-status-main { flex:1; min-width:0; }
+.pwa-status progress { display:block; width:100%; max-width:400px; height:8px; margin-top:10px; accent-color:var(--sage-dark); }
+.pwa-status progress[hidden] { display:none; }
+.pwa-status .btn:disabled { opacity:.65; cursor:wait; }
+@media (min-width:768px) { .pwa-status { flex-wrap:wrap; } }

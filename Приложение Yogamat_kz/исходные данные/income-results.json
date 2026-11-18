@@ -1,0 +1,30 @@
+{
+  "engine": "Node.js VM",
+  "note": "Income calculations and rendered values; no browser or iOS runtime",
+  "results": [
+    {
+      "name": "Unpaid sales do not contribute; payment month drives header, annual chart, table and all-time income",
+      "status": "passed"
+    },
+    {
+      "name": "Historical year and selected month match payments; cumulative chart respects selected year",
+      "status": "passed"
+    },
+    {
+      "name": "Paid toggle immediately updates every income surface, persists payment date, and removes income when cleared",
+      "status": "passed"
+    },
+    {
+      "name": "Paid-at-sale uses actual payment date rather than historical purchase date",
+      "status": "passed"
+    },
+    {
+      "name": "Valid restored paid receipts count, unmarked legacy sales remain unpaid, and undated paid imports are rejected",
+      "status": "passed"
+    },
+    {
+      "name": "Deleting a client immediately refreshes income after their paid subscriptions are removed",
+      "status": "passed"
+    }
+  ]
+}

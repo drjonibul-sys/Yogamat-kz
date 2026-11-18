@@ -1,0 +1,22 @@
+{
+  "engine": "Node.js VM with minimal DOM",
+  "note": "No browser rendering or physical iPad testing",
+  "results": [
+    {
+      "name": "15 complete plans: three regular per level, three for each adjacent transition; exact totals <=75",
+      "status": "passed"
+    },
+    {
+      "name": "Tabs follow marked progression; all-practices list retains transitional groups first",
+      "status": "passed"
+    },
+    {
+      "name": "Every plan renders a contiguous timeline, body cues, adaptations and links to valid asanas",
+      "status": "passed"
+    },
+    {
+      "name": "Asana detail returns to its originating practice and scroll position; help navigation retains section",
+      "status": "passed"
+    }
+  ]
+}

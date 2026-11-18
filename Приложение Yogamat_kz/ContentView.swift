@@ -6,18 +6,21 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var store = StudioStore()
+
     var body: some View {
-        VStack {
-            Image(systemName: "checkmark.seal.fill")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-                .font(.title)
-                .padding()
-            Text("Hello, world!")
-                .font(.title)
-                .padding()
+        Group {
+            if store.currentUser != nil {
+                RootView()
+            } else {
+                AuthView()
+            }
         }
-        .padding()
+        .environment(store)
+        .preferredColorScheme(.light)
+        .task {
+            store.maintainAutomaticBackup()
+        }
     }
 }
 

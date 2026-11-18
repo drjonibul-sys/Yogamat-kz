@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Йога-практика</title>
+<meta name="application-name" content="Йога-практика">
+<meta name="description" content="Учёт клиентов, абонементов и занятий йогой. Справочник 200 асан и вариантов, 15 практик до 75 минут, резервные копии и автономная работа.">
+<meta name="yoga-app" content="yoga-practice-pwa">
+<meta name="theme-color" content="#F8F4F6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Йога-практика">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --bg:#F8F4F6;
+    --surface:#FFFFFF;
+    --ink:#524A5A;
+    --ink-soft:#9C93A3;
+    --line:#EBE0E9;
+    --sage:#A9C7B8;
+    --sage-dark:#6E9782;
+    --sage-tint:#E9F2EC;
+    --clay:#CC8873;
+    --clay-tint:#FAE9E3;
+    --rose:#C1728C;
+    --rose-tint:#FAE6ED;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(82,74,90,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Work Sans',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.45;
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:78px;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+  ::selection{background:var(--sage-tint);}
+
+  /* ---------- Header ---------- */
+  .app-header{
+    padding:22px 18px 16px;
+    background:var(--bg);
+    position:sticky;top:0;z-index:20;
+    border-bottom:1px solid var(--line);
+  }
+  .app-header .eyebrow{
+    color:var(--ink-soft);
+    font-size:13px;
+    margin-bottom:2px;
+  }
+  .app-header h1{font-size:26px;letter-spacing:-0.01em;}
+  .header-stat{
+    margin-top:12px;
+    display:flex;gap:18px;
+  }
+  .header-stat .item{flex:1;}
+  .header-stat .num{font-family:'Fraunces',serif;font-size:20px;font-weight:600;}
+  .header-stat .label{font-size:12px;color:var(--ink-soft);margin-top:1px;}
+
+  /* ---------- Layout ---------- */
+  .page{display:none;padding:18px;max-width:640px;margin:0 auto;}
+  .page.active{display:block;}
+  .section-title{
+    font-size:19px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  }
+  .section-title .btn-add{flex-shrink:0;}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+  }
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+  .stat-grid .big{grid-column:1/-1;}
+  .stat-card .num{font-family:'Fraunces',serif;font-size:24px;font-weight:600;color:var(--sage-dark);}
+  .stat-card.clay .num{color:var(--clay);}
+  .stat-card .label{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+
+  .list-row{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 14px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    margin-bottom:8px;
+    cursor:pointer;
+  }
+  .list-row .avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:var(--sage-tint);color:var(--sage-dark);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:600;font-size:15px;
+    flex-shrink:0;
+  }
+  .list-row .main{flex:1;min-width:0;}
+  .list-row .title{font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .list-row .sub{font-size:12.5px;color:var(--ink-soft);margin-top:1px;}
+  .list-row .tag{
+    font-size:11.5px;padding:3px 9px;border-radius:20px;flex-shrink:0;white-space:nowrap;
+  }
+  .tag.ok{background:var(--sage-tint);color:var(--sage-dark);}
+  .tag.warn{background:var(--clay-tint);color:var(--clay);}
+  .tag.bad{background:var(--rose-tint);color:var(--rose);}
+  .tag.mute{background:#EFEDE4;color:var(--ink-soft);}
+
+  .empty{
+    text-align:center;color:var(--ink-soft);padding:36px 18px;font-size:13.5px;
+  }
+
+  /* ---------- Forms ---------- */
+  label{display:block;font-size:12.5px;color:var(--ink-soft);margin:12px 0 5px;}
+  label:first-child{margin-top:0;}
+  input,select,textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--surface);
+    font-family:inherit;font-size:14.5px;color:var(--ink);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--sage);outline-offset:-1px;}
+  textarea{resize:vertical;min-height:60px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .btn{
+    padding:11px 16px;border-radius:8px;font-size:14px;font-weight:600;
+    background:var(--sage);color:#fff;width:100%;margin-top:16px;
+  }
+  .btn:active{background:var(--sage-dark);}
+  .btn.secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+  .btn.danger{background:var(--rose-tint);color:var(--rose);}
+  .btn.small{width:auto;padding:8px 13px;font-size:13px;margin-top:0;}
+  .btn-add{
+    width:34px;height:34px;border-radius:50%;background:var(--sage);color:#fff;
+    font-size:20px;display:flex;align-items:center;justify-content:center;line-height:1;
+  }
+  .btn-row{display:flex;gap:8px;margin-top:14px;}
+  .btn-row .btn{margin-top:0;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    display:none;position:fixed;inset:0;background:rgba(43,46,40,0.42);
+    z-index:100;align-items:flex-end;justify-content:center;
+  }
+  .overlay.active{display:flex;}
+  .sheet{
+    background:var(--bg);
+    width:100%;max-width:640px;
+    border-radius:16px 16px 0 0;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow-y:auto;
+    animation:slideup .18s ease-out;
+  }
+  @keyframes slideup{from{transform:translateY(16px);opacity:.4;}to{transform:translateY(0);opacity:1;}}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .sheet-head h3{font-size:18px;}
+  .sheet-close{
+    width:28px;height:28px;border-radius:50%;background:var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:15px;
+  }
+  .field-hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+
+  /* ---------- Detail ---------- */
+  .detail-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .detail-head .avatar{width:48px;height:48px;font-size:18px;}
+  .detail-head h2{font-size:20px;}
+  .detail-head .sub{font-size:13px;color:var(--ink-soft);}
+  .progress-track{
+    height:9px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:6px;
+  }
+  .progress-fill{height:100%;background:var(--sage);border-radius:6px;}
+  .kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .kv:last-child{border-bottom:none;}
+  .kv .k{color:var(--ink-soft);}
+  .subtabs{display:flex;gap:6px;margin:14px 0 10px;}
+  .subtab{
+    flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:12.5px;font-weight:600;
+    background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);
+  }
+  .subtab.active{background:var(--sage);color:#fff;border-color:var(--sage);}
+
+  /* ---------- Bottom nav ---------- */
+  .tabbar{
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--surface);
+    border-top:1px solid var(--line);
+    display:flex;
+    padding-bottom:env(safe-area-inset-bottom);
+    z-index:30;
+  }
+  .tabbtn{
+    flex:1;background:none;padding:9px 2px 8px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--ink-soft);
+  }
+  .tabbtn.active{color:var(--sage-dark);}
+  .tabbtn svg{width:20px;height:20px;}
+  .tabbtn .tl{font-size:10.5px;font-weight:600;}
+
+  /* ---------- Chart ---------- */
+  .chart-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 12px 8px;margin-bottom:14px;}
+  .chart-legend{display:flex;gap:14px;font-size:12px;color:var(--ink-soft);margin-bottom:6px;padding-left:4px;}
+  .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+  .bar-label{font-size:10px;fill:var(--ink-soft);}
+  .filter-pills{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px;}
+  .pill{padding:6px 13px;border-radius:20px;font-size:12.5px;font-weight:600;background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);white-space:nowrap;flex-shrink:0;}
+  .pill.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .toast{
+    position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(10px);
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;
+    opacity:0;pointer-events:none;transition:all .2s ease;z-index:200;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- Backup / archive ---------- */
+  .header-settings-btn{
+    position:absolute;top:20px;right:16px;
+    width:34px;height:34px;border-radius:50%;
+    background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .header-settings-btn svg{width:17px;height:17px;}
+  .backup-status-row{display:flex;align-items:center;gap:12px;cursor:pointer;}
+  .backup-status-row .ico{
+    width:38px;height:38px;border-radius:50%;flex-shrink:0;
+    background:var(--sage-tint);color:var(--sage-dark);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .backup-status-row .ico svg{width:18px;height:18px;}
+  .backup-status-row .chev{color:var(--ink-soft);font-size:16px;flex-shrink:0;}
+  .backup-row{
+    display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);
+  }
+  .backup-row:last-child{border-bottom:none;}
+  .backup-row .main{flex:1;min-width:0;}
+  .backup-row .title{font-size:13.5px;font-weight:600;}
+  .backup-row .sub{font-size:11.5px;color:var(--ink-soft);margin-top:1px;}
+  .file-input-wrap{
+    display:block;text-align:center;padding:11px 16px;border-radius:8px;font-size:14px;font-weight:600;
+    background:var(--surface);color:var(--ink);border:1px dashed var(--line);margin-top:16px;cursor:pointer;
+  }
+  .file-input-wrap input{display:none;}
+
+  /* ---------- Attendance grid (Визиты) ---------- */
+  .att-week-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
+  .att-week-nav .lbl{font-weight:600;font-size:14px;text-align:center;flex:1;}
+  .att-week-nav button{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;color:var(--ink-soft);flex-shrink:0;}
+  .att-week-nav button.today-btn{color:var(--sage-dark);font-weight:600;}
+  .attendance-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);}
+  table.att-table{border-collapse:collapse;width:100%;min-width:800px;font-size:12.5px;}
+  .att-table th, .att-table td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:7px 6px;text-align:center;background:var(--surface);}
+  .att-table th{background:var(--sage-tint);color:var(--sage-dark);font-weight:600;vertical-align:middle;}
+  .att-table td.name-col, .att-table th.name-col{position:sticky;left:0;text-align:left;min-width:132px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .att-table td.name-col{background:var(--surface);z-index:1;font-weight:600;}
+  .att-table th.name-col{z-index:2;}
+  .att-table .num-col{min-width:38px;font-weight:700;color:var(--sage-dark);}
+  .att-table .num-col.left{color:var(--clay);}
+  .att-table .day-head{line-height:1.25;}
+  .att-table .day-head .wd{font-size:10.5px;opacity:.8;}
+  .att-table .day-head .dn{font-size:14.5px;font-family:'Fraunces',serif;font-weight:600;}
+  .att-table .day-head .mo{font-size:9px;opacity:.75;}
+  .att-table .day-col{min-width:46px;cursor:pointer;color:var(--ink-soft);font-size:16px;user-select:none;}
+  .att-table th.today, .att-table td.today{background:var(--rose-tint);}
+  .att-table td.day-col.done{background:var(--sage);color:#fff;font-weight:700;}
+  .att-table .note-col{min-width:150px;text-align:left;padding:3px 6px;}
+  .att-table .note-col input{width:100%;border:none;background:transparent;padding:4px 2px;font-size:12px;color:var(--ink);font-family:inherit;}
+  .att-table .note-col input:focus{outline:1px solid var(--sage);border-radius:4px;}
+
+  /* ---------- Переключатель «оплачено» ---------- */
+  .pay-switch{
+    display:inline-flex;align-items:center;gap:8px;flex-shrink:0;
+    background:none;border:none;padding:4px 0;font-family:inherit;font-size:12.5px;
+    color:var(--ink-soft);cursor:pointer;
+  }
+  .pay-switch .track{
+    position:relative;width:38px;height:22px;border-radius:12px;background:#CFCDD2;
+    transition:background .18s ease;flex-shrink:0;
+  }
+  .pay-switch .track::after{
+    content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .18s ease;
+  }
+  .pay-switch.on{color:#4F8F5F;font-weight:600;}
+  .pay-switch.on .track{background:#9ED9AA;}
+  .pay-switch.on .track::after{transform:translateX(16px);}
+  .pay-switch:focus-visible{outline:2px solid var(--sage);outline-offset:2px;border-radius:6px;}
+  .pay-note{font-size:11.5px;color:var(--ink-soft);margin-bottom:2px;white-space:nowrap;}
+  .pay-note.paid{color:#4F8F5F;}
+
+  /* ======================================================================
+     iPad 10.5" Pro landscape (and similar tablet-width landscape screens)
+     Sidebar nav instead of bottom tab bar, wider canvas, grid lists,
+     centered dialog sheets instead of bottom sheets.
+     ====================================================================== */
+  @media (min-width:900px) and (orientation:landscape){
+    body{padding-bottom:0;padding-left:84px;}
+
+    .tabbar{
+      top:0;left:0;bottom:0;right:auto;
+      width:84px;height:100vh;
+      flex-direction:column;justify-content:flex-start;
+      padding-top:26px;gap:10px;
+      border-top:none;border-right:1px solid var(--line);
+    }
+    .tabbtn{flex:none;padding:11px 2px;}
+    .tabbtn svg{width:22px;height:22px;}
+
+    .app-header{padding:24px 32px 18px;}
+    .header-stat{max-width:640px;}
+
+    .page{max-width:1040px;margin:0 auto;padding:24px 32px;}
+
+    .toast{left:calc(50% + 42px);}
+
+    /* Sheets become centered dialogs rather than bottom sheets */
+    .overlay{align-items:center;}
+    .sheet{
+      width:480px;max-width:88vw;
+      border-radius:16px;
+      max-height:82vh;
+      animation:none;
+    }
+
+    /* Use the extra width for multi-column card grids */
+    #clientList, #planList, #salesList, #visitsList, #dashAttention, #dashRecentVisits{
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;
+    }
+    #clientList .list-row, #planList .card, #salesList .list-row, #visitsList .list-row,
+    #dashAttention .list-row, #dashRecentVisits .list-row{margin-bottom:0;}
+
+    .stat-grid{grid-template-columns:repeat(4,1fr);}
+    .stat-grid .big{grid-column:span 1;}
+
+    .att-table th, .att-table td{padding:9px 8px;}
+    table.att-table{min-width:0;}
+    .att-table .day-col{min-width:60px;}
+    .att-table td.name-col, .att-table th.name-col{min-width:170px;}
+    .att-table .note-col{min-width:220px;}
+  }
+
+  /* ---------- Printable month attendance report (PDF export via print) ---------- */
+  #printReportRoot{display:none;}
+  .pr-table{border-collapse:collapse;width:100%;font-size:10px;}
+  .pr-table th, .pr-table td{border:1px solid #999;padding:4px 3px;text-align:center;}
+  .pr-table th.pr-name, .pr-table td.pr-name{text-align:left;padding-left:6px;min-width:110px;}
+  .pr-table td.pr-total, .pr-table th.pr-total{font-weight:700;min-width:28px;}
+  @media print{
+    @page{ size: A4 landscape; margin: 12mm; }
+    body > *:not(#printReportRoot){ display:none !important; }
+    #printReportRoot{ display:block !important; }
+  }
+</style>
+<link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="practices.css">
+<link rel="stylesheet" href="pwa.css">
+<link rel="stylesheet" href="rent.css">
+<link rel="stylesheet" href="team.css">
+<link rel="stylesheet" href="logo.css">
+</head>
+<body>
+
+<header class="app-header">
+  <button class="header-settings-btn" onclick="showPage('settings')" aria-label="Настройки">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+  </button>
+  <div class="eyebrow" id="todayLabel">—</div>
+  <h1>Йога-практика</h1>
+  <div class="header-stat">
+    <div class="item">
+      <div class="num" id="hdrMonthIncome">0 ₸</div>
+      <div class="label">месяц после аренды</div>
+    </div>
+    <div class="item">
+      <div class="num" id="hdrTotalIncome">0 ₸</div>
+      <div class="label">накопительно после аренды</div>
+    </div>
+    <div class="item">
+      <div class="num" id="hdrActiveClients">0</div>
+      <div class="label">активных абон.</div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ DASHBOARD ============ -->
+<div class="page active" id="page-dashboard">
+  <div class="section-title"><h2>Сегодня</h2></div>
+  <div class="btn-row">
+    <button class="btn" onclick="openVisitSheet()">Отметить посещение</button>
+  </div>
+  <button class="btn secondary admin-only" style="margin-top:8px" onclick="openSaleSheet()">Продать абонемент</button>
+
+  <div class="card rent-reminder" id="rentReminderCard" role="status" hidden></div>
+
+  <div class="section-title" style="margin-top:22px"><h2>Требуют внимания</h2></div>
+  <div id="dashAttention"></div>
+
+  <div class="section-title" style="margin-top:22px"><h2>Последние посещения</h2></div>
+  <div id="dashRecentVisits"></div>
+
+</div>
+
+<!-- ============ CLIENTS ============ -->
+<div class="page" id="page-clients">
+  <div class="section-title">
+    <h2>Клиенты</h2>
+    <button class="btn-add admin-only" onclick="openClientSheet()" aria-label="Добавить клиента">+</button>
+  </div>
+  <input type="text" id="clientSearch" placeholder="Поиск по имени…" oninput="renderClients()" style="margin-bottom:12px">
+  <div id="clientList"></div>
+</div>
+
+<!-- ============ ATTENDANCE GRID (Визиты) ============ -->
+<div class="page" id="page-attendance">
+  <div class="section-title"><h2>Визиты</h2></div>
+  <div class="att-week-nav">
+    <button onclick="shiftAttendanceWeek(-7)">←</button>
+    <div class="lbl" id="attWeekLabel"></div>
+    <button class="today-btn" onclick="resetAttendanceWeek()">Сегодня</button>
+    <button onclick="shiftAttendanceWeek(7)">→</button>
+  </div>
+  <label for="attClassFilter" style="margin-top:0">Направление</label>
+  <select id="attClassFilter" onchange="setAttendanceClass(this.value)" style="margin-bottom:12px"></select>
+  <button class="btn secondary" style="margin-top:0;margin-bottom:14px" onclick="openPdfExportSheet()">Экспорт визитов за месяц в PDF</button>
+  <div id="attendanceGridBox"></div>
+</div>
+
+<!-- ============ CLASSES (направления) ============ -->
+<div class="page" id="page-classes">
+  <div class="section-title">
+    <h2>Направления / классы</h2>
+    <button class="btn-add admin-only" onclick="openClassSheet()" aria-label="Добавить направление">+</button>
+  </div>
+  <div class="filter-pills" id="classFilterPills"></div>
+  <div id="classList"></div>
+</div>
+
+<!-- ============ SETTINGS ============ -->
+<div class="page" id="page-settings">
+  <div class="section-title"><h2>Настройки</h2></div>
+  <div class="card" id="settingsUserCard"></div>
+  <div class="admin-only">
+    <div class="section-title" style="margin-top:22px"><h2 style="font-size:15px">Пользователи и роли</h2></div>
+    <div class="card" id="settingsUsersCard"></div>
+    <div class="section-title" style="margin-top:22px"><h2 style="font-size:15px">Логотип</h2></div>
+    <div class="card" id="settingsLogoCard"></div>
+    <div class="section-title" style="margin-top:22px"><h2 style="font-size:15px">Резервное копирование</h2></div>
+    <div class="card" id="backupStatusCard"></div>
+  </div>
+  <div class="section-title" style="margin-top:22px"><h2 style="font-size:15px">Приложение с домашнего экрана</h2></div>
+  <div id="settingsPwaSlot"></div>
+  <div class="app-footer">
+    <div id="appVersionLabel">Версия: 2.0.0</div>
+    <div class="app-credit"><em>Разработано Yogamat.kz</em></div>
+  </div>
+</div>
+
+<!-- ============ CLIENT DETAIL ============ -->
+<div class="page" id="page-client-detail">
+  <button class="btn secondary small" onclick="showPage('clients')" style="margin-bottom:14px">← К списку клиентов</button>
+  <div class="detail-head">
+    <div class="avatar" id="cdAvatar"></div>
+    <div>
+      <h2 id="cdName"></h2>
+      <div class="sub" id="cdPhone"></div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn small" style="flex:1" onclick="openVisitSheet(currentClientId)">Отметить визит</button>
+    <button class="btn secondary small admin-only" style="flex:1" onclick="openSaleSheet(currentClientId)">Продать абонемент</button>
+  </div>
+  <div class="subtabs">
+    <button class="subtab active" data-cd="subs" onclick="setClientDetailTab('subs')">Абонементы</button>
+    <button class="subtab" data-cd="visits" onclick="setClientDetailTab('visits')">Посещения</button>
+    <button class="subtab" data-cd="info" onclick="setClientDetailTab('info')">Инфо</button>
+  </div>
+  <div id="cdSubs"></div>
+  <div id="cdVisits" style="display:none"></div>
+  <div id="cdInfo" style="display:none"></div>
+</div>
+
+<!-- ============ PLANS (тарифы) ============ -->
+<div class="page" id="page-plans">
+  <div class="section-title">
+    <h2>Тарифы абонементов</h2>
+    <button class="btn-add" onclick="openPlanSheet()">+</button>
+  </div>
+  <div id="planList"></div>
+</div>
+
+<!-- ============ SALES (проданные абонементы) ============ -->
+<div class="page" id="page-sales">
+  <div class="section-title">
+    <h2>Абонементы клиентов</h2>
+    <button class="btn-add" onclick="openSaleSheet()">+</button>
+  </div>
+  <div class="filter-pills" id="salesFilterPills"></div>
+  <div id="salesList"></div>
+</div>
+
+<!-- ============ VISITS log ============ -->
+<div class="page" id="page-visits">
+  <div class="section-title">
+    <h2>Посещаемость</h2>
+    <button class="btn-add" onclick="openVisitSheet()">+</button>
+  </div>
+  <div id="visitsList"></div>
+</div>
+
+<!-- ============ FINANCE ============ -->
+<div class="page" id="page-finance">
+  <div class="section-title"><h2>Доход после аренды</h2></div>
+  <p class="field-hint" style="margin-bottom:12px">Оплаченные абонементы учитываются по дате оплаты. Вычитается только оплаченная аренда за её месяц. Поздняя оплата аренды корректирует соответствующий месяц и накопительный итог.</p>
+  <p class="field-hint" id="financeDataNotice" role="status" hidden></p>
+  <div class="filter-pills" id="financeYearPills"></div>
+  <label for="financeMonthSelect">Месяц расчёта</label>
+  <select id="financeMonthSelect" onchange="setFinanceMonth(this.value)" style="margin-bottom:14px"></select>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="num" id="finMonthNum">0 ₸</div><div class="label" id="finMonthLabel">выбранный месяц</div></div>
+    <div class="stat-card clay"><div class="num" id="finYearNum">0 ₸</div><div class="label">итого за год после аренды</div></div>
+    <div class="stat-card"><div class="num" id="finReceiptsNum">0 ₸</div><div class="label">оплаченные абонементы за месяц</div></div>
+    <div class="stat-card clay"><div class="num" id="finRentNum">0 ₸</div><div class="label">оплаченная аренда за месяц</div></div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-legend"><span><span class="dot" style="background:var(--sage)"></span>доход после аренды</span><span><span class="dot" style="background:var(--rose)"></span>отрицательный итог</span></div>
+    <svg id="chartMonthly" viewBox="0 0 340 160" width="100%" height="160"></svg>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-legend"><span><span class="dot" style="background:var(--clay)"></span>накопительным итогом</span></div>
+    <svg id="chartCumulative" viewBox="0 0 340 160" width="100%" height="160"></svg>
+  </div>
+  <div class="section-title" style="margin-top:6px"><h2 style="font-size:16px">По месяцам</h2></div>
+  <div id="finTable"></div>
+</div>
+
+<nav class="tabbar">
+  <button class="tabbtn active" data-tab="dashboard" onclick="showPage('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l9-8 9 8"/><path d="M6 10.5V20h12v-9.5"/></svg>
+    <span class="tl">Обзор</span>
+  </button>
+  <button class="tabbtn" data-tab="clients" onclick="showPage('clients')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
+    <span class="tl">Клиенты</span>
+  </button>
+  <button class="tabbtn" data-tab="attendance" onclick="showPage('attendance')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/><path d="M8.5 14.5l2 2 4-4.5"/></svg>
+    <span class="tl">Визиты</span>
+  </button>
+  <button class="tabbtn" data-tab="classes" onclick="showPage('classes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="5.5" r="2.2"/><path d="M12 8v5m0 0l-4 6m4-6l4 6M5 11h14"/></svg>
+    <span class="tl">Классы</span>
+  </button>
+  <button class="tabbtn" data-tab="plans" onclick="showPage('plans')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+    <span class="tl">Тарифы</span>
+  </button>
+  <button class="tabbtn" data-tab="sales" onclick="showPage('sales')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7l1.4 10.5A2 2 0 007.4 19h9.2a2 2 0 002-1.5L20 7"/><path d="M8 10V6a4 4 0 118 0v4"/></svg>
+    <span class="tl"><span class="sales-full-label">Абонементы</span><span class="compact-label">Абон.</span></span>
+  </button>
+  <button class="tabbtn" data-tab="finance" onclick="showPage('finance')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M11 20V4M18 20v-7"/></svg>
+    <span class="tl">Доход</span>
+  </button>
+</nav>
+
+<div class="overlay" id="overlay"><div class="sheet" id="sheetContent"></div></div>
+<div class="toast" id="toast"></div>
+<div id="printReportRoot"></div>
+
+<script>
+/* ================= STORAGE ================= */
+const STORAGE_KEY = 'yogaTrackerData_v1';
+const CORRUPT_KEY = 'yogaTrackerCorrupt_v1';
+let stateMigrated = false;
+let state = loadState();
+if(stateMigrated){ try{ saveState(); }catch(e){} }
+
+function emptyRentState(){ return {defaultAmount:null,startMonth:null,payments:[]}; }
+function preserveCorrupt(raw, reason){
+  // Не затираем непонятные данные молча: сохраняем исходную строку отдельно и предупреждаем один раз.
+  try{ if(localStorage.getItem(CORRUPT_KEY)===null) localStorage.setItem(CORRUPT_KEY, raw); }catch(e){}
+  setTimeout(()=>{ try{ alert('Сохранённые данные приложения не удалось прочитать ('+reason+'). Исходная запись оставлена в памяти браузера под ключом '+CORRUPT_KEY+'. Приложение запущено с пустыми данными; если есть файл резервной копии, восстановите его в разделе «Резервные копии».'); }catch(e){} }, 500);
+}
+function loadState(){
+  let raw = null;
+  try{
+    raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const data=JSON.parse(raw);
+      if(data && typeof data==='object' && !Array.isArray(data)){
+        if(data.rent===undefined) data.rent=emptyRentState();
+        if(!Array.isArray(data.classes)){ data.classes=defaultClasses(); stateMigrated=true; }
+        return data;
+      }
+      preserveCorrupt(raw, 'неверный формат');
+    }
+  }catch(e){
+    if(raw) preserveCorrupt(raw, 'повреждённый JSON');
+  }
+  return { clients:[], plans:[], subscriptions:[], visits:[], transfers:[], rent:emptyRentState(), classes:defaultClasses() };
+}
+// Хранилище Safari ограничено (~5 МБ). Если записать данные не удалось, сначала освобождаем место,
+// удаляя самые старые резервные копии (рабочие данные важнее копий), и только потом сообщаем об ошибке.
+let storageAlertShown = false;
+function reportStorageFull(){
+  if(storageAlertShown) return;
+  storageAlertShown = true;
+  setTimeout(()=>{ storageAlertShown = false; }, 30000);
+  try{ alert('Не удалось сохранить данные: память браузера заполнена. Последнее изменение НЕ сохранено. Сохраните копию в файл (шестерёнка → «Сохранить копию в файл») и удалите старые резервные копии.'); }catch(e){}
+}
+function saveState(){
+  const json = JSON.stringify(state);
+  try{ localStorage.setItem(STORAGE_KEY, json); return; }
+  catch(firstError){
+    let backups = [];
+    try{ backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]'); }catch(e){}
+    while(backups.length){
+      backups.pop(); // самая старая копия — в конце списка
+      try{ localStorage.setItem(BACKUP_KEY, JSON.stringify(backups)); }catch(e){}
+      try{ localStorage.setItem(STORAGE_KEY, json); return; }catch(e){}
+    }
+    reportStorageFull();
+    throw firstError;
+  }
+}
+function syncRentPeriods(){
+  if(typeof ensureRentPeriods!=='function') return false;
+  const previous=JSON.stringify(state);
+  try{
+    const changed=ensureRentPeriods();
+    if(changed) saveState();
+    return changed;
+  }catch(error){
+    state=JSON.parse(previous);
+    showToast('Не удалось подготовить аренду: '+error.message);
+    return false;
+  }
+}
+
+/* ================= UTILS ================= */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+// Календарная дата по МЕСТНОМУ времени (toISOString даёт UTC и сдвигает день в UTC+5/+6)
+function localISO(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function todayISO(){ return localISO(new Date()); }
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function fmtMoney(n){
+  return Math.round(n).toLocaleString('ru-RU') + ' ₸';
+}
+function addDays(iso, days){
+  const d = new Date(iso+'T00:00:00');
+  d.setDate(d.getDate()+Number(days));
+  return localISO(d);
+}
+function daysBetween(a,b){
+  const d1=new Date(a+'T00:00:00'), d2=new Date(b+'T00:00:00');
+  return Math.round((d2-d1)/86400000);
+}
+function initials(name){
+  return name.trim().split(/\s+/).map(p=>p[0]).slice(0,2).join('').toUpperCase();
+}
+function formatPhoneInputValue(raw){
+  let digits = raw.replace(/\D/g,'');
+  // drop a leading 7 or 8 (country/trunk code) since +7 is added automatically
+  if(digits.startsWith('7')) digits = digits.slice(1);
+  else if(digits.startsWith('8')) digits = digits.slice(1);
+  digits = digits.slice(0,10);
+  if(digits.length===0) return '+7 ';
+  let out = '+7 ' + digits.slice(0,3);
+  if(digits.length>3) out += ' ' + digits.slice(3,6);
+  if(digits.length>6) out += '-' + digits.slice(6,8);
+  if(digits.length>8) out += '-' + digits.slice(8,10);
+  return out;
+}
+function monthKey(iso){ return iso.slice(0,7); } // YYYY-MM
+function monthLabel(key){
+  const [y,m] = key.split('-');
+  const names=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  return names[Number(m)-1]+' '+y.slice(2);
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ================= DERIVED HELPERS ================= */
+function getClient(id){ return state.clients.find(c=>c.id===id); }
+function getPlan(id){ return state.plans.find(p=>p.id===id); }
+function clientSubscriptions(clientId){
+  return state.subscriptions.filter(s=>s.clientId===clientId).sort((a,b)=>b.purchaseDate.localeCompare(a.purchaseDate));
+}
+function subStatus(sub){
+  if(sub.visitsLeft<=0) return 'finished'; // занятия закончились
+  if(sub.expiryDate < todayISO()) return 'expired'; // истёк срок
+  return 'active';
+}
+function activeSubForClient(clientId){
+  // most relevant active subscription (soonest expiry among active)
+  const subs = clientSubscriptions(clientId).filter(s=>subStatus(s)==='active');
+  subs.sort((a,b)=>a.expiryDate.localeCompare(b.expiryDate));
+  return subs[0] || null;
+}
+
+/* ================= ROLES (реализованы в team.js; без него — полный доступ) ================= */
+function isAdmin(){ return !window.__access || window.__access.role()==='admin'; }
+function actorName(){ return window.__access && window.__access.name ? window.__access.name() : ''; }
+function requireAdmin(){ if(isAdmin()) return true; showToast('Доступно только администратору'); return false; }
+const APP_VERSION = '2.0.0';
+
+/* ================= NAVIGATION ================= */
+let currentClientId = null;
+function showPage(name){
+  if(window.__access && typeof window.__access.canOpen==='function' && !window.__access.canOpen(name)){ showToast('Раздел доступен только администратору'); name='dashboard'; }
+  syncRentPeriods();
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  window.scrollTo(0,0);
+  if(name==='dashboard') renderDashboard();
+  if(name==='clients') renderClients();
+  if(name==='attendance') renderAttendanceGrid();
+  if(name==='plans') renderPlans();
+  if(name==='sales') renderSales();
+  if(name==='visits') renderVisitsPage();
+  if(name==='finance') renderFinance();
+  if(name==='classes') renderClasses();
+  if(name==='settings') renderSettings();
+  if(name==='rent' && typeof renderRent==='function') renderRent();
+}
+function renderSettings(){
+  document.getElementById('appVersionLabel').textContent = 'Версия: '+APP_VERSION;
+  renderBackupStatusCard();
+  if(typeof window.renderAccessSettings==='function') window.renderAccessSettings();
+}
+function refreshViews(){
+  renderHeader(); renderDashboard(); renderSales(); renderFinance(); renderClients();
+  if(document.getElementById('page-client-detail').classList.contains('active')) renderClientDetail();
+  if(document.getElementById('page-attendance').classList.contains('active')) renderAttendanceGrid();
+  if(document.getElementById('page-classes').classList.contains('active')) renderClasses();
+}
+function openClientDetail(id){
+  currentClientId = id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-client-detail').classList.add('active');
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab==='clients'));
+  setClientDetailTab('subs');
+  renderClientDetail();
+  window.scrollTo(0,0);
+}
+function setClientDetailTab(tab){
+  document.querySelectorAll('.subtab').forEach(b=>b.classList.toggle('active', b.dataset.cd===tab));
+  document.getElementById('cdSubs').style.display = tab==='subs' ? '' : 'none';
+  document.getElementById('cdVisits').style.display = tab==='visits' ? '' : 'none';
+  document.getElementById('cdInfo').style.display = tab==='info' ? '' : 'none';
+}
+
+/* ================= SHEET (modal) ================= */
+function openSheet(html){
+  document.getElementById('sheetContent').innerHTML = html;
+  document.getElementById('overlay').classList.add('active');
+}
+function closeSheet(){
+  document.getElementById('overlay').classList.remove('active');
+}
+document.getElementById('overlay').addEventListener('click', e=>{
+  if(e.target.id==='overlay') closeSheet();
+});
+
+/* ================= HEADER SUMMARY ================= */
+function validIncomeDate(value){
+  if(typeof value!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(value+'T12:00:00');
+  return !Number.isNaN(date.getTime()) && localISO(date)===value;
+}
+function paidIncomeEntries(){
+  return state.subscriptions.filter(sub=>sub.paid===true && validIncomeDate(sub.paidDate) &&
+    Number.isFinite(Number(sub.price)) && Number(sub.price)>=0);
+}
+function paidReceiptsByMonth(){
+  const result = {};
+  paidIncomeEntries().forEach(sub=>{
+    const key = monthKey(sub.paidDate);
+    result[key] = (result[key]||0) + Number(sub.price);
+  });
+  return result;
+}
+function incomeByMonth(){
+  const result = paidReceiptsByMonth();
+  const expenses = typeof rentExpensesByMonth==='function' ? rentExpensesByMonth() : {};
+  Object.entries(expenses).forEach(([month,amount])=>{
+    if(!validIncomeDate(month+'-01') || !Number.isFinite(amount) || amount<0) return;
+    result[month] = (result[month]||0) - amount;
+  });
+  return result;
+}
+function renderHeader(){
+  const mk = monthKey(todayISO());
+  const byMonth = incomeByMonth();
+  const monthIncome = byMonth[mk]||0;
+  const totalIncome = Object.values(byMonth).reduce((sum,value)=>sum+value,0);
+  const activeCount = state.subscriptions.filter(s=>subStatus(s)==='active').length;
+  document.getElementById('hdrMonthIncome').textContent = fmtMoney(monthIncome);
+  document.getElementById('hdrTotalIncome').textContent = fmtMoney(totalIncome);
+  document.getElementById('hdrMonthIncome').style.color = monthIncome<0 ? 'var(--rose)' : '';
+  document.getElementById('hdrTotalIncome').style.color = totalIncome<0 ? 'var(--rose)' : '';
+  document.getElementById('hdrActiveClients').textContent = activeCount;
+  document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('ru-RU',{weekday:'long', day:'numeric', month:'long'});
+}
+
+/* ================= DASHBOARD ================= */
+function renderDashboard(){
+  syncRentPeriods();
+  renderHeader();
+  renderBackupStatusCard();
+  if(typeof renderRentReminder==='function') renderRentReminder();
+  // Attention: active subs with visitsLeft<=2 or expiry within 5 days
+  const attn = state.subscriptions.filter(s=>{
+    if(subStatus(s)!=='active') return false;
+    const daysLeft = daysBetween(todayISO(), s.expiryDate);
+    return s.visitsLeft<=2 || daysLeft<=5;
+  }).sort((a,b)=>a.visitsLeft-b.visitsLeft);
+
+  const box = document.getElementById('dashAttention');
+  if(attn.length===0){
+    box.innerHTML = '<div class="empty">Пока всё спокойно — ни у кого не заканчивается абонемент</div>';
+  } else {
+    box.innerHTML = attn.map(s=>{
+      const c = getClient(s.clientId);
+      const daysLeft = daysBetween(todayISO(), s.expiryDate);
+      const reason = s.visitsLeft<=2 ? `осталось ${s.visitsLeft} занят.` : `истекает через ${daysLeft} дн.`;
+      return rowHtml(c ? c.name : '—', reason, s.visitsLeft<=1?'bad':'warn', s.visitsLeft<=1?'мало':'скоро', ()=>openClientDetail(s.clientId));
+    }).join('');
+  }
+
+  const recent = [...state.visits].sort((a,b)=>b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)).slice(0,6);
+  const rv = document.getElementById('dashRecentVisits');
+  if(recent.length===0){
+    rv.innerHTML = '<div class="empty">Пока нет отмеченных посещений</div>';
+  } else {
+    rv.innerHTML = recent.map(v=>{
+      const c = getClient(v.clientId);
+      return rowHtml(c?c.name:'—', fmtDate(v.date), 'mute', 'визит', ()=>openClientDetail(v.clientId));
+    }).join('');
+  }
+}
+function rowHtml(title, sub, tagClass, tagText, onclick){
+  const id = 'r_'+uid();
+  setTimeout(()=>{ const el=document.getElementById(id); if(el) el.onclick=onclick; },0);
+  return `<div class="list-row" id="${id}">
+    <div class="avatar">${initials(title)}</div>
+    <div class="main"><div class="title">${escapeHtml(title)}</div><div class="sub">${escapeHtml(sub)}</div></div>
+    <div class="tag ${tagClass}">${tagText}</div>
+  </div>`;
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ================= CLIENTS ================= */
+function renderClients(){
+  const q = (document.getElementById('clientSearch').value||'').toLowerCase().trim();
+  const list = state.clients
+    .filter(c=>c.name.toLowerCase().includes(q))
+    .sort((a,b)=>a.name.localeCompare(b.name,'ru'));
+  const box = document.getElementById('clientList');
+  if(list.length===0){
+    box.innerHTML = '<div class="empty">Клиентов пока нет. Нажмите «+», чтобы добавить первого.</div>';
+    return;
+  }
+  box.innerHTML = list.map(c=>{
+    const sub = activeSubForClient(c.id);
+    let tagClass='mute', tagText='нет абон.';
+    if(sub){
+      tagClass = sub.visitsLeft<=2 ? 'warn' : 'ok';
+      tagText = sub.visitsLeft+' занят.';
+    }
+    const subline = sub ? `до ${fmtDate(sub.expiryDate)}` : (c.phone||'—');
+    return rowHtml(c.name, subline, tagClass, tagText, ()=>openClientDetail(c.id));
+  }).join('');
+}
+function openClientSheet(existing){
+  const c = existing || {};
+  openSheet(`
+    <div class="sheet-head"><h3>${existing?'Изменить клиента':'Новый клиент'}</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <label>Имя</label>
+    <input id="fClientName" value="${c.name?escapeHtml(c.name):''}" placeholder="Имя Фамилия">
+    <label>Телефон</label>
+    <input id="fClientPhone" type="tel" inputmode="tel" value="${c.phone?escapeHtml(c.phone):''}" placeholder="+7 700 000-00-00" onfocus="if(!this.value) this.value='+7 '" oninput="this.value=formatPhoneInputValue(this.value)">
+    <label>Заметки</label>
+    <textarea id="fClientNotes" placeholder="Гибкость, ограничения, пожелания…">${c.notes?escapeHtml(c.notes):''}</textarea>
+    ${existing?`<div class="row2">
+      <div><label>Клиент с</label><input id="fClientSince" type="date" value="${escapeHtml(c.createdAt||todayISO())}"></div>
+      <div><label>Примечание в «Визитах»</label><input id="fClientAttNote" value="${c.attendanceNote?escapeHtml(c.attendanceNote):''}" placeholder="Коротко"></div>
+    </div>`:''}
+    <button class="btn" onclick="saveClient('${existing?existing.id:''}')">Сохранить</button>
+    ${existing?'<button class="btn danger" style="margin-top:8px" onclick="deleteClient(\''+existing.id+'\')">Удалить клиента</button>':''}
+  `);
+}
+function saveClient(id){
+  const name = document.getElementById('fClientName').value.trim();
+  if(!name){ showToast('Введите имя клиента'); return; }
+  const phone = document.getElementById('fClientPhone').value.trim();
+  const notes = document.getElementById('fClientNotes').value.trim();
+  if(id){
+    const c = getClient(id);
+    const since = document.getElementById('fClientSince');
+    if(since && since.value){
+      if(!validIncomeDate(since.value)){ showToast('Проверьте дату «Клиент с»'); return; }
+      c.createdAt = since.value;
+    }
+    const attNote = document.getElementById('fClientAttNote');
+    if(attNote) c.attendanceNote = attNote.value.trim();
+    c.name=name; c.phone=phone; c.notes=notes;
+  } else {
+    state.clients.push({id:uid(), name, phone, notes, createdAt:todayISO()});
+  }
+  saveState(); closeSheet(); renderClients(); renderDashboard();
+  if(document.getElementById('page-client-detail').classList.contains('active')) renderClientDetail();
+  showToast('Клиент сохранён');
+}
+function deleteClient(id){
+  if(!confirm('Удалить клиента и все его данные (абонементы, посещения)?')) return;
+  state.clients = state.clients.filter(c=>c.id!==id);
+  state.subscriptions = state.subscriptions.filter(s=>s.clientId!==id);
+  state.visits = state.visits.filter(v=>v.clientId!==id);
+  state.transfers = state.transfers.filter(t=>t.clientId!==id);
+  saveState(); closeSheet(); showPage('clients'); renderHeader();
+}
+
+function renderClientDetail(){
+  const c = getClient(currentClientId);
+  if(!c){ showPage('clients'); return; }
+  document.getElementById('cdAvatar').textContent = initials(c.name);
+  document.getElementById('cdName').textContent = c.name;
+  document.getElementById('cdPhone').textContent = c.phone || 'телефон не указан';
+
+  // subscriptions
+  const subs = clientSubscriptions(c.id);
+  const subsBox = document.getElementById('cdSubs');
+  if(subs.length===0){
+    subsBox.innerHTML = '<div class="empty">Абонементов пока нет</div>';
+  } else {
+    subsBox.innerHTML = subs.map(s=>{
+      const plan = getPlan(s.planId);
+      const status = subStatus(s);
+      const pct = Math.max(0, Math.min(100, Math.round((s.visitsLeft/s.visitsTotal)*100)));
+      const statusTag = status==='active' ? '<span class="tag ok">активен</span>' : status==='finished' ? '<span class="tag mute">использован</span>' : '<span class="tag bad">истёк</span>';
+      const admin = isAdmin();
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:600">${escapeHtml(plan?plan.name:'Абонемент')}</div>
+            <div class="sub" style="color:var(--ink-soft);font-size:12.5px">куплен ${fmtDate(s.purchaseDate)}${admin?' · '+fmtMoney(s.price):''}</div>
+          </div>
+          ${statusTag}
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="kv"><span class="k">Осталось занятий</span><span>${s.visitsLeft} из ${s.visitsTotal}</span></div>
+        <div class="kv"><span class="k">Действует до</span><span>${fmtDate(s.expiryDate)}</span></div>
+        ${admin?`<div class="kv"><span class="k">Дата оплаты</span><span>${s.paid?fmtDate(s.paidDate):'—'}</span></div>
+        <div style="margin-top:8px">${paySwitchHtml(!!s.paid, `toggleSubPaid('${s.id}')`)}</div>`:''}
+        <div class="btn-row">
+          <button class="btn secondary small" style="flex:1" onclick="openTransferSheet('${s.id}')">Перенести занятие</button>
+          ${admin?`<button class="btn secondary small" style="flex:1" onclick="openSubEditSheet('${s.id}')">Изменить абонемент</button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // visits
+  const visits = state.visits.filter(v=>v.clientId===c.id).sort((a,b)=>b.date.localeCompare(a.date));
+  const vBox = document.getElementById('cdVisits');
+  if(visits.length===0){
+    vBox.innerHTML = '<div class="empty">Посещений пока не было</div>';
+  } else {
+    vBox.innerHTML = visits.map(v=>{
+      const cls = v.classId ? getClassObj(v.classId) : null;
+      return `<div class="list-row" style="cursor:default">
+        <div class="avatar">✓</div>
+        <div class="main"><div class="title">${fmtDate(v.date)}</div><div class="sub">${cls?escapeHtml(cls.name)+' · ':''}списано с абонемента</div></div>
+        <div class="row-actions">
+          <button class="btn secondary small" onclick="openVisitEditSheet('${v.id}')">Изменить</button>
+          <button class="btn danger small" onclick="undoVisit('${v.id}')">Отменить</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // transfers + info
+  const transfers = state.transfers.filter(t=>t.clientId===c.id).sort((a,b)=>b.date.localeCompare(a.date));
+  const infoBox = document.getElementById('cdInfo');
+  infoBox.innerHTML = `
+    <div class="card">
+      <div class="kv"><span class="k">Телефон</span><span>${c.phone?escapeHtml(c.phone):'—'}</span></div>
+      <div class="kv"><span class="k">Клиент с</span><span>${fmtDate(c.createdAt)}</span></div>
+      ${isAdmin()?`<div class="kv"><span class="k">Оплата абонемента</span><span>${escapeHtml(paymentNoteText(activeSubForClient(c.id)||clientSubscriptions(c.id)[0]))}</span></div>`:''}
+      <div class="kv"><span class="k">Заметки</span><span style="text-align:right;max-width:65%">${c.notes?escapeHtml(c.notes):'—'}</span></div>
+    </div>
+    <button class="btn secondary admin-only" onclick="openClientSheet(getClient('${c.id}'))">Редактировать клиента</button>
+    <div class="section-title" style="margin-top:18px"><h2 style="font-size:15px">История переносов</h2></div>
+    ${transfers.length===0 ? '<div class="empty">Переносов не было</div>' : transfers.map(t=>`
+      <div class="list-row" style="cursor:default">
+        <div class="avatar">⇄</div>
+        <div class="main"><div class="title">+${t.daysAdded} дн. к сроку</div><div class="sub">${fmtDate(t.date)}${t.comment?' · '+escapeHtml(t.comment):''}</div></div>
+        <div class="row-actions"><button class="btn secondary small" onclick="openTransferEditSheet('${t.id}')">Изменить</button></div>
+      </div>`).join('')}
+  `;
+}
+function undoVisit(visitId){
+  const v = state.visits.find(x=>x.id===visitId);
+  if(!v) return;
+  if(!confirm('Отменить это посещение и вернуть занятие в абонемент?')) return;
+  const sub = state.subscriptions.find(s=>s.id===v.subscriptionId);
+  if(sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft+1);
+  state.visits = state.visits.filter(x=>x.id!==visitId);
+  saveState(); renderClientDetail(); renderDashboard();
+  showToast('Посещение отменено');
+}
+
+/* ================= EDITING (абонементы, посещения, переносы) ================= */
+function fieldValue(id){ const el=document.getElementById(id); return el ? el.value : ''; }
+function openSubEditSheet(id){
+  if(!requireAdmin()) return;
+  const s = state.subscriptions.find(x=>x.id===id); if(!s) return;
+  const planOptions = state.plans.map(p=>`<option value="${p.id}" ${p.id===s.planId?'selected':''}>${escapeHtml(p.name)}</option>`).join('')
+    || '<option value="">—</option>';
+  const used = state.visits.filter(v=>v.subscriptionId===s.id).length;
+  openSheet(`
+    <div class="sheet-head"><h3>Изменить абонемент</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <label>Тариф</label>
+    <select id="fSubEditPlan">${planOptions}</select>
+    <div class="row2">
+      <div><label>Дата покупки</label><input id="fSubEditPurchase" type="date" value="${s.purchaseDate}"></div>
+      <div><label>Действует до</label><input id="fSubEditExpiry" type="date" value="${s.expiryDate}"></div>
+    </div>
+    <div class="row2">
+      <div><label>Занятий всего</label><input id="fSubEditTotal" type="number" inputmode="numeric" min="1" value="${s.visitsTotal}"></div>
+      <div><label>Осталось занятий</label><input id="fSubEditLeft" type="number" inputmode="numeric" min="0" value="${s.visitsLeft}"></div>
+    </div>
+    <div class="field-hint">Отмечено визитов по этому абонементу: ${used}. «Осталось» можно скорректировать вручную.</div>
+    <label>Цена, ₸</label>
+    <input id="fSubEditPrice" type="number" inputmode="decimal" min="0" value="${s.price}">
+    <div class="row2" style="align-items:end">
+      <div style="margin-top:14px">${paySwitchHtml(!!s.paid, 'toggleSubEditPaid(this)', 'fSubEditPaid')}</div>
+      <div><label>Дата оплаты</label><input id="fSubEditPaidDate" type="date" value="${s.paid&&s.paidDate?s.paidDate:''}" ${s.paid?'':'disabled'}></div>
+    </div>
+    <button class="btn" onclick="saveSubEdit('${s.id}')">Сохранить</button>
+    <button class="btn danger" style="margin-top:8px" onclick="deleteSubscription('${s.id}')">Удалить абонемент</button>
+  `);
+}
+function toggleSubEditPaid(btn){
+  toggleSalePaidDraft(btn);
+  const on = btn.classList.contains('on');
+  const input = document.getElementById('fSubEditPaidDate');
+  input.disabled = !on;
+  if(on && !input.value) input.value = todayISO();
+  if(!on) input.value = '';
+}
+function saveSubEdit(id){
+  if(!requireAdmin()) return;
+  const s = state.subscriptions.find(x=>x.id===id); if(!s) return;
+  const planId = fieldValue('fSubEditPlan') || s.planId;
+  const purchaseDate = fieldValue('fSubEditPurchase'), expiryDate = fieldValue('fSubEditExpiry');
+  const total = Number(fieldValue('fSubEditTotal')), left = Number(fieldValue('fSubEditLeft'));
+  const priceRaw = fieldValue('fSubEditPrice').trim(), price = Number(priceRaw);
+  const paid = document.getElementById('fSubEditPaid').classList.contains('on');
+  const paidDate = paid ? fieldValue('fSubEditPaidDate') : null;
+  if(!validIncomeDate(purchaseDate) || !validIncomeDate(expiryDate)){ showToast('Проверьте даты абонемента'); return; }
+  if(expiryDate < purchaseDate){ showToast('Срок действия раньше даты покупки'); return; }
+  if(!Number.isInteger(total) || total<1){ showToast('«Занятий всего» — целое число от 1'); return; }
+  if(!Number.isInteger(left) || left<0 || left>total){ showToast('«Осталось» — от 0 до «Занятий всего»'); return; }
+  if(priceRaw==='' || !Number.isFinite(price) || price<0){ showToast('Укажите цену (0 или больше)'); return; }
+  if(paid && !validIncomeDate(paidDate)){ showToast('Укажите дату оплаты'); return; }
+  Object.assign(s,{planId,purchaseDate,expiryDate,visitsTotal:total,visitsLeft:left,price,paid,paidDate});
+  saveState(); closeSheet(); refreshViews();
+  showToast('Абонемент сохранён');
+}
+function deleteSubscription(id){
+  if(!requireAdmin()) return;
+  const s = state.subscriptions.find(x=>x.id===id); if(!s) return;
+  const n = state.visits.filter(v=>v.subscriptionId===id).length;
+  if(!confirm('Удалить абонемент'+(n?' вместе с '+n+' отметками посещений':'')+'? Действие нельзя отменить (восстановить можно только из резервной копии).')) return;
+  state.subscriptions = state.subscriptions.filter(x=>x.id!==id);
+  state.visits = state.visits.filter(v=>v.subscriptionId!==id);
+  state.transfers = state.transfers.filter(t=>t.subscriptionId!==id);
+  saveState(); closeSheet(); refreshViews();
+  showToast('Абонемент удалён');
+}
+
+function openVisitEditSheet(id){
+  const v = state.visits.find(x=>x.id===id); if(!v) return;
+  const c = getClient(v.clientId);
+  const subOptions = clientSubscriptions(v.clientId).map(s=>{
+    const p = getPlan(s.planId);
+    return `<option value="${s.id}" ${s.id===v.subscriptionId?'selected':''}>${escapeHtml(p?p.name:'Абонемент')} · ${fmtDate(s.purchaseDate)} → ${fmtDate(s.expiryDate)}</option>`;
+  }).join('');
+  openSheet(`
+    <div class="sheet-head"><h3>Изменить посещение</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <div class="field-hint">${c?escapeHtml(c.name):''}</div>
+    <label>Дата занятия</label>
+    <input id="fVisitEditDate" type="date" value="${v.date}">
+    <label>Направление</label>
+    <select id="fVisitEditClass">${classSelectOptions(v.classId,'Без направления')}</select>
+    <label>Абонемент</label>
+    <select id="fVisitEditSub">${subOptions}</select>
+    <button class="btn" onclick="saveVisitEdit('${v.id}')">Сохранить</button>
+  `);
+}
+function saveVisitEdit(id){
+  const v = state.visits.find(x=>x.id===id); if(!v) return;
+  const date = fieldValue('fVisitEditDate'), classId = fieldValue('fVisitEditClass'), subId = fieldValue('fVisitEditSub');
+  if(!validIncomeDate(date)){ showToast('Укажите корректную дату занятия'); return; }
+  if(state.visits.some(x=>x.id!==id && x.clientId===v.clientId && x.date===date)){ showToast('Посещение в этот день уже отмечено'); return; }
+  const target = state.subscriptions.find(s=>s.id===subId && s.clientId===v.clientId);
+  if(!target){ showToast('Выберите абонемент'); return; }
+  if(date<target.purchaseDate || date>target.expiryDate){
+    showToast('Дата вне срока абонемента: '+fmtDate(target.purchaseDate)+' – '+fmtDate(target.expiryDate)); return;
+  }
+  if(target.id!==v.subscriptionId){
+    if(target.visitsLeft<=0){ showToast('В выбранном абонементе не осталось занятий'); return; }
+    const old = state.subscriptions.find(s=>s.id===v.subscriptionId);
+    if(old) old.visitsLeft = Math.min(old.visitsTotal, old.visitsLeft+1);
+    target.visitsLeft -= 1;
+    v.subscriptionId = target.id;
+  }
+  v.date = date; v.classId = classId||''; v.editedBy = actorName();
+  saveState(); closeSheet(); refreshViews();
+  showToast('Посещение сохранено');
+}
+
+function openTransferEditSheet(id){
+  const t = state.transfers.find(x=>x.id===id); if(!t) return;
+  openSheet(`
+    <div class="sheet-head"><h3>Изменить перенос</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <div class="field-hint">При изменении числа дней срок абонемента пересчитывается автоматически.</div>
+    <label>Продлено на, дней</label>
+    <input id="fTransferEditDays" type="number" inputmode="numeric" min="1" value="${t.daysAdded}">
+    <label>Дата переноса</label>
+    <input id="fTransferEditDate" type="date" value="${t.date}">
+    <label>Комментарий</label>
+    <input id="fTransferEditComment" value="${t.comment?escapeHtml(t.comment):''}" placeholder="Причина переноса">
+    <button class="btn" onclick="saveTransferEdit('${t.id}')">Сохранить</button>
+    <button class="btn danger" style="margin-top:8px" onclick="deleteTransfer('${t.id}')">Удалить перенос</button>
+  `);
+}
+function saveTransferEdit(id){
+  const t = state.transfers.find(x=>x.id===id); if(!t) return;
+  const sub = state.subscriptions.find(s=>s.id===t.subscriptionId);
+  const days = Number(fieldValue('fTransferEditDays')), date = fieldValue('fTransferEditDate');
+  const comment = fieldValue('fTransferEditComment').trim();
+  if(!Number.isInteger(days) || days<1 || days>36500){ showToast('Укажите число дней от 1'); return; }
+  if(!validIncomeDate(date)){ showToast('Укажите корректную дату переноса'); return; }
+  if(sub){
+    const expiry = addDays(sub.expiryDate, days - t.daysAdded);
+    if(!validIncomeDate(expiry) || expiry < sub.purchaseDate){ showToast('Срок действия абонемента получится некорректным'); return; }
+    sub.expiryDate = expiry;
+  }
+  t.daysAdded = days; t.date = date; t.comment = comment;
+  saveState(); closeSheet(); refreshViews();
+  showToast('Перенос сохранён');
+}
+function deleteTransfer(id){
+  const t = state.transfers.find(x=>x.id===id); if(!t) return;
+  if(!confirm('Удалить перенос? Срок абонемента уменьшится на '+t.daysAdded+' дн.')) return;
+  const sub = state.subscriptions.find(s=>s.id===t.subscriptionId);
+  if(sub){
+    const expiry = addDays(sub.expiryDate, -t.daysAdded);
+    if(!validIncomeDate(expiry) || expiry < sub.purchaseDate){ showToast('Нельзя удалить: срок станет раньше даты покупки'); return; }
+    sub.expiryDate = expiry;
+  }
+  state.transfers = state.transfers.filter(x=>x.id!==id);
+  saveState(); closeSheet(); refreshViews();
+  showToast('Перенос удалён');
+}
+
+/* ================= CLASSES (направления йоги и пилатеса) ================= */
+const CLASS_TYPES = {yoga:'Йога', pilates:'Пилатес', other:'Другое'};
+const CLASS_LEVELS = ['Все уровни','Начинающие','Средний','Продвинутый'];
+function defaultClasses(){
+  const mk=(name,type,level,durationMin,capacity,equipment,description)=>({id:uid(),name,type,level,durationMin,capacity,trainerIds:[],schedule:'',equipment,description,active:true});
+  return [
+    mk('Хатха-йога','yoga','Все уровни',60,12,'Коврик, блоки, ремень','Классическая практика асан, дыхания и расслабления в спокойном темпе. Баланс силы и гибкости.'),
+    mk('Йога для начинающих','yoga','Начинающие',60,12,'Коврик, блоки','Базовые асаны, правильное выравнивание и дыхание. Подходит для первого знакомства с йогой.'),
+    mk('Виньяса-флоу','yoga','Средний',75,12,'Коврик','Динамичная последовательность асан, связанных с дыханием. Развивает выносливость и координацию.'),
+    mk('Аштанга-виньяса','yoga','Продвинутый',90,10,'Коврик','Строгая последовательность поз в быстром темпе. Требует подготовки и регулярной практики.'),
+    mk('Йога Айенгара','yoga','Все уровни',75,10,'Коврик, блоки, ремни, болстеры','Точное выравнивание и длительное удержание поз с использованием опор.'),
+    mk('Инь-йога','yoga','Все уровни',75,12,'Коврик, болстеры, одеяла','Долгие пассивные позы (3–5 минут) для глубокого расслабления соединительных тканей.'),
+    mk('Кундалини-йога','yoga','Все уровни',75,14,'Коврик, плед','Крия, дыхательные техники, мантры и медитация.'),
+    mk('Йога для спины и осанки','yoga','Все уровни',60,12,'Коврик, блоки, ремни','Оздоровительная практика для позвоночника, снятия напряжения в шее и пояснице.'),
+    mk('Пренатальная йога','yoga','Все уровни',60,8,'Коврик, болстеры, блоки','Мягкая практика для беременных: дыхание, подвижность таза, расслабление.'),
+    mk('Йога-нидра','yoga','Все уровни',45,15,'Коврик, плед, болстер','Глубокая релаксация в положении лёжа под голос ведущего.'),
+    mk('Мат-пилатес','pilates','Все уровни',55,12,'Коврик','Упражнения на коврике для мышц кора, осанки и контроля дыхания.'),
+    mk('Пилатес для начинающих','pilates','Начинающие',55,12,'Коврик, мяч','Основные принципы пилатеса, базовые упражнения и техника безопасного выполнения.'),
+    mk('Пилатес на реформере','pilates','Средний',55,6,'Реформер','Тренировка на реформере с пружинным сопротивлением. Малые группы.'),
+    mk('Пилатес с малым оборудованием','pilates','Все уровни',55,10,'Мячи, кольца, ленты, ролики','Разнообразная нагрузка с фитболом, кольцом, эспандерами и роликами.'),
+    mk('Пилатес для спины и кора','pilates','Все уровни',55,10,'Коврик, ролик','Укрепление глубоких мышц спины и живота, профилактика болей в пояснице.'),
+    mk('Пренатальный и постнатальный пилатес','pilates','Все уровни',55,8,'Коврик, мяч','Безопасные упражнения во время беременности и для восстановления после родов.')
+  ];
+}
+function getClassObj(id){ return (state.classes||[]).find(c=>c.id===id); }
+function classSelectOptions(selectedId, emptyLabel){
+  const list = (state.classes||[]).filter(c=>c.active!==false || c.id===selectedId)
+    .sort((a,b)=>a.name.localeCompare(b.name,'ru'));
+  return `<option value="">${escapeHtml(emptyLabel||'Не выбрано')}</option>` +
+    list.map(c=>`<option value="${c.id}" ${c.id===selectedId?'selected':''}>${escapeHtml(c.name)} (${CLASS_TYPES[c.type]||'Другое'})</option>`).join('');
+}
+function trainerNamesFor(cls){
+  const names = (cls.trainerIds||[]).map(id=>typeof window.trainerName==='function' ? window.trainerName(id) : '').filter(Boolean);
+  return names.join(', ');
+}
+let classesFilter = 'all';
+function setClassesFilter(k){ classesFilter=k; renderClasses(); }
+function renderClasses(){
+  const pills = [['all','Все'],['yoga','Йога'],['pilates','Пилатес'],['other','Другое']];
+  document.getElementById('classFilterPills').innerHTML = pills.map(([k,l])=>
+    `<button class="pill ${classesFilter===k?'active':''}" onclick="setClassesFilter('${k}')">${l}</button>`).join('');
+  let list = [...(state.classes||[])];
+  if(classesFilter!=='all') list = list.filter(c=>c.type===classesFilter);
+  list.sort((a,b)=>(a.type===b.type?0:(a.type==='yoga'?-1:1)) || a.name.localeCompare(b.name,'ru'));
+  const box = document.getElementById('classList');
+  if(list.length===0){ box.innerHTML = '<div class="empty">Направлений пока нет'+(isAdmin()?'. Нажмите «+», чтобы добавить.':'.')+'</div>'; return; }
+  box.innerHTML = list.map(c=>{
+    const tr = trainerNamesFor(c);
+    const facts = [c.level, c.durationMin?c.durationMin+' мин':'', c.capacity?'до '+c.capacity+' чел.':''].filter(Boolean).join(' · ');
+    return `<div class="card class-card ${c.active===false?'inactive':''}" onclick="openClassSheet('${c.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="font-weight:600">${escapeHtml(c.name)}</div>
+        <span class="tag ${c.type==='pilates'?'warn':'ok'}">${CLASS_TYPES[c.type]||'Другое'}</span>
+      </div>
+      <div class="sub" style="color:var(--ink-soft);font-size:12.5px;margin-top:2px">${escapeHtml(facts)}</div>
+      ${c.schedule?`<div class="class-line">🕒 ${escapeHtml(c.schedule)}</div>`:''}
+      ${tr?`<div class="class-line">Тренер: ${escapeHtml(tr)}</div>`:''}
+      ${c.description?`<div class="class-desc">${escapeHtml(c.description)}</div>`:''}
+      ${c.active===false?'<div class="class-line">Не проводится</div>':''}
+    </div>`;
+  }).join('');
+}
+function openClassSheet(id){
+  const existing = id ? getClassObj(id) : null;
+  if(!isAdmin()){ if(existing) openClassView(existing); return; }
+  const c = existing || {type:'yoga',level:'Все уровни',durationMin:60,capacity:12,trainerIds:[],active:true};
+  const trainers = typeof window.listTrainers==='function' ? window.listTrainers() : [];
+  const trainerBoxes = trainers.length ? trainers.map(t=>`<label class="check-row"><input type="checkbox" class="class-trainer" value="${t.id}" ${(c.trainerIds||[]).includes(t.id)?'checked':''}> ${escapeHtml(t.name)}</label>`).join('')
+    : '<div class="field-hint">Тренеры ещё не добавлены: Настройки → Пользователи и роли.</div>';
+  openSheet(`
+    <div class="sheet-head"><h3>${existing?'Изменить направление':'Новое направление'}</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <label>Название</label>
+    <input id="fClassName" value="${c.name?escapeHtml(c.name):''}" placeholder="Например: Хатха-йога">
+    <div class="row2">
+      <div><label>Вид</label><select id="fClassType">${Object.entries(CLASS_TYPES).map(([k,l])=>`<option value="${k}" ${c.type===k?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div><label>Уровень</label><select id="fClassLevel">${CLASS_LEVELS.map(l=>`<option ${c.level===l?'selected':''}>${l}</option>`).join('')}</select></div>
+    </div>
+    <div class="row2">
+      <div><label>Длительность, мин</label><input id="fClassDuration" type="number" inputmode="numeric" min="0" value="${c.durationMin??''}"></div>
+      <div><label>Мест в группе</label><input id="fClassCapacity" type="number" inputmode="numeric" min="0" value="${c.capacity??''}"></div>
+    </div>
+    <label>Расписание</label>
+    <input id="fClassSchedule" value="${c.schedule?escapeHtml(c.schedule):''}" placeholder="Например: Пн, Ср 19:00">
+    <label>Оборудование</label>
+    <input id="fClassEquipment" value="${c.equipment?escapeHtml(c.equipment):''}" placeholder="Коврик, блоки…">
+    <label>Описание</label>
+    <textarea id="fClassDescription" placeholder="О чём занятие, кому подходит">${c.description?escapeHtml(c.description):''}</textarea>
+    <label>Тренеры</label>
+    <div class="check-list">${trainerBoxes}</div>
+    <label class="check-row" style="margin-top:12px"><input id="fClassActive" type="checkbox" ${c.active!==false?'checked':''}> Направление проводится</label>
+    <button class="btn" onclick="saveClass('${existing?existing.id:''}')">Сохранить</button>
+    ${existing?`<button class="btn danger" style="margin-top:8px" onclick="deleteClass('${existing.id}')">Удалить направление</button>`:''}
+  `);
+}
+function openClassView(c){
+  const tr = trainerNamesFor(c);
+  openSheet(`
+    <div class="sheet-head"><h3>${escapeHtml(c.name)}</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <div class="kv"><span class="k">Вид</span><span>${CLASS_TYPES[c.type]||'Другое'}</span></div>
+    <div class="kv"><span class="k">Уровень</span><span>${escapeHtml(c.level||'—')}</span></div>
+    <div class="kv"><span class="k">Длительность</span><span>${c.durationMin?c.durationMin+' мин':'—'}</span></div>
+    <div class="kv"><span class="k">Мест в группе</span><span>${c.capacity||'—'}</span></div>
+    <div class="kv"><span class="k">Расписание</span><span>${escapeHtml(c.schedule||'—')}</span></div>
+    <div class="kv"><span class="k">Тренеры</span><span>${escapeHtml(tr||'—')}</span></div>
+    <div class="kv"><span class="k">Оборудование</span><span style="text-align:right;max-width:60%">${escapeHtml(c.equipment||'—')}</span></div>
+    <p style="margin:12px 0 0">${escapeHtml(c.description||'')}</p>
+  `);
+}
+function saveClass(id){
+  if(!requireAdmin()) return;
+  const name = fieldValue('fClassName').trim();
+  if(!name){ showToast('Введите название направления'); return; }
+  const type = fieldValue('fClassType'); if(!CLASS_TYPES[type]){ showToast('Выберите вид'); return; }
+  const durationMin = Number(fieldValue('fClassDuration')||0), capacity = Number(fieldValue('fClassCapacity')||0);
+  if(!Number.isInteger(durationMin) || durationMin<0 || durationMin>600 || !Number.isInteger(capacity) || capacity<0 || capacity>1000){
+    showToast('Проверьте длительность и число мест'); return;
+  }
+  if((state.classes||[]).some(c=>c.id!==id && c.name.trim().toLowerCase()===name.toLowerCase())){ showToast('Направление с таким названием уже есть'); return; }
+  const rec = {
+    name, type, level:fieldValue('fClassLevel'), durationMin, capacity,
+    schedule:fieldValue('fClassSchedule').trim(), equipment:fieldValue('fClassEquipment').trim(),
+    description:fieldValue('fClassDescription').trim(),
+    trainerIds:[...document.querySelectorAll('.class-trainer:checked')].map(el=>el.value),
+    active:document.getElementById('fClassActive').checked
+  };
+  if(!Array.isArray(state.classes)) state.classes=[];
+  if(id){ const c=getClassObj(id); if(!c) return; Object.assign(c,rec); }
+  else state.classes.push({id:uid(),...rec});
+  saveState(); closeSheet(); renderClasses();
+  showToast('Направление сохранено');
+}
+function deleteClass(id){
+  if(!requireAdmin()) return;
+  const n = state.visits.filter(v=>v.classId===id).length;
+  if(!confirm('Удалить направление?'+(n?' У '+n+' посещений направление будет сброшено.':''))) return;
+  state.classes = state.classes.filter(c=>c.id!==id);
+  state.visits.forEach(v=>{ if(v.classId===id) v.classId=''; });
+  if(attendanceClassFilter===id) attendanceClassFilter='';
+  saveState(); closeSheet(); renderClasses();
+  showToast('Направление удалено');
+}
+
+/* ================= PLANS (тарифы) ================= */
+function renderPlans(){
+  const box = document.getElementById('planList');
+  if(state.plans.length===0){
+    box.innerHTML = '<div class="empty">Тарифов пока нет. Добавьте первый, например «8 занятий / месяц».</div>';
+    return;
+  }
+  box.innerHTML = state.plans.map(p=>`
+    <div class="card" onclick="openPlanSheet(getPlanObj('${p.id}'))" style="cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:600">${escapeHtml(p.name)}</div>
+          <div class="sub" style="color:var(--ink-soft);font-size:12.5px">${p.visitsCount} занятий · ${p.durationDays} дней</div>
+        </div>
+        <div style="font-family:'Fraunces',serif;font-weight:600;font-size:17px;color:var(--sage-dark)">${fmtMoney(p.price)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function getPlanObj(id){ return getPlan(id); }
+function openPlanSheet(existing){
+  const p = existing || {visitsCount:8, durationDays:30};
+  openSheet(`
+    <div class="sheet-head"><h3>${existing?'Изменить тариф':'Новый тариф'}</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <label>Название</label>
+    <input id="fPlanName" value="${p.name?escapeHtml(p.name):''}" placeholder="Например: 8 занятий / месяц">
+    <div class="row2">
+      <div><label>Занятий в абонементе</label><input id="fPlanVisits" type="number" min="1" value="${p.visitsCount}"></div>
+      <div><label>Срок действия, дней</label><input id="fPlanDuration" type="number" min="1" value="${p.durationDays}"></div>
+    </div>
+    <label>Цена, ₸</label>
+    <input id="fPlanPrice" type="number" min="0" value="${p.price||''}" placeholder="15000">
+    <div class="field-hint">Срок обычно = 30 дней (1 месяц). Для безлимитного абонемента укажите большое число занятий, например 999.</div>
+    <button class="btn" onclick="savePlan('${existing?existing.id:''}')">Сохранить</button>
+    ${existing?'<button class="btn danger" style="margin-top:8px" onclick="deletePlan(\''+existing.id+'\')">Удалить тариф</button>':''}
+  `);
+}
+function savePlan(id){
+  const name = document.getElementById('fPlanName').value.trim();
+  const visitsCount = Number(document.getElementById('fPlanVisits').value);
+  const durationDays = Number(document.getElementById('fPlanDuration').value);
+  const price = Number(document.getElementById('fPlanPrice').value);
+  if(!name || !visitsCount || !durationDays || !price){ showToast('Заполните все поля'); return; }
+  if(id){
+    const p = getPlan(id);
+    Object.assign(p,{name,visitsCount,durationDays,price});
+  } else {
+    state.plans.push({id:uid(), name, visitsCount, durationDays, price});
+  }
+  saveState(); closeSheet(); renderPlans();
+  showToast('Тариф сохранён');
+}
+function deletePlan(id){
+  if(!confirm('Удалить тариф? Уже проданные абонементы этого тарифа останутся у клиентов.')) return;
+  state.plans = state.plans.filter(p=>p.id!==id);
+  saveState(); closeSheet(); renderPlans();
+}
+
+/* ================= PAYMENT (подтверждение оплаты) ================= */
+// Поля абонемента: paid (bool), paidDate (YYYY-MM-DD, ставится автоматически в момент отметки «оплачено»)
+function paySwitchHtml(on, onclick, id){
+  return `<button type="button" class="pay-switch ${on?'on':''}" ${id?`id="${id}"`:''} role="switch" aria-checked="${on?'true':'false'}" onclick="${onclick}"><span class="track"></span><span>оплачено</span></button>`;
+}
+function toggleSalePaidDraft(btn){
+  const on = !btn.classList.contains('on');
+  btn.classList.toggle('on', on);
+  btn.setAttribute('aria-checked', on?'true':'false');
+}
+function toggleSubPaid(subId){
+  const sub = state.subscriptions.find(x=>x.id===subId);
+  if(!sub) return;
+  if(sub.paid){ sub.paid=false; sub.paidDate=null; }
+  else { sub.paid=true; sub.paidDate=todayISO(); }
+  saveState();
+  renderSales(); renderDashboard();
+  renderFinance();
+  if(document.getElementById('page-client-detail').classList.contains('active')) renderClientDetail();
+  if(document.getElementById('page-attendance').classList.contains('active')) renderAttendanceGrid();
+  showToast(sub.paid ? 'Оплата отмечена: '+fmtDate(sub.paidDate) : 'Отметка об оплате снята');
+}
+function paymentNoteText(sub){
+  if(!sub) return 'нет абонемента';
+  return sub.paid ? 'Оплачено: '+fmtDate(sub.paidDate) : 'Не оплачено';
+}
+
+/* ================= SALES (продажа абонементов) ================= */
+let salesFilter = 'all';
+function renderSalesPills(){
+  const pills = [['all','Все'],['active','Активные'],['finished','Использованы'],['expired','Истёкшие']];
+  document.getElementById('salesFilterPills').innerHTML = pills.map(([k,l])=>
+    `<button class="pill ${salesFilter===k?'active':''}" onclick="setSalesFilter('${k}')">${l}</button>`).join('');
+}
+function setSalesFilter(k){ salesFilter=k; renderSales(); }
+function renderSales(){
+  renderSalesPills();
+  let list = [...state.subscriptions].sort((a,b)=>b.purchaseDate.localeCompare(a.purchaseDate));
+  if(salesFilter!=='all') list = list.filter(s=>subStatus(s)===salesFilter);
+  const box = document.getElementById('salesList');
+  if(list.length===0){
+    box.innerHTML = '<div class="empty">Ничего не найдено</div>';
+    return;
+  }
+  box.innerHTML = list.map(s=>{
+    const c = getClient(s.clientId);
+    const plan = getPlan(s.planId);
+    const status = subStatus(s);
+    const tagClass = status==='active' ? (s.visitsLeft<=2?'warn':'ok') : status==='finished' ? 'mute' : 'bad';
+    const tagText = status==='active' ? s.visitsLeft+' ост.' : status==='finished' ? 'исп.' : 'истёк';
+    const title = `${c?c.name:'—'} · ${plan?plan.name:'—'}`;
+    return `<div class="list-row" onclick="openClientDetail('${s.clientId}')">
+      <div class="avatar">${initials(c?c.name:'—')}</div>
+      <div class="main">
+        <div class="title">${escapeHtml(title)}</div>
+        <div class="sub">${fmtDate(s.purchaseDate)} → ${fmtDate(s.expiryDate)} · ${fmtMoney(s.price)}</div>
+        <div class="pay-note ${s.paid?'paid':''}">${paymentNoteText(s)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px" onclick="event.stopPropagation()">
+        <div class="tag ${tagClass}">${tagText}</div>
+        ${paySwitchHtml(!!s.paid, `toggleSubPaid('${s.id}')`)}
+      </div>
+    </div>`;
+  }).join('');
+}
+function openSaleSheet(clientId){
+  const clientOptions = state.clients.sort((a,b)=>a.name.localeCompare(b.name,'ru'))
+    .map(c=>`<option value="${c.id}" ${clientId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+  const planOptions = state.plans.map(p=>`<option value="${p.id}">${escapeHtml(p.name)} — ${fmtMoney(p.price)}</option>`).join('');
+  if(state.clients.length===0){ showToast('Сначала добавьте клиента'); return; }
+  if(state.plans.length===0){ showToast('Сначала добавьте тариф'); return; }
+  openSheet(`
+    <div class="sheet-head"><h3>Продажа абонемента</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <label>Клиент</label>
+    <select id="fSaleClient">${clientOptions}</select>
+    <label>Тариф</label>
+    <select id="fSalePlan" onchange="onSalePlanChange()">${planOptions}</select>
+    <div class="row2">
+      <div><label>Дата покупки</label><input id="fSaleDate" type="date" value="${todayISO()}" onchange="onSalePlanChange()"></div>
+      <div><label>Занятий</label><input id="fSaleVisits" type="number" min="1"></div>
+    </div>
+    <div class="row2">
+      <div><label>Цена, ₸</label><input id="fSalePrice" type="number" min="0"></div>
+      <div><label>Действует до</label><input id="fSaleExpiry" type="date"></div>
+    </div>
+    <div style="margin-top:14px">${paySwitchHtml(false, 'toggleSalePaidDraft(this)', 'fSalePaid')}</div>
+    <div class="field-hint">Включите, когда получили оплату — дата оплаты проставится автоматически.</div>
+    <button class="btn" onclick="saveSale()">Продать абонемент</button>
+  `);
+  onSalePlanChange();
+}
+function onSalePlanChange(){
+  const planId = document.getElementById('fSalePlan').value;
+  const plan = getPlan(planId);
+  const date = document.getElementById('fSaleDate').value || todayISO();
+  if(plan){
+    document.getElementById('fSaleVisits').value = plan.visitsCount;
+    document.getElementById('fSalePrice').value = plan.price;
+    document.getElementById('fSaleExpiry').value = addDays(date, plan.durationDays);
+  }
+}
+function saveSale(){
+  const clientId = document.getElementById('fSaleClient').value;
+  const planId = document.getElementById('fSalePlan').value;
+  const purchaseDate = document.getElementById('fSaleDate').value;
+  const visitsTotal = Number(document.getElementById('fSaleVisits').value);
+  const price = Number(document.getElementById('fSalePrice').value);
+  const expiryDate = document.getElementById('fSaleExpiry').value;
+  if(!clientId || !planId || !purchaseDate || !visitsTotal || !expiryDate){ showToast('Заполните все поля'); return; }
+  const paid = document.getElementById('fSalePaid').classList.contains('on');
+  state.subscriptions.push({
+    id:uid(), clientId, planId, purchaseDate, expiryDate,
+    visitsTotal, visitsLeft:visitsTotal, price,
+    paid, paidDate: paid ? todayISO() : null
+  });
+  saveState(); closeSheet();
+  renderSales(); renderDashboard();
+  if(document.getElementById('page-client-detail').classList.contains('active')) renderClientDetail();
+  showToast('Абонемент продан');
+}
+
+/* ================= VISITS (посещаемость) ================= */
+function openVisitSheet(clientId){
+  const withSub = state.clients.filter(c=>activeSubForClient(c.id));
+  if(withSub.length===0){
+    showToast('Нет клиентов с активным абонементом');
+    return;
+  }
+  const options = withSub.sort((a,b)=>a.name.localeCompare(b.name,'ru')).map(c=>{
+    const sub = activeSubForClient(c.id);
+    return `<option value="${c.id}" ${clientId===c.id?'selected':''}>${escapeHtml(c.name)} — осталось ${sub.visitsLeft}</option>`;
+  }).join('');
+  openSheet(`
+    <div class="sheet-head"><h3>Отметить посещение</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <label>Клиент</label>
+    <select id="fVisitClient">${options}</select>
+    <label>Дата занятия</label>
+    <input id="fVisitDate" type="date" value="${todayISO()}">
+    <label>Направление</label>
+    <select id="fVisitClass">${classSelectOptions('', 'Без направления')}</select>
+    <div class="field-hint">Занятие спишется с ближайшего по сроку активного абонемента клиента.</div>
+    <button class="btn" onclick="saveVisit()">Отметить</button>
+  `);
+}
+function saveVisit(){
+  const clientId = document.getElementById('fVisitClient').value;
+  const date = document.getElementById('fVisitDate').value;
+  const sub = activeSubForClient(clientId);
+  if(!sub){ showToast('У клиента нет активного абонемента'); return; }
+  sub.visitsLeft -= 1;
+  state.visits.push({id:uid(), clientId, subscriptionId:sub.id, date, classId:fieldValue('fVisitClass'), markedBy:actorName(), createdAt:new Date().toISOString()});
+  saveState(); closeSheet();
+  renderDashboard();
+  if(document.getElementById('page-visits').classList.contains('active')) renderVisitsPage();
+  if(document.getElementById('page-client-detail').classList.contains('active')) renderClientDetail();
+  showToast('Посещение отмечено');
+}
+function renderVisitsPage(){
+  const list = [...state.visits].sort((a,b)=>b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  const box = document.getElementById('visitsList');
+  if(list.length===0){
+    box.innerHTML = '<div class="empty">Посещений пока нет</div>';
+    return;
+  }
+  box.innerHTML = list.map(v=>{
+    const c = getClient(v.clientId);
+    return `<div class="list-row" style="cursor:default" onclick="openClientDetail('${v.clientId}')">
+      <div class="avatar">✓</div>
+      <div class="main"><div class="title">${c?escapeHtml(c.name):'—'}</div><div class="sub">${fmtDate(v.date)}</div></div>
+      <div class="tag mute">визит</div>
+    </div>`;
+  }).join('');
+}
+
+/* ================= ATTENDANCE GRID (Визиты) ================= */
+const WEEKDAY_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const MONTH_SHORT = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+let attendanceWeekAnchor = todayISO();
+let attendanceClassFilter = '';
+function setAttendanceClass(id){ attendanceClassFilter = id||''; renderAttendanceGrid(); }
+function fillAttendanceClassFilter(){
+  const sel = document.getElementById('attClassFilter'); if(!sel) return;
+  if(attendanceClassFilter && !getClassObj(attendanceClassFilter)) attendanceClassFilter='';
+  sel.innerHTML = classSelectOptions(attendanceClassFilter, 'Все направления');
+}
+
+function getWeekDates(refISO){
+  const ref = new Date(refISO+'T00:00:00');
+  const dow = ref.getDay(); // 0=Sun..6=Sat
+  const diffToMonday = dow===0 ? -6 : 1-dow;
+  const monday = new Date(ref); monday.setDate(ref.getDate()+diffToMonday);
+  const dates=[];
+  for(let i=0;i<7;i++){
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    dates.push(localISO(d));
+  }
+  return dates;
+}
+function weekRangeLabel(weekDates){
+  const first = weekDates[0], last = weekDates[weekDates.length-1];
+  const d1 = new Date(first+'T00:00:00'), d2 = new Date(last+'T00:00:00');
+  const y = d2.getFullYear();
+  if(d1.getMonth()===d2.getMonth()){
+    return `${d1.getDate()}–${d2.getDate()} ${MONTH_SHORT[d2.getMonth()]} ${y}`;
+  }
+  return `${d1.getDate()} ${MONTH_SHORT[d1.getMonth()]} – ${d2.getDate()} ${MONTH_SHORT[d2.getMonth()]} ${y}`;
+}
+function shiftAttendanceWeek(days){ attendanceWeekAnchor = addDays(attendanceWeekAnchor, days); renderAttendanceGrid(); }
+function resetAttendanceWeek(){ attendanceWeekAnchor = todayISO(); renderAttendanceGrid(); }
+
+function renderAttendanceGrid(){
+  fillAttendanceClassFilter();
+  const weekDates = getWeekDates(attendanceWeekAnchor);
+  document.getElementById('attWeekLabel').textContent = weekRangeLabel(weekDates);
+
+  const clients = state.clients
+    .filter(c=>activeSubForClient(c.id))
+    .sort((a,b)=>a.name.localeCompare(b.name,'ru'));
+
+  const box = document.getElementById('attendanceGridBox');
+  if(clients.length===0){
+    box.innerHTML = '<div class="empty">Нет клиентов с действующим абонементом</div>';
+    return;
+  }
+
+  const todayStr = todayISO();
+  let head = `<tr>
+    <th class="name-col">Клиент</th>
+    <th class="num-col left">Осталось</th>
+    <th class="num-col">Прошло</th>`;
+  weekDates.forEach(d=>{
+    const dt = new Date(d+'T00:00:00');
+    const isToday = d===todayStr;
+    head += `<th class="${isToday?'today':''}"><div class="day-head"><div class="wd">${WEEKDAY_SHORT[dt.getDay()===0?6:dt.getDay()-1]}</div><div class="dn">${dt.getDate()}</div><div class="mo">${MONTH_SHORT[dt.getMonth()]}</div></div></th>`;
+  });
+  head += `<th class="note-col">Примечание</th></tr>`;
+
+  let bodyRows = '';
+  clients.forEach(c=>{
+    const sub = activeSubForClient(c.id);
+    const passed = sub.visitsTotal - sub.visitsLeft;
+    let row = `<tr>
+      <td class="name-col">${escapeHtml(c.name)}</td>
+      <td class="num-col left">${sub.visitsLeft}</td>
+      <td class="num-col">${passed}</td>`;
+    weekDates.forEach(d=>{
+      const has = state.visits.some(v=>v.clientId===c.id && v.date===d && (!attendanceClassFilter || v.classId===attendanceClassFilter));
+      const isToday = d===todayStr;
+      const cls = ['day-col'];
+      if(has) cls.push('done');
+      if(isToday && !has) cls.push('today');
+      row += `<td class="${cls.join(' ')}" onclick="toggleAttendanceCell('${c.id}','${d}')">${has?'✓':''}</td>`;
+    });
+    row += `<td class="note-col"><div class="pay-note ${sub.paid?'paid':''}">${paymentNoteText(sub)}</div><input type="text" value="${escapeHtml(c.attendanceNote||'')}" placeholder="…" onclick="event.stopPropagation()" onchange="updateAttendanceNote('${c.id}', this.value)"></td>`;
+    row += `</tr>`;
+    bodyRows += row;
+  });
+
+  box.innerHTML = `<div class="attendance-wrap"><table class="att-table"><thead>${head}</thead><tbody>${bodyRows}</tbody></table></div>`;
+}
+
+function toggleAttendanceCell(clientId, dateISO){
+  const existing = state.visits.find(v=>v.clientId===clientId && v.date===dateISO);
+  if(existing){
+    const sub = state.subscriptions.find(s=>s.id===existing.subscriptionId);
+    if(sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft+1);
+    state.visits = state.visits.filter(v=>v.id!==existing.id);
+    saveState();
+    renderAttendanceGrid();
+    showToast('Отметка снята');
+  } else {
+    const sub = activeSubForClient(clientId);
+    if(!sub){ showToast('Нет активного абонемента'); renderAttendanceGrid(); return; }
+    sub.visitsLeft -= 1;
+    state.visits.push({id:uid(), clientId, subscriptionId:sub.id, date:dateISO, classId:attendanceClassFilter, markedBy:actorName(), createdAt:new Date().toISOString()});
+    saveState();
+    renderAttendanceGrid();
+    showToast('Визит отмечен');
+  }
+}
+function updateAttendanceNote(clientId, value){
+  const c = getClient(clientId);
+  if(!c) return;
+  c.attendanceNote = value;
+  saveState();
+}
+
+/* ---- Month attendance report -> PDF (via browser print) ---- */
+const MONTH_FULL = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+function openPdfExportSheet(){
+  const now = new Date();
+  const curM = now.getMonth()+1, curY = now.getFullYear();
+  openSheet(`
+    <div class="sheet-head"><h3>Экспорт визитов в PDF</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <div class="field-hint">Сформируется печатная таблица посещений за выбранный месяц (клиенты по строкам, числа месяца по столбцам). Откроется диалог печати — выберите «Сохранить в PDF» (на iPhone/iPad: разведите два пальца на миниатюре предпросмотра, затем выберите «Поделиться» → «Сохранить в Файлы»).</div>
+    <div class="row2">
+      <div><label>Месяц</label>
+        <select id="fPdfMonth">${MONTH_FULL.map((n,i)=>`<option value="${i+1}" ${i+1===curM?'selected':''}>${n}</option>`).join('')}</select>
+      </div>
+      <div><label>Год</label><input id="fPdfYear" type="number" inputmode="numeric" value="${curY}" min="2020" max="2100"></div>
+    </div>
+    <label>Направление</label>
+    <select id="fPdfClass">${classSelectOptions(attendanceClassFilter, 'Все направления')}</select>
+    <button class="btn" onclick="generateMonthPdf()">Сформировать PDF / печать</button>
+  `);
+}
+
+function generateMonthPdf(){
+  const month = Number(document.getElementById('fPdfMonth').value);
+  const year = Number(document.getElementById('fPdfYear').value);
+  if(!month || !year){ showToast('Укажите месяц и год'); return; }
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const prefix = `${year}-${String(month).padStart(2,'0')}-`;
+
+  const pdfClass = fieldValue('fPdfClass');
+  const visitsThisMonth = state.visits.filter(v=>v.date.startsWith(prefix) && (!pdfClass || v.classId===pdfClass));
+  const clientIds = Array.from(new Set(visitsThisMonth.map(v=>v.clientId)));
+  const clients = clientIds.map(id=>getClient(id)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name,'ru'));
+
+  let headerCells = '';
+  for(let d=1; d<=daysInMonth; d++) headerCells += `<th>${d}</th>`;
+
+  let rows = '';
+  if(clients.length===0){
+    rows = `<tr><td colspan="${daysInMonth+2}" style="text-align:center;padding:18px;color:#888">Посещений за этот месяц не найдено</td></tr>`;
+  } else {
+    clients.forEach(c=>{
+      let total = 0;
+      let cells = '';
+      for(let d=1; d<=daysInMonth; d++){
+        const dateStr = prefix + String(d).padStart(2,'0');
+        const has = visitsThisMonth.some(v=>v.clientId===c.id && v.date===dateStr);
+        if(has) total++;
+        cells += `<td>${has?'✓':''}</td>`;
+      }
+      rows += `<tr><td class="pr-name">${escapeHtml(c.name)}</td>${cells}<td class="pr-total">${total}</td></tr>`;
+    });
+  }
+
+  const reportHtml = `
+    <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:2px">Табель посещений — ${MONTH_FULL[month-1]} ${year}${pdfClass&&getClassObj(pdfClass)?' · '+escapeHtml(getClassObj(pdfClass).name):''}</div>
+    <div style="font-family:'Work Sans',sans-serif;font-size:11px;color:#666;margin-bottom:12px">Йога-практика · сформировано ${new Date().toLocaleDateString('ru-RU')}</div>
+    <table class="pr-table">
+      <thead><tr><th class="pr-name">Клиент</th>${headerCells}<th class="pr-total">Итого</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  document.getElementById('printReportRoot').innerHTML = reportHtml;
+  closeSheet();
+  setTimeout(()=>{ window.print(); }, 150);
+}
+window.addEventListener('afterprint', ()=>{
+  const root = document.getElementById('printReportRoot');
+  if(root) root.innerHTML = '';
+});
+
+/* ================= TRANSFERS (перенос занятия / продление) ================= */
+function openTransferSheet(subId){
+  const sub = state.subscriptions.find(s=>s.id===subId);
+  if(!sub) return;
+  openSheet(`
+    <div class="sheet-head"><h3>Перенести занятие</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <div class="field-hint">Занятие не списывается с абонемента. Срок действия абонемента продлевается на указанное число дней — клиент сможет использовать перенесённое занятие позже.</div>
+    <label>На сколько дней продлить срок</label>
+    <input id="fTransferDays" type="number" min="1" value="7">
+    <label>Дата переноса</label>
+    <input id="fTransferDate" type="date" value="${todayISO()}">
+    <label>Комментарий (необязательно)</label>
+    <input id="fTransferComment" placeholder="Причина переноса">
+    <div class="field-hint">Текущий срок действия: до ${fmtDate(sub.expiryDate)}</div>
+    <button class="btn" onclick="saveTransfer('${subId}')">Продлить абонемент</button>
+  `);
+}
+function saveTransfer(subId){
+  const sub = state.subscriptions.find(s=>s.id===subId);
+  const days = Number(document.getElementById('fTransferDays').value);
+  const date = document.getElementById('fTransferDate').value;
+  const comment = document.getElementById('fTransferComment').value.trim();
+  if(!days || days<1){ showToast('Укажите число дней'); return; }
+  sub.expiryDate = addDays(sub.expiryDate, days);
+  state.transfers.push({id:uid(), subscriptionId:subId, clientId:sub.clientId, daysAdded:days, date, comment});
+  saveState(); closeSheet();
+  renderClientDetail(); renderDashboard();
+  showToast('Абонемент продлён на '+days+' дн.');
+}
+
+/* ================= FINANCE ================= */
+let financeYear = new Date().getFullYear();
+let financeMonth = new Date().getMonth()+1;
+function renderFinance(){
+  const byMonth = incomeByMonth();
+  const receipts = paidReceiptsByMonth();
+  const rent = typeof rentExpensesByMonth==='function' ? rentExpensesByMonth() : {};
+  const allMonths = Object.keys(byMonth).sort();
+  const years = Array.from(new Set(allMonths.map(key=>Number(key.slice(0,4)))));
+  if(!years.includes(new Date().getFullYear())) years.push(new Date().getFullYear());
+  if(!years.includes(financeYear)) years.push(financeYear);
+  years.sort();
+  document.getElementById('financeYearPills').innerHTML = years.map(y=>
+    `<button class="pill ${financeYear===y?'active':''}" onclick="setFinanceYear(${y})">${y}</button>`).join('');
+
+  document.getElementById('financeMonthSelect').innerHTML = MONTH_FULL.map((name,index)=>
+    `<option value="${index+1}" ${financeMonth===index+1?'selected':''}>${name}</option>`).join('');
+  const missingDates = state.subscriptions.filter(sub=>sub.paid===true && !validIncomeDate(sub.paidDate)).length;
+  const notice = document.getElementById('financeDataNotice');
+  notice.hidden = missingDates===0;
+  notice.textContent = missingDates ? `Оплаченных абонементов без корректной даты оплаты: ${missingDates}. Они не включены в доход.` : '';
+
+  // this year's months (Jan..Dec) for bar chart
+  const yearMonths = [];
+  for(let m=1;m<=12;m++){
+    const k = financeYear+'-'+String(m).padStart(2,'0');
+    yearMonths.push(k);
+  }
+  const yearValues = yearMonths.map(k=>byMonth[k]||0);
+  const yearTotal = yearValues.reduce((a,b)=>a+b,0);
+  const selectedMonthKey = financeYear+'-'+String(financeMonth).padStart(2,'0');
+  document.getElementById('finMonthNum').textContent = fmtMoney(byMonth[selectedMonthKey]||0);
+  document.getElementById('finMonthLabel').textContent = MONTH_FULL[financeMonth-1]+' '+financeYear;
+  document.getElementById('finYearNum').textContent = fmtMoney(yearTotal);
+  document.getElementById('finReceiptsNum').textContent = fmtMoney(receipts[selectedMonthKey]||0);
+  document.getElementById('finRentNum').textContent = fmtMoney(rent[selectedMonthKey]||0);
+  document.getElementById('finMonthNum').style.color = (byMonth[selectedMonthKey]||0)<0 ? 'var(--rose)' : '';
+  document.getElementById('finYearNum').style.color = yearTotal<0 ? 'var(--rose)' : '';
+
+  drawBarChart('chartMonthly', yearMonths.map(k=>monthLabel(k).split(' ')[0]), yearValues, 'var(--sage)');
+
+  // cumulative across ALL history up to and including this year, month by month
+  let running = 0;
+  const cumMonths = allMonths.filter(k=>k<=financeYear+'-12');
+  const cumValues = [];
+  const cumLabels = [];
+  cumMonths.forEach(k=>{
+    running += byMonth[k];
+    cumValues.push(running);
+    cumLabels.push(monthLabel(k));
+  });
+  if(cumValues.length===0){ cumValues.push(0); cumLabels.push(''); }
+  drawLineChart('chartCumulative', cumLabels, cumValues, 'var(--clay)');
+
+  // table
+  const tbl = document.getElementById('finTable');
+  const rows = allMonths.filter(k=>k.startsWith(String(financeYear))).sort().reverse();
+  if(rows.length===0){
+    tbl.innerHTML = '<div class="empty">За выбранный год нет оплаченных абонементов и аренды</div>';
+  } else {
+    let cum = 0;
+    const cumMap = {};
+    [...allMonths].sort().forEach(k=>{ cum+=byMonth[k]; cumMap[k]=cum; });
+    tbl.innerHTML = rows.map(k=>`
+      <div class="kv card" style="margin-bottom:8px">
+        <span class="k">${monthLabel(k)}</span>
+        <span style="font-weight:600">${fmtMoney(byMonth[k])} <span style="color:var(--ink-soft);font-weight:400">· накопл. ${fmtMoney(cumMap[k])}</span></span>
+      </div>
+    `).join('');
+  }
+}
+function setFinanceYear(y){ financeYear=y; renderFinance(); }
+function setFinanceMonth(month){
+  const value = Number(month);
+  if(!Number.isInteger(value) || value<1 || value>12) return;
+  financeMonth=value; renderFinance();
+}
+
+function drawBarChart(svgId, labels, values, color){
+  const svg = document.getElementById(svgId);
+  const W=340,H=160,padB=22,padT=8,padL=6,padR=6;
+  const data = values.map(value=>Number.isFinite(value) ? value : 0);
+  const min = Math.min(0,...data), max = Math.max(0,...data);
+  const range = max===min ? 1 : max-min;
+  const top = max===min ? 1 : max;
+  const plotBottom = H-padB;
+  const yFor = value=>padT + (top-value)/range*(plotBottom-padT);
+  const zeroY = yFor(0);
+  const n = Math.max(1,data.length);
+  const gap=4;
+  const barW = (W-padL-padR)/n - gap;
+  let html=`<line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W-padR}" y2="${zeroY.toFixed(1)}" stroke="var(--ink-soft)" stroke-width="1" opacity="0.55"/>`;
+  data.forEach((v,i)=>{
+    const available = v>=0 ? zeroY-padT : plotBottom-zeroY;
+    const h = v===0 ? 0 : Math.min(available,Math.max(2,Math.abs(yFor(v)-zeroY)));
+    const x = padL + i*((W-padL-padR)/n) + gap/2;
+    const y = v>=0 ? zeroY-h : zeroY;
+    html += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${v<0?'var(--rose)':color}" rx="2"/>`;
+    html += `<text class="bar-label" x="${(x+barW/2).toFixed(1)}" y="${H-8}" text-anchor="middle">${labels[i]||''}</text>`;
+  });
+  svg.innerHTML = html;
+}
+function drawLineChart(svgId, labels, values, color){
+  const svg = document.getElementById(svgId);
+  const W=340,H=160,padB=22,padT=10,padL=6,padR=6;
+  const data = values.length ? values.map(value=>Number.isFinite(value) ? value : 0) : [0];
+  const min = Math.min(0,...data), max = Math.max(0,...data);
+  const range = max===min ? 1 : max-min;
+  const top = max===min ? 1 : max;
+  const plotBottom = H-padB;
+  const yFor = value=>padT + (top-value)/range*(plotBottom-padT);
+  const zeroY = yFor(0);
+  const n = data.length;
+  const step = n>1 ? (W-padL-padR)/(n-1) : 0;
+  let points = data.map((v,i)=>{
+    const x = padL + i*step;
+    const y = yFor(v);
+    return [x,y];
+  });
+  let path = points.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  let area = path + ` L${points[points.length-1][0].toFixed(1)},${zeroY.toFixed(1)} L${points[0][0].toFixed(1)},${zeroY.toFixed(1)} Z`;
+  let html = `<line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W-padR}" y2="${zeroY.toFixed(1)}" stroke="var(--ink-soft)" stroke-width="1" opacity="0.55"/>`;
+  html += `<path d="${area}" fill="${color}" opacity="0.12"/>`;
+  html += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  points.forEach((p,i)=>{
+    html += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="${color}"/>`;
+    if(n<=14 || i%Math.ceil(n/12)===0){
+      html += `<text class="bar-label" x="${p[0].toFixed(1)}" y="${H-8}" text-anchor="middle">${labels[i]||''}</text>`;
+    }
+  });
+  svg.innerHTML = html;
+}
+
+/* ================= BACKUP / ARCHIVE ================= */
+const BACKUP_KEY = 'yogaTrackerBackups_v1';
+const LAST_BACKUP_KEY = 'yogaTrackerLastBackupAt_v1';
+const AUTO_BACKUP_DAYS = 7;
+const MAX_BACKUPS_KEPT = 25;
+// Копии хранят всё состояние целиком, поэтому ограничиваем их суммарный объём, а не только число.
+const BACKUP_BUDGET_CHARS = 1200000;
+
+function loadBackups(){
+  try{
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return [];
+}
+function saveBackups(list){
+  localStorage.setItem(BACKUP_KEY, JSON.stringify(list));
+}
+function snapshotData(){
+  return {
+    clients:state.clients, plans:state.plans, subscriptions:state.subscriptions,
+    visits:state.visits, transfers:state.transfers, rent:state.rent||emptyRentState(), classes:state.classes||[]
+  };
+}
+function createBackup(type){
+  const backups = loadBackups();
+  backups.unshift({
+    id:uid(),
+    createdAt:new Date().toISOString(),
+    type, // 'auto' | 'manual' | 'pre-restore'
+    data:JSON.stringify(snapshotData())
+  });
+  while(backups.length>MAX_BACKUPS_KEPT) backups.pop();
+  const sizeOf = list => list.reduce((sum,b)=>sum+b.data.length,0);
+  while(backups.length>1 && sizeOf(backups)>BACKUP_BUDGET_CHARS) backups.pop();
+  for(;;){
+    try{ saveBackups(backups); break; }
+    catch(error){
+      if(backups.length<=1) throw error; // место кончилось даже для одной копии
+      backups.pop();
+    }
+  }
+  localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString());
+  return backups[0];
+}
+function checkAutoBackup(){
+  const last = localStorage.getItem(LAST_BACKUP_KEY);
+  const dueForFirst = !last && state.clients.length>0;
+  const dueByAge = last && (Date.now() - new Date(last).getTime()) >= AUTO_BACKUP_DAYS*86400000;
+  if(dueForFirst || dueByAge){
+    try{
+      createBackup('auto');
+      showToast('Создана еженедельная резервная копия');
+      renderBackupStatusCard();
+    }catch(error){
+      showToast('Не удалось создать копию: мало места. Сохраните копию в файл.');
+    }
+  }
+}
+function nextAutoBackupLabel(){
+  const last = localStorage.getItem(LAST_BACKUP_KEY);
+  if(!last) return 'скоро, при следующем запуске';
+  const nextDate = new Date(new Date(last).getTime() + AUTO_BACKUP_DAYS*86400000);
+  const daysLeft = Math.ceil((nextDate-Date.now())/86400000);
+  if(daysLeft<=0) return 'скоро, при следующем запуске';
+  return `через ${daysLeft} дн. (${nextDate.toLocaleDateString('ru-RU')})`;
+}
+function renderBackupStatusCard(){
+  const card = document.getElementById('backupStatusCard');
+  if(!card) return;
+  const last = localStorage.getItem(LAST_BACKUP_KEY);
+  const lastLabel = last ? new Date(last).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'копий ещё не было';
+  card.innerHTML = `
+    <div class="backup-status-row" onclick="openArchiveSheet()">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v5l3 2"/><circle cx="12" cy="13" r="8"/><path d="M9 3h6M12 3v3"/></svg></div>
+      <div class="main">
+        <div class="title" style="font-weight:600;font-size:14px">Последняя копия: ${lastLabel}</div>
+        <div class="sub" style="font-size:12px;color:var(--ink-soft)">Следующая авто-копия ${nextAutoBackupLabel()}</div>
+      </div>
+      <div class="chev">›</div>
+    </div>`;
+}
+function archiveHtml(){
+  const backups = loadBackups();
+  const last = localStorage.getItem(LAST_BACKUP_KEY);
+  const lastLabel = last ? new Date(last).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'копий ещё не было';
+  const typeLabel = {auto:'авто', manual:'ручная', 'pre-restore':'перед восстановлением', 'pre-update':'перед обновлением'};
+  const list = backups.length===0 ? '<div class="empty">Резервных копий пока нет</div>' :
+    backups.map(b=>{
+      const dt = new Date(b.createdAt).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      let count = 0;
+      try{ count = JSON.parse(b.data).clients.length; }catch(e){}
+      return `<div class="backup-row">
+        <div class="main">
+          <div class="title">${dt}</div>
+          <div class="sub">${typeLabel[b.type]||b.type} · клиентов: ${count}</div>
+        </div>
+        <button class="btn secondary small" onclick="restoreBackup('${b.id}')">Восстановить</button>
+        <button class="btn danger small" onclick="deleteBackup('${b.id}')">✕</button>
+      </div>`;
+    }).join('');
+  return `
+    <div class="sheet-head"><h3>Архив и резервные копии</h3><div class="sheet-close" onclick="closeSheet()">✕</div></div>
+    <div class="field-hint">Автоматическая копия создаётся раз в неделю и сохраняется в локальном хранилище браузера — там же, где хранятся все данные приложения.</div>
+    <div class="kv" style="margin-top:10px"><span class="k">Последняя копия</span><span>${lastLabel}</span></div>
+    <div class="kv"><span class="k">Следующая авто-копия</span><span>${nextAutoBackupLabel()}</span></div>
+    <div class="btn-row">
+      <button class="btn small" style="flex:1" onclick="manualBackupNow()">Создать копию сейчас</button>
+      <button class="btn secondary small" style="flex:1" onclick="exportBackupFile()">Скачать в файл</button>
+    </div>
+    <label class="file-input-wrap">
+      Восстановить из файла (.json)
+      <input type="file" accept="application/json" onchange="importBackupFile(this)">
+    </label>
+    <div class="section-title" style="margin-top:20px"><h2 style="font-size:15px">Сохранённые копии</h2></div>
+    ${list}
+  `;
+}
+function openArchiveSheet(){
+  openSheet(archiveHtml());
+}
+function refreshArchiveSheetIfOpen(){
+  if(document.getElementById('overlay').classList.contains('active')){
+    document.getElementById('sheetContent').innerHTML = archiveHtml();
+  }
+}
+function manualBackupNow(){
+  createBackup('manual');
+  showToast('Резервная копия создана');
+  refreshArchiveSheetIfOpen();
+  renderBackupStatusCard();
+}
+function exportBackupFile(){
+  const payload = Object.assign({exportedAt:new Date().toISOString()}, snapshotData());
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'yoga-tracker-backup-'+todayISO()+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Файл резервной копии скачан');
+}
+function importBackupFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    let data;
+    try{ data = JSON.parse(e.target.result); }
+    catch(err){ showToast('Не удалось прочитать файл'); return; }
+    if(!data || !Array.isArray(data.clients)){ showToast('Файл не похож на резервную копию'); return; }
+    if(!confirm('Восстановить данные из файла? Текущие данные будут заменены (текущее состояние сохранится как копия «перед восстановлением»).')) { input.value=''; return; }
+    createBackup('pre-restore');
+    applySnapshot(data);
+    input.value = '';
+    closeSheet();
+    showPage('dashboard');
+    showToast('Данные восстановлены из файла');
+  };
+  reader.readAsText(file);
+}
+function restoreBackup(id){
+  const backups = loadBackups();
+  const b = backups.find(x=>x.id===id);
+  if(!b) return;
+  const dt = new Date(b.createdAt).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  if(!confirm(`Восстановить данные на состояние от ${dt}? Текущие данные будут заменены (текущее состояние сохранится как копия «перед восстановлением»).`)) return;
+  createBackup('pre-restore');
+  const data = JSON.parse(b.data);
+  applySnapshot(data);
+  closeSheet();
+  showPage('dashboard');
+  showToast('Данные восстановлены');
+}
+function applySnapshot(data){
+  state.clients = data.clients||[];
+  state.plans = data.plans||[];
+  state.subscriptions = data.subscriptions||[];
+  state.visits = data.visits||[];
+  state.transfers = data.transfers||[];
+  state.rent = data.rent===undefined ? emptyRentState() : data.rent;
+  if(Array.isArray(data.classes)) state.classes = data.classes;
+  saveState();
+}
+function deleteBackup(id){
+  if(!confirm('Удалить эту резервную копию?')) return;
+  let backups = loadBackups();
+  backups = backups.filter(b=>b.id!==id);
+  saveBackups(backups);
+  refreshArchiveSheetIfOpen();
+}
+
+/* ================= INIT ================= */
+function seedIfEmpty(){
+  if(state.plans.length===0 && state.clients.length===0){
+    state.plans = [
+      {id:uid(), name:'4 занятия / месяц', visitsCount:4, durationDays:30, price:14000},
+      {id:uid(), name:'8 занятий / месяц', visitsCount:8, durationDays:30, price:24000},
+      {id:uid(), name:'12 занятий / месяц', visitsCount:12, durationDays:30, price:32000},
+      {id:uid(), name:'Разовое занятие', visitsCount:1, durationDays:14, price:4000},
+    ];
+    saveState();
+  }
+}
+seedIfEmpty();
+renderHeader();
+renderDashboard();
+renderBackupStatusCard();
+checkAutoBackup();
+// re-check periodically in case the app stays open across the week boundary
+setInterval(checkAutoBackup, 6*60*60*1000);
+</script>
+<script src="validation.js"></script>
+<script src="rent.js"></script>
+<script src="asanas.js"></script>
+<script src="images.js"></script>
+<script src="practices.js"></script>
+<script src="help.js"></script>
+<script src="pwa.js"></script>
+<script src="updates.js"></script>
+<script src="auth-config.js"></script>
+<script src="auth.js"></script>
+<script src="logo.js"></script>
+<script src="team.js"></script>
+</body>
+</html>

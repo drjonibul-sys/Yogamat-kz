@@ -1,0 +1,26 @@
+{
+  "engine": "Node.js VM with minimal DOM",
+  "note": "Catalog behavior and data validation only; no browser rendering, Safari or device execution",
+  "results": [
+    {
+      "name": "Catalog has 200 distinct complete poses and preserves all original 100 names, IDs and levels",
+      "status": "passed"
+    },
+    {
+      "name": "All view groups 200 cards into 80 easy, 70 medium and 50 hard entries",
+      "status": "passed"
+    },
+    {
+      "name": "Russian and Devanagari search combine correctly with difficulty and handle empty results",
+      "status": "passed"
+    },
+    {
+      "name": "A new advanced pose opens full instructions and its own anatomical art; favorites survive reopening",
+      "status": "passed"
+    },
+    {
+      "name": "Every pose has a unique in-bounds anatomical cell, without external image dependencies",
+      "status": "passed"
+    }
+  ]
+}

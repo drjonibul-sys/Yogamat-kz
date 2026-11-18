@@ -1,0 +1,1 @@
+Сценарии Playwright (Chromium, эмуляция iPad). Запуск: `python3 -m http.server --directory dist 8101`, затем по порядку `python3 tests/browser/v2.py` (создаёт state.json), `v3.py`, `v4.py`; `v1.py` проверяет первый запуск и настройки на чистом профиле. Нужен `pip install playwright`.
