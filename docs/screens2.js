@@ -186,6 +186,16 @@
 
   /* ---------- Аккаунт ---------- */
   function pinFields() { return { a: input({ type: 'password', inputmode: 'numeric', maxlength: 8, placeholder: 'Текущий PIN', autocomplete: 'current-password' }), b: input({ type: 'password', inputmode: 'numeric', maxlength: 8, placeholder: 'Новый PIN (4–8 цифр)', autocomplete: 'new-password' }), c: input({ type: 'password', inputmode: 'numeric', maxlength: 8, placeholder: 'Повторите новый PIN', autocomplete: 'new-password' }) }; }
+  function questionForm() {
+    const u = store.currentUser; if (!u) return;
+    formSheet('Контрольный вопрос', 'Сохранить', (s) => {
+      const picker = UI.questionPicker(store.questionOf(u.id)); const ans = input({ placeholder: 'Ответ (от 3 знаков)', autocomplete: 'off', 'aria-label': 'Ответ' }); const pin = input({ type: 'password', inputmode: 'numeric', maxlength: 8, placeholder: 'Ваш PIN', autocomplete: 'current-password' });
+      s.body.append(h('div', { class: 'soft small' }, 'Если забудете PIN, на экране входа нажмите «Забыли PIN?» и ответьте на этот вопрос. Регистр, пробелы и знаки в ответе не важны. Ответ хранится только в виде хэша.'), field('Вопрос', picker.el), field('Ответ', ans), field('Подтвердите своим PIN', pin));
+      const extra = store.hasQuestion(u.id) ? [h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (!(await confirmBox('Удалить контрольный вопрос?', (u.role === 'admin' ? 'Без вопроса забытый PIN администратора восстановить нельзя.' : 'Без вопроса новый PIN сможет задать только администратор.'), 'Удалить', true))) return; try { await store.clearQuestion(u.id, pin.value); toast('Вопрос удалён'); s.close(); } catch (e) { toast(e.message); } } }, 'Удалить вопрос')] : [];
+      return { extra, async save() { await store.setQuestion(u.id, picker.value(), ans.value, pin.value); toast('Контрольный вопрос сохранён'); } };
+    });
+  }
+  App.questionForm = questionForm;
   function changePinForm() {
     const u = store.currentUser;
     formSheet('Сменить PIN', 'Сохранить PIN', (s) => { const f = pinFields(); s.body.append(field('Текущий PIN', f.a), field('Новый PIN', f.b), field('Повтор', f.c));
@@ -206,11 +216,11 @@
       const draw = () => {
         clear(s.body);
         s.body.appendChild(h('div', { class: 'card' }, h('div', { class: 'row' }, avatar(u.name, 56), h('div', { class: 'grow' }, h('div', { class: 'h2' }, u.name), h('div', { class: 'soft small' }, u.role === 'admin' ? 'Администратор · полный доступ' : 'Тренер · свои занятия и клиенты')))));
-        s.body.appendChild(h('div', { class: 'card flat' }, listRow([icon('key'), h('div', { class: 'grow' }, 'Сменить PIN')], changePinForm)));
+        s.body.appendChild(h('div', { class: 'card flat' }, listRow([icon('key'), h('div', { class: 'grow' }, 'Сменить PIN')], changePinForm), listRow([icon('book'), h('div', { class: 'grow' }, h('div', null, 'Контрольный вопрос'), h('div', { class: 'soft small' }, store.hasQuestion(u.id) ? 'задан — для восстановления PIN' : 'не задан — задайте, чтобы восстановить PIN'))], questionForm)));
         if (store.isAdmin) {
           s.body.appendChild(h('div', { class: 'row between' }, App.section('Тренеры'), h('button', { class: 'link', type: 'button', onclick: () => trainerForm(null) }, '+ Добавить')));
           const staff = store.state.staff.filter((x) => x.role === 'trainer');
-          s.body.appendChild(staff.length ? h('div', { class: 'card flat' }, staff.map((t) => listRow([avatar(t.name, 38), h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, t.name), h('div', { class: 'soft small' }, t.active ? 'работает' : 'отключён')), t.active ? null : pill('отключён', 'gray')], () => trainerForm(t))))
+          s.body.appendChild(staff.length ? h('div', { class: 'card flat' }, staff.map((t) => listRow([avatar(t.name, 38), h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, t.name), h('div', { class: 'soft small' }, (t.active ? 'работает' : 'отключён') + (store.hasQuestion(t.id) ? ' · есть контрольный вопрос' : ''))), t.active ? null : pill('отключён', 'gray')], () => trainerForm(t))))
             : h('div', { class: 'card' }, h('div', { class: 'h3' }, 'Тренеров пока нет'), h('div', { class: 'soft small' }, 'Тренер входит по своему PIN и видит свои занятия; доход и удаление клиентов ему недоступны.')));
         }
         s.body.appendChild(h('button', { class: 'btn danger', type: 'button', onclick: () => { s.close(); store.logOut(); } }, icon('logout'), 'Выйти'));

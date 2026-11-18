@@ -1,5 +1,5 @@
 /* Йога-студия yoga_matkz — офлайн-режим. Версия кэша совпадает с версией приложения (проверяется тестом). */
-const VERSION = '1.5.2';
+const VERSION = '1.6.0';
 const CACHE = 'yogamat-' + VERSION;
 const SHELL = ['./', 'index.html', 'app.css', 'store.js', 'ui.js', 'screens.js', 'screens2.js', 'catalog.js', 'guide.js', 'pdf.js', 'app.js', 'vendor/jspdf.umd.min.js', 'vendor/jspdf.plugin.autotable.min.js', 'vendor/font-regular.ttf', 'vendor/font-bold.ttf', 'manifest.webmanifest',
   'icons/logo.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'data/asanas.json', 'data/practices.json', 'data/images.json'];

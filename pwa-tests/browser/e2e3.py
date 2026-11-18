@@ -9,7 +9,7 @@ with sync_playwright() as p:
     errs = []; page.on('pageerror', lambda e: errs.append(str(e)))
     page.goto(BASE); page.wait_for_selector('.auth')
     page.fill('.auth input >> nth=0', 'Анна'); page.fill('.auth input >> nth=1', '1234'); page.fill('.auth input >> nth=2', '1234')
-    page.click('text=Продолжить'); page.check('#rc-ok'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
+    page.select_option('.auth select','Город, в котором вы родились?'); page.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
     page.evaluate("""() => { const s = App.store; for (let i = 1; i <= 45; i++) { s.addQuickSale({ name: 'Клиент Длинная-Фамилия ' + i, phone: '+7 701 234 56 ' + String(i).padStart(2,'0'), tariffName: '8 занятий / месяц', purchaseDate: '2026-11-01', expiryDate: '2026-12-01', visitsTotal: 8, price: 28000, paid: i % 3 !== 0, paidDate: i % 3 !== 0 ? '2026-11-05' : null }); } }""")
     b64 = page.evaluate("""async () => { const r = await Pdf.build('Клиенты студии', App.store.clientsCSV(), 'Студия · 18.11.2026'); const buf = new Uint8Array(await r.blob.arrayBuffer()); let s=''; for (let i=0;i<buf.length;i+=8192) s+=String.fromCharCode.apply(null, buf.subarray(i,i+8192)); return btoa(s) + '|' + r.pages; }""")
     data, pages = b64.split('|'); raw = base64.b64decode(data); open('/tmp/shots/clients.pdf', 'wb').write(raw)

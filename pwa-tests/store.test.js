@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('assert');
-const { createStore, RU, memoryStorage } = require('../docs/store.js');
+const { createStore, RU, memoryStorage, KEYS: Studio_KEYS } = require('../docs/store.js');
 
 let t0 = new Date(2026, 10, 18, 12, 0); // 18 ноября 2026, среда
 const mk = () => { t0 = new Date(2026, 10, 18, 12, 0); const s = createStore({ storage: memoryStorage(), now: () => t0, backupBeforeDelete: true }); s.load(); return s; };
@@ -164,7 +164,7 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
   await test('удаление клиента: только админ, делает копию, чистит связанное', async () => {
     const s = mk(); const c = sale(s); s.markVisit(c.id, '2026-11-18');
     throws(() => s.deleteClient(c.id), 'только администратор');
-    await s.setupAdmin('Анна', '1234', 'ABCD-EFGH');
+    await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана');
     s.deleteClient(c.id);
     assert.strictEqual(s.state.clients.length, 0); assert.strictEqual(s.state.subscriptions.length, 0); assert.strictEqual(s.state.visits.length, 0);
     assert.strictEqual(s.backups().length, 1);
@@ -172,8 +172,8 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
 
   await test('PIN: вход, неверный PIN, блокировка на 30 с после 5 попыток', async () => {
     const s = mk();
-    await rejects(s.setupAdmin('А', '12', 'AAAA-BBBB'), '4 до 8');
-    const admin = await s.setupAdmin('Анна', '1234', 'ABCD-EFGH');
+    await rejects(s.setupAdmin('А', '12', 'Город, в котором вы родились?', 'Астана'), '4 до 8');
+    const admin = await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана');
     assert(s.isAdmin); s.logOut(); assert(!s.currentUser);
     await rejects(s.logIn(admin.id, '0000'), 'Осталось попыток: 4');
     await s.logIn(admin.id, '1234'); assert(s.isAdmin); s.logOut();
@@ -184,19 +184,31 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     await s.logIn(admin.id, '1234'); assert(s.isAdmin);
   });
 
-  await test('восстановление по коду и смена PIN', async () => {
-    const s = mk(); const admin = await s.setupAdmin('Анна', '1234', 'abcd efgh');
-    s.logOut();
-    await rejects(s.resetPIN(admin.id, 'WRONG-CODE', '5555'), 'не подходит');
-    await s.resetPIN(admin.id, 'ABCD-EFGH', '5555');
-    await rejects(s.logIn(admin.id, '1234'), 'Неверный PIN');
-    await s.logIn(admin.id, '5555');
+  await test('восстановление PIN по контрольному вопросу, лимит попыток, код отменён', async () => {
+    const s = mk(); await rejects(s.setupAdmin('Анна', '1234', '', 'Астана'), 'Выберите контрольный вопрос'); await rejects(s.setupAdmin('Анна', '1234', 'Город?', 'ab'), 'не короче 3');
+    const admin = await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана');
+    assert.strictEqual(s.questionOf(admin.id), 'Город, в котором вы родились?'); assert(s.hasQuestion(admin.id)); s.logOut();
+    await rejects(s.resetPINByAnswer(admin.id, 'Алматы', '5555'), 'Неверный ответ');
+    await s.resetPINByAnswer(admin.id, '  аСТана!! ', '5555');
+    await rejects(s.logIn(admin.id, '1234'), 'Неверный PIN'); await s.logIn(admin.id, '5555');
     await rejects(s.changePIN(admin.id, '0000', '7777'), 'Текущий PIN неверный');
     await s.changePIN(admin.id, '5555', '7777'); s.logOut(); await s.logIn(admin.id, '7777');
+    for (let i = 0; i < 4; i++) await rejects(s.resetPINByAnswer(admin.id, 'x' + i + 'yz', '1111'), 'Осталось попыток');
+    await rejects(s.resetPINByAnswer(admin.id, 'qwerty', '1111'), 'аблокировано'); assert(s.lockRemainingSeconds(admin.id) > 0);
+    t0 = new Date(t0.getTime() + 31000); await s.resetPINByAnswer(admin.id, 'Астана', '2222');
+    await s.setQuestion(admin.id, 'Свой вопрос?', 'Ответ один', '2222'); assert.strictEqual(s.questionOf(admin.id), 'Свой вопрос?'); await rejects(s.setQuestion(admin.id, 'Q?', 'Ответ', '0000'), 'PIN неверный');
+    await s.clearQuestion(admin.id, '2222'); assert(!s.hasQuestion(admin.id)); await rejects(s.resetPINByAnswer(admin.id, 'Ответ один', '3333'), 'не задан');
+    assert.strictEqual(typeof s.makeRecoveryCode, 'undefined'); assert.strictEqual(typeof s.resetPIN, 'undefined');
+  });
+  await test('старый код восстановления удаляется из хранилища; ответы не попадают в копии', async () => {
+    const storage = memoryStorage(); const s = createStore({ storage, now: () => t0 }); s.load(); const admin = await s.setupAdmin('Анна', '1234', 'Город?', 'Астана');
+    const p = JSON.parse(storage.getItem(Studio_KEYS.pins)); p['recovery.code'] = 'abc:def'; storage.setItem(Studio_KEYS.pins, JSON.stringify(p));
+    const s2 = createStore({ storage, now: () => t0 }); s2.load(); s2.logOut(); await rejects(s2.logIn(admin.id, '9999'), 'Неверный PIN');
+    assert(!('recovery.code' in JSON.parse(storage.getItem(Studio_KEYS.pins)))); assert(!JSON.stringify(s2.snapshot()).includes('Астана'));
   });
 
   await test('тренеры: добавление, отключение, удаление, права', async () => {
-    const s = mk(); const admin = await s.setupAdmin('Анна', '1234', 'ABCD-EFGH');
+    const s = mk(); const admin = await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана');
     const tr = await s.addTrainer('Ольга Пак', '4321');
     const cls = s.state.classes[0]; cls.trainerIDs = [tr.id];
     assert.strictEqual(s.trainerNames(cls), 'Ольга Пак');
@@ -212,7 +224,7 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
   await test('сессия переживает перезагрузку', async () => {
     const storage = memoryStorage();
     const a = createStore({ storage, now: () => t0 }); a.load();
-    const admin = await a.setupAdmin('Анна', '1234', 'ABCD-EFGH');
+    const admin = await a.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана');
     const b = createStore({ storage, now: () => t0 }); b.load();
     assert(b.isAdmin); assert.strictEqual(b.currentUser.id, admin.id);
   });
@@ -263,7 +275,7 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     const storage = memoryStorage(); const a = createStore({ storage, now: () => t0 }); a.load();
     const png = 'data:image/png;base64,iVBORw0KGgo=';
     assert.strictEqual(a.logoSrc(), 'icons/logo.png');
-    await a.setupAdmin('Анна', '1234', 'ABCD-EFGH');
+    await a.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана');
     a.setStudioLogo(png); assert.strictEqual(a.logoSrc(), png);
     for (const bad of ['http://x/y.png', 'data:text/html;base64,AAAA', 'data:image/svg+xml;base64,AAAA', 'data:image/png;base64,' + 'A'.repeat(260000)]) assert.throws(() => a.setStudioLogo(bad), /Логотип/);
     const b = createStore({ storage, now: () => t0 }); b.load(); assert.strictEqual(b.logoSrc(), png);
@@ -278,18 +290,18 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     assert(rev.split('.').length === 3); assert(src.includes('Как изменить название и логотип студии?') && src.includes('Как войти в приложение?'));
   });
   await test('новый тренер виден в «Тренеры» сразу, даже без занятий', async () => {
-    const s = mk(); await s.setupAdmin('Анна', '1234', 'ABCD-EFGH'); await s.addTrainer('Новый Тренер', '4321');
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана'); await s.addTrainer('Новый Тренер', '4321');
     const r = s.trainerLoad(2026, 11).find((x) => x.trainer.name === 'Новый Тренер'); assert(r && r.sessions === 0 && r.occupancy === 0);
   });
   await test('тренер не может продавать абонементы и создавать классы; администратор может', async () => {
-    const s = mk(); await s.setupAdmin('Анна', '1234', 'ABCD-EFGH'); const tr = await s.addTrainer('Новый Тренер', '4321');
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана'); const tr = await s.addTrainer('Новый Тренер', '4321');
     await s.logOut(); await s.logIn(tr.id, '4321'); assert(!s.isAdmin);
     assert.throws(() => sale(s), /только администратор/);
     assert.throws(() => s.saveClass({ name: 'Новое', type: 'yoga', level: 'Лёгкий', durationMin: 60, capacity: 10, weekdays: [1], startMinutes: 600, active: true }), /только администратор/);
     assert.throws(() => s.cancelFutureBookings(), /только администратор/);
   });
   await test('отмена всех будущих записей одним действием возвращает занятия', async () => {
-    const s = mk(); await s.setupAdmin('Анна', '1234', 'ABCD-EFGH'); const c = sale(s); const cls = s.state.classes[0];
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана'); const c = sale(s); const cls = s.state.classes[0];
     const sub = s.state.subscriptions[0]; const before = sub.visitsLeft; const wd = cls.weekdays[0];
     let d = new Date(t0); d.setDate(d.getDate() + 1); while (RU.weekdayIndex(d) !== wd) d.setDate(d.getDate() + 1);
     s.bookVisit(c.id, cls.id, RU.key(d)); assert.strictEqual(s.futureBookings().length, 1); assert.strictEqual(sub.visitsLeft, before - 1);

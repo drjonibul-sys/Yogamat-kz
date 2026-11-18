@@ -101,6 +101,15 @@
     const s = h('select', { class: 'inp', onchange }, options.map((o) => h('option', { value: o.value }, o.label)));
     s.value = value; return s;
   }
+  /* выбор контрольного вопроса: 5 типовых + «Свой вопрос» */
+  function questionPicker(current) {
+    const std = Studio.STANDARD_QUESTIONS; const custom = !!current && !std.includes(current);
+    const sel = h('select', { class: 'inp', 'aria-label': 'Контрольный вопрос' }, h('option', { value: '' }, 'Выберите вопрос'), std.map((q) => h('option', { value: q }, q)), h('option', { value: '__custom' }, 'Свой вопрос'));
+    const own = h('input', { class: 'inp', maxlength: 80, autocomplete: 'off', placeholder: 'Введите ваш вопрос', 'aria-label': 'Свой вопрос', hidden: !custom, value: custom ? current : '' });
+    sel.value = custom ? '__custom' : (current || '');
+    sel.addEventListener('change', () => { own.hidden = sel.value !== '__custom'; if (!own.hidden) own.focus(); });
+    return { el: h('div', { class: 'stack s8' }, sel, own), value: () => (sel.value === '__custom' ? own.value.trim() : sel.value) };
+  }
   function toggle(label, on, onchange, sub) {
     const b = h('button', { class: 'toggle', type: 'button', role: 'switch', 'aria-checked': on ? 'true' : 'false' },
       h('span', null, h('div', null, label), sub ? h('div', { class: 'hint' }, sub) : null), h('span', { class: 'sw' }));
@@ -234,5 +243,5 @@
       document.body.appendChild(i); i.click();
     });
   }
-  window.UI = { pickLogo, h, clear, icon, avatar, pill, statusPill, empty, bar, chip, footer, field, input, textarea, select, toggle, stepper, phoneInput, phoneValue, num, moneyInput, sheet, closeAllSheets, confirmBox, toast, formSheet, saveFile, pickFile };
+  window.UI = { questionPicker, pickLogo, h, clear, icon, avatar, pill, statusPill, empty, bar, chip, footer, field, input, textarea, select, toggle, stepper, phoneInput, phoneValue, num, moneyInput, sheet, closeAllSheets, confirmBox, toast, formSheet, saveFile, pickFile };
 })();

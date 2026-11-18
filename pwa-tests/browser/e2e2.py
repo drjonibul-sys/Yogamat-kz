@@ -9,7 +9,7 @@ with sync_playwright() as p:
     errs = []; page.on('pageerror', lambda e: errs.append(str(e)))
     page.goto(BASE); page.wait_for_selector('.auth')
     page.fill('.auth input >> nth=0', 'Анна'); page.fill('.auth input >> nth=1', '1234'); page.fill('.auth input >> nth=2', '1234')
-    page.click('text=Продолжить'); page.check('#rc-ok'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
+    page.select_option('.auth select','Город, в котором вы родились?'); page.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
     # тема
     page.goto(BASE + '#/settings'); page.wait_for_selector('text=Как в системе')
     bg = lambda: page.evaluate("getComputedStyle(document.body).backgroundColor")
@@ -56,15 +56,15 @@ with sync_playwright() as p:
     y3 = page.evaluate("document.getElementById('main').scrollTop"); ok('возврат в ту же позицию внутри комплекса (%d → %d)' % (y2, y3), y2 > 0 and abs(y3 - y2) <= 2)
     # закреплённый верхний пояс
     for url, name in [('#/practices', 'список комплексов'), ('#/practice/' + page.evaluate("fetch('data/practices.json').then(r=>r.json()).then(d=>d[0].id)"), 'комплекс'), ('#/asana/tadasana', 'асана')]:
-        page.goto(BASE + url); page.wait_for_selector('.head.sticky'); page.evaluate("document.getElementById('main').scrollTop = 700"); page.wait_for_timeout(200)
+        page.goto(BASE + url); page.wait_for_selector('.head.sticky'); page.wait_for_load_state('networkidle'); page.wait_for_timeout(400); page.evaluate("document.getElementById('main').scrollTop = 700"); page.wait_for_timeout(250)
         top = page.evaluate("document.querySelector('.head.sticky').getBoundingClientRect().top"); vis = page.locator('.head.sticky [aria-label="Назад"]').is_visible()
         ok('верхний пояс закреплён: ' + name, abs(top) < 2 and vis and page.evaluate("document.getElementById('main').scrollTop") > 100)
     page.click('.head.sticky [aria-label="Назад"]'); page.wait_for_timeout(200)
     # версии
     page.goto(BASE + '#/settings'); page.wait_for_selector('text=Проверить обновление'); page.wait_for_timeout(600)
-    ok('та же версия на сайте — не «обновление»', 'актуальная версия 1.5.2' in page.inner_text('.page') and 'Обновить до' not in page.inner_text('.page'))
+    ok('та же версия на сайте — не «обновление»', 'актуальная версия 1.6.0' in page.inner_text('.page') and 'Обновить до' not in page.inner_text('.page'))
     page.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"1.10.0"}'))
-    page.click('text=Проверить обновление'); page.wait_for_selector('text=Обновить до 1.10.0'); ok('1.10.0 новее 1.5.2 (числовое сравнение)', True)
+    page.click('text=Проверить обновление'); page.wait_for_selector('text=Обновить до 1.10.0'); ok('1.10.0 новее 1.6.0 (числовое сравнение)', True)
     page.unroute('**/version.json*'); page.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"1.0.9"}'))
     page.click('text=Проверить обновление'); page.wait_for_timeout(500); ok('старая версия на сайте не считается обновлением', 'Обновить до' not in page.inner_text('.page'))
     page.unroute('**/version.json*'); page.route('**/version.json*', lambda r: r.abort())

@@ -8,7 +8,7 @@ png('/tmp/logo-test.png')
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_context(viewport={'width':390,'height':800},locale='ru-RU').new_page(); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
     pg.goto('http://localhost:8765/'); pg.wait_for_selector('.auth')
-    pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234'); pg.click('text=Продолжить'); pg.check('#rc-ok'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
+    pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234'); pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
     pg.goto('http://localhost:8765/#/settings'); pg.wait_for_selector('text=Название студии')
     name=pg.locator('input[aria-label="Название студии"]'); name.fill('Студия Лотос'); name.press('Tab')
     with pg.expect_file_chooser() as fc: pg.click('text=Выбрать логотип')

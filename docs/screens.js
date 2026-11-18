@@ -173,6 +173,7 @@
     cards.push(h('div', { class: 'stats' }, stat('people', 'Клиентов', store.state.clients.length, () => App.go('/clients')),
       stat('calendar', 'Занятий сегодня', tv.length, () => App.go('/visits')), stat('alert', 'Заканчиваются', ending.length, () => document.getElementById('ending') && document.getElementById('ending').scrollIntoView({ behavior: 'smooth' }))));
     if (App.update && App.update.state === 'new') cards.push(h('div', { class: 'card tint' }, h('div', { class: 'h3' }, 'Доступна версия ' + App.update.version), h('div', { class: 'small soft' }, 'Установлена ' + Studio.APP_VERSION + '. Обновление применится после перезапуска.'), h('button', { class: 'btn', type: 'button', onclick: () => App.applyUpdate() }, 'Обновить')));
+    if (u && !store.hasQuestion(u.id)) cards.push(h('button', { class: 'card warn', type: 'button', style: { textAlign: 'left' }, onclick: () => App.questionForm() }, h('div', { class: 'row' }, icon('key'), h('div', { class: 'grow' }, h('div', { class: 'h3' }, 'Задайте контрольный вопрос'), h('div', { class: 'soft small' }, 'Без него забытый PIN не восстановить.')), icon('chev', 'chev'))));
     if (store.saveError) cards.push(h('div', { class: 'card warn' }, h('div', { class: 'row top' }, icon('alert'), h('div', { class: 'small' }, store.saveError))));
     cards.push(h('div', { class: 'row' },
       h('button', { class: 'btn', type: 'button', onclick: () => (store.isAdmin ? saleForm(null) : clientForm(null)) }, icon('plus'), 'Добавить клиента'),

@@ -60,22 +60,15 @@
 
   function authSetup() {
     const name = input({ placeholder: 'Например: Анна Ким', autocapitalize: 'words' }); const pin = pinInput('PIN, 4–8 цифр'); const pin2 = pinInput('Повторите PIN'); const err = errBox();
-    const go = h('button', { class: 'btn', type: 'button' }, 'Продолжить');
-    go.addEventListener('click', () => {
+    const picker = UI.questionPicker(''); const ans = input({ placeholder: 'Ответ (от 3 знаков)', autocomplete: 'off', 'aria-label': 'Ответ на контрольный вопрос' });
+    const go = h('button', { class: 'btn', type: 'button' }, 'Начать работу');
+    go.addEventListener('click', async () => {
       if (!store.isValidPIN(pin.value)) return showErr(err, 'PIN — от 4 до 8 цифр');
       if (pin.value !== pin2.value) return showErr(err, 'PIN не совпадает с повтором');
-      authRecoveryStep(name.value, pin.value);
+      go.disabled = true; try { await store.setupAdmin(name.value, pin.value, picker.value(), ans.value); } catch (e) { showErr(err, e.message); go.disabled = false; }
     });
-    authShell('Первый запуск', 'Создайте аккаунт администратора студии. Данные хранятся только на этом устройстве.', field('Ваше имя', name), field('PIN для входа', pin), field(null, pin2), err, go);
-  }
-  function authRecoveryStep(name, pin) {
-    const code = store.makeRecoveryCode(); const ok = h('input', { type: 'checkbox', id: 'rc-ok' }); const err = errBox();
-    const go = h('button', { class: 'btn', type: 'button', disabled: true }, 'Начать работу');
-    ok.addEventListener('change', () => { go.disabled = !ok.checked; });
-    const copy = h('button', { class: 'btn soft-btn', type: 'button', onclick: async () => { try { await navigator.clipboard.writeText(code); toast('Код скопирован'); } catch (e) { toast('Запишите код вручную'); } } }, 'Скопировать код');
-    go.addEventListener('click', async () => { go.disabled = true; try { await store.setupAdmin(name, pin, code); } catch (e) { showErr(err, e.message); go.disabled = false; } });
-    authShell('Код восстановления', 'Если забудете PIN, этот код вернёт доступ. Запишите его и храните отдельно от телефона — повторно он не показывается.', h('div', { class: 'code-box', 'aria-label': 'Код восстановления' }, code), copy,
-      h('label', { class: 'row', style: { gap: '10px' } }, ok, h('span', null, 'Я записал(а) код восстановления')), err, go);
+    authShell('Первый запуск', 'Создайте аккаунт администратора студии. Данные хранятся только на этом устройстве.', field('Ваше имя', name), field('PIN для входа', pin), field(null, pin2),
+      field('Контрольный вопрос — для восстановления PIN', picker.el), field(null, ans), err, go);
   }
   function authChoose() {
     const users = store.state.staff.filter((u) => u.active);
@@ -91,10 +84,14 @@
     lockTick(); if (store.lockRemainingSeconds(user.id) > 0) timer = setInterval(lockTick, 1000);
   }
   function authRecover(user) {
-    const code = input({ placeholder: 'XXXX-XXXX', autocapitalize: 'characters', style: { textTransform: 'uppercase' } }); const pin = pinInput('Новый PIN, 4–8 цифр'); const pin2 = pinInput('Повторите новый PIN'); const err = errBox();
+    const back = h('button', { class: 'link', type: 'button', style: { color: 'var(--ink-soft)' }, onclick: () => authPin(user) }, 'Назад');
+    if (!store.hasQuestion(user.id)) {
+      return authShell('Восстановление доступа', user.role === 'admin' ? 'Для этого аккаунта не задан контрольный вопрос, поэтому PIN восстановить нельзя. Если база сохранена в файл JSON, её можно восстановить после очистки данных сайта.' : user.name + ', контрольный вопрос не задан. Обратитесь к администратору — он задаст вам новый PIN.', back);
+    }
+    const ans = input({ placeholder: 'Ваш ответ', autocomplete: 'off', 'aria-label': 'Ответ' }); const pin = pinInput('Новый PIN, 4–8 цифр'); const pin2 = pinInput('Повторите новый PIN'); const err = errBox();
     const go = h('button', { class: 'btn', type: 'button' }, 'Сменить PIN и войти');
-    go.addEventListener('click', async () => { if (pin.value !== pin2.value) return showErr(err, 'PIN не совпадает с повтором'); go.disabled = true; try { await store.resetPIN(user.id, code.value, pin.value); await store.logIn(user.id, pin.value); } catch (e) { showErr(err, e.message); go.disabled = false; } });
-    authShell('Восстановление доступа', user.name + ': введите код восстановления и задайте новый PIN.', field('Код восстановления', code), field('Новый PIN', pin), field(null, pin2), err, go, h('button', { class: 'link', type: 'button', style: { color: 'var(--ink-soft)' }, onclick: () => authPin(user) }, 'Назад'));
+    go.addEventListener('click', async () => { if (pin.value !== pin2.value) return showErr(err, 'PIN не совпадает с повтором'); go.disabled = true; try { await store.resetPINByAnswer(user.id, ans.value, pin.value); await store.logIn(user.id, pin.value); } catch (e) { showErr(err, e.message); go.disabled = false; } });
+    authShell('Восстановление доступа', user.name + ': ответьте на контрольный вопрос и задайте новый PIN.', h('div', { class: 'card tint', style: { fontWeight: 600 } }, store.questionOf(user.id)), field('Ответ', ans), field('Новый PIN', pin), field(null, pin2), err, go, back);
   }
   /* ---------- тема ---------- */
   const metas = Array.from(document.querySelectorAll('meta[name="theme-color"]')).map((m) => ({ m, media: m.getAttribute('media'), content: m.getAttribute('content') }));

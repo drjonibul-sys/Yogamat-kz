@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.5.2';
+  const APP_VERSION = '1.6.0';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -204,17 +204,13 @@
       return names.length ? names.join(', ') : (item.trainer || '');
     };
     api.isValidPIN = (pin) => /^\d{4,8}$/.test(String(pin));
-    api.makeRecoveryCode = () => {
-      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      const a = new Uint8Array(8);
-      (typeof crypto !== 'undefined' ? crypto : require('crypto').webcrypto).getRandomValues(a);
-      const c = Array.from(a).map((b) => alphabet[b % alphabet.length]).join('');
-      return c.slice(0, 4) + '-' + c.slice(4);
-    };
+    /* контрольный вопрос (вместо кода восстановления): типовые вопросы и нормализация ответа */
+    api.STANDARD_QUESTIONS = STANDARD_QUESTIONS;
+    api.normAnswer = normAnswer;
+    api.isValidAnswer = (t) => normAnswer(t).length >= 3;
 
-    const pins = () => read(KEYS.pins, {});
+    const pins = () => { const p = read(KEYS.pins, {}); if (p['recovery.code']) { delete p['recovery.code']; write(KEYS.pins, p); } return p; }; /* код восстановления отменён: старый удаляется */
     const setVault = (account, value) => { const p = pins(); p[account] = value; write(KEYS.pins, p); };
-    const normCode = (c) => String(c).toUpperCase().replace(/[\s-]/g, '');
     async function makeRecord(secret) { const salt = makeSalt(); return salt + ':' + (await hashPin(secret, salt)); }
     async function matches(secret, record) {
       if (!record) return false;
@@ -231,15 +227,33 @@
     const clearAttempts = (id) => { const a = attempts(); delete a[id]; setAttempts(a); };
     function startSession(id) { currentUserID = id; try { storage.setItem(KEYS.session, id); } catch (e) { /* без сессии */ } api.emit(); }
 
-    api.setupAdmin = async (name, pin, recoveryCode) => {
+    api.setupAdmin = async (name, pin, question, answer) => {
       if (S.staff.length) fail('Аккаунт администратора уже создан');
       if (!api.isValidPIN(pin)) fail('PIN — от 4 до 8 цифр');
+      checkQA(question, answer);
       const user = { id: uid(), name: trim(name) || 'Администратор', role: 'admin', active: true };
       S.staff = [user];
       setVault('pin.' + user.id, await makeRecord(pin));
-      setVault('recovery.code', await makeRecord(normCode(recoveryCode)));
+      setVault('qa.' + user.id, { question: trim(question), answer: await makeRecord(normAnswer(answer)) });
       persist(); startSession(user.id);
       return user;
+    };
+    function checkQA(question, answer) {
+      if (!trim(question)) fail('Выберите контрольный вопрос или введите свой');
+      if (trim(question).length > 80) fail('Вопрос слишком длинный (до 80 знаков)');
+      if (!api.isValidAnswer(answer)) fail('Ответ — не короче 3 знаков (буквы или цифры)');
+    }
+    api.hasQuestion = (userID) => { const q = pins()['qa.' + userID]; return !!(q && q.question && q.answer); };
+    api.questionOf = (userID) => (api.hasQuestion(userID) ? pins()['qa.' + userID].question : '');
+    api.setQuestion = async (userID, question, answer, pin) => {
+      if (!staffById(userID)) fail('Пользователь не найден');
+      if (!(await matches(pin, pins()['pin.' + userID]))) fail('PIN неверный');
+      checkQA(question, answer);
+      setVault('qa.' + userID, { question: trim(question), answer: await makeRecord(normAnswer(answer)) }); api.emit();
+    };
+    api.clearQuestion = async (userID, pin) => {
+      if (!(await matches(pin, pins()['pin.' + userID]))) fail('PIN неверный');
+      const p = pins(); delete p['qa.' + userID]; write(KEYS.pins, p); api.emit();
     };
     api.addTrainer = async (name, pin) => {
       if (!api.isValidPIN(pin)) fail('PIN — от 4 до 8 цифр');
@@ -261,7 +275,7 @@
     };
     api.changePIN = async (userID, current, next) => {
       const record = pins()['pin.' + userID];
-      if (!record) fail('PIN не найден — восстановите доступ по коду');
+      if (!record) fail('PIN не найден — восстановите доступ по контрольному вопросу');
       if (!(await matches(current, record))) fail('Текущий PIN неверный');
       if (!api.isValidPIN(next)) fail('PIN — от 4 до 8 цифр');
       setVault('pin.' + userID, await makeRecord(next));
@@ -275,7 +289,7 @@
     api.deleteStaff = (id) => {
       const u = staffById(id); if (!u || u.role === 'admin') return;
       S.staff = S.staff.filter((x) => x.id !== id);
-      const p = pins(); delete p['pin.' + id]; write(KEYS.pins, p);
+      const p = pins(); delete p['pin.' + id]; delete p['qa.' + id]; write(KEYS.pins, p);
       S.classes.forEach((c) => { c.trainerIDs = (c.trainerIDs || []).filter((x) => x !== id); });
       if (currentUserID === id) api.logOut();
       persist();
@@ -286,7 +300,7 @@
       const u = staffById(userID);
       if (!u || !u.active) fail('Пользователь не найден или отключён');
       const record = pins()['pin.' + userID];
-      if (!record) fail('PIN не найден — восстановите доступ по коду');
+      if (!record) fail('PIN не найден — восстановите доступ по контрольному вопросу');
       if (!(await matches(pin, record))) {
         const a = attempts(); const cur = a[userID] || { count: 0 };
         cur.count += 1;
@@ -296,10 +310,19 @@
       }
       clearAttempts(userID); startSession(userID);
     };
-    api.resetPIN = async (userID, code, pin) => {
-      if (!(await matches(normCode(code), pins()['recovery.code']))) fail('Код восстановления не подходит');
+    /* общий счётчик попыток с входом: 5 неверных — пауза 30 с */
+    function failAttempt(userID, message) {
+      const a = attempts(); const cur = a[userID] || { count: 0 }; cur.count += 1;
+      if (cur.count >= 5) { a[userID] = { count: 0, lockUntil: now().getTime() + 30000 }; setAttempts(a); fail('Слишком много попыток. Заблокировано на 30 секунд.'); }
+      a[userID] = cur; setAttempts(a); fail(message + ' Осталось попыток: ' + Math.max(0, 5 - cur.count) + '.');
+    }
+    api.resetPINByAnswer = async (userID, answer, pin) => {
+      const locked = api.lockRemainingSeconds(userID);
+      if (locked > 0) fail('Слишком много попыток. Заблокировано ещё на ' + locked + ' с.');
+      const u = staffById(userID); if (!u || !u.active) fail('Пользователь не найден или отключён');
+      const qa = pins()['qa.' + userID]; if (!qa || !qa.answer) fail('Контрольный вопрос не задан');
       if (!api.isValidPIN(pin)) fail('PIN — от 4 до 8 цифр');
-      if (!staffById(userID)) fail('Пользователь не найден');
+      if (!(await matches(normAnswer(answer), qa.answer))) failAttempt(userID, 'Неверный ответ.');
       setVault('pin.' + userID, await makeRecord(pin)); clearAttempts(userID);
     };
     api.logOut = () => { currentUserID = null; try { storage.removeItem(KEYS.session); } catch (e) { /* ок */ } api.emit(); };
@@ -749,6 +772,8 @@
   }
 
   /** Сравнение версий X.Y.Z по числам: 1 — a новее, -1 — b новее, 0 — равны. */
+  const STANDARD_QUESTIONS = ['Девичья фамилия матери?', 'Кличка вашего первого домашнего питомца?', 'Город, в котором вы родились?', 'Имя вашего лучшего школьного друга?', 'Ваше любимое блюдо в детстве?'];
+  const normAnswer = (t) => String(t || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/g, '');
   function cmpVersion(a, b) {
     const pa = String(a).split('.').map((x) => parseInt(x, 10) || 0), pb = String(b).split('.').map((x) => parseInt(x, 10) || 0);
     for (let i = 0; i < Math.max(pa.length, pb.length, 3); i++) { const d = (pa[i] || 0) - (pb[i] || 0); if (d) return d > 0 ? 1 : -1; }
@@ -767,5 +792,5 @@
     return out;
   }
 
-  return { createStore, cmpVersion, formatPhone, RU, APP_VERSION, KEYS, memoryStorage, uid };
+  return { createStore, cmpVersion, formatPhone, RU, APP_VERSION, KEYS, memoryStorage, uid, STANDARD_QUESTIONS };
 });
