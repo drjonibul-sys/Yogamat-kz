@@ -39,6 +39,7 @@
       h('span', { class: 'ico' }, icon(ic)), h('span', null, title)))));
     document.title = store.state.studioName || 'yoga_matkz';
     if (bgImg.getAttribute('src') !== store.logoSrc()) bgImg.src = store.logoSrc();
+    if (App.promptUpdate && App.update && App.update.state === 'new') setTimeout(App.promptUpdate, 600);
   }
   const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(render); } };
   App.rerender = schedule;
@@ -113,8 +114,13 @@
       const c = Studio.cmpVersion(v, Studio.APP_VERSION);
       App.update = { version: v, state: c > 0 ? 'new' : c < 0 ? 'older' : 'same' };
     } catch (e) { App.update = { state: 'offline' }; }
-    schedule(); return App.update;
+    schedule(); if (App.promptUpdate) setTimeout(App.promptUpdate, 400); return App.update;
   };
+  /* автоматическая проверка: при запуске, возврате в приложение, появлении сети и раз в 30 минут (не чаще раза в 5 минут) */
+  let lastCheck = 0;
+  const autoCheck = (force) => { if (App.prefs.autoUpdate === false || navigator.onLine === false || !store.currentUser) return; const t = Date.now(); if (!force && t - lastCheck < 300000) return; lastCheck = t; App.checkUpdate(); };
+  setInterval(() => { if (!document.hidden) autoCheck(false); }, 30 * 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) autoCheck(false); });
 
   /* ---------- запуск ---------- */
   store.load();
@@ -122,9 +128,9 @@
   if (store.currentUser) store.maintainAutomaticBackup();
   if (!location.hash) history.replaceState(null, '', '#/overview');
   render();
-  if (navigator.onLine !== false) App.checkUpdate();
+  if (navigator.onLine !== false) { lastCheck = Date.now(); App.checkUpdate(); }
   App.offline.start();
-  window.addEventListener('online', () => App.checkUpdate());
+  window.addEventListener('online', () => autoCheck(true));
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* офлайн-режим недоступен */ }); });

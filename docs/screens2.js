@@ -326,6 +326,25 @@
     });
   }
 
+  /* Установить найденное обновление: со своего адреса — с окном хода, с чужого источника — переход по адресу */
+  App.installUpdate = async () => {
+    const u = App.update; if (!u || u.state !== 'new') return;
+    if (App.sourceIsOwn()) return applyUpdate();
+    if (await UI.confirmBox('Перейти на новый адрес?', 'Версия ' + u.version + ' находится по адресу ' + App.sourceBase() + '. Данные приложения хранятся отдельно для каждого адреса — сначала сохраните базу в файл JSON. Открыть адрес?', 'Открыть')) location.href = App.sourceBase();
+  };
+  /* Всплывающее предложение обновиться: один раз на версию за запуск, не поверх входа и хода обновления */
+  let promptedFor = null;
+  App.promptUpdate = () => {
+    const u = App.update;
+    if (!u || u.state !== 'new' || App.prefs.autoUpdate === false || promptedFor === u.version) return;
+    if (!store.currentUser || updating || document.body.classList.contains('locked') || document.querySelector('.overlay')) return;
+    promptedFor = u.version;
+    sheet('Доступно обновление', (s) => {
+      s.body.append(h('div', { class: 'upd-promo' }, h('img', { src: store.logoSrc(), alt: '', width: 56, height: 56 }), h('div', { class: 'h3' }, 'Версия ' + u.version), h('div', { class: 'small soft' }, 'Установлена ' + Studio.APP_VERSION + '. Данные не затрагиваются. Обновление займёт несколько секунд.')));
+      s.setFoot([h('button', { class: 'btn', type: 'button', onclick: () => { s.close(); App.installUpdate(); } }, 'Установить'), h('button', { class: 'btn soft-btn', type: 'button', onclick: () => s.close() }, 'Позже')]);
+    });
+  };
+
   /* Обновление с индикатором: скачиваем файлы новой версии с показом хода (n из N), затем сбрасываем кэш и перезапускаем.
      Пока идёт скачивание, старая версия остаётся рабочей: при ошибке ничего не теряется. */
   let updating = false;
@@ -363,9 +382,9 @@
     const u = App.update; const box = h('div', { class: 'stack s8' });
     const line = h('div', { class: 'small' }, !u ? 'Проверка обновлений не выполнялась.' : u.state === 'new' ? 'Доступна новая версия ' + u.version + ' (установлена ' + Studio.APP_VERSION + ').' : u.state === 'same' ? 'Установлена актуальная версия ' + Studio.APP_VERSION + '. Версия на сайте: ' + u.version + '.' : u.state === 'older' ? 'Установленная версия (' + Studio.APP_VERSION + ') новее, чем на сайте (' + u.version + ').' : 'Не удалось проверить: нет связи с сайтом.');
     box.appendChild(line);
-    if (u && u.state === 'new') box.appendChild(App.sourceIsOwn() ? h('button', { class: 'btn', type: 'button', onclick: applyUpdate }, 'Обновить до ' + u.version)
-      : h('button', { class: 'btn', type: 'button', onclick: async () => { if (await UI.confirmBox('Перейти на новый адрес?', 'Версия ' + u.version + ' находится по адресу ' + App.sourceBase() + '. Данные приложения хранятся отдельно для каждого адреса — сначала сохраните базу в файл JSON. Открыть адрес?', 'Открыть')) location.href = App.sourceBase(); } }, 'Открыть ' + u.version + ' по адресу источника'));
+    if (u && u.state === 'new') box.appendChild(h('button', { class: 'btn', type: 'button', onclick: () => App.installUpdate() }, App.sourceIsOwn() ? 'Обновить до ' + u.version : 'Открыть ' + u.version + ' по адресу источника'));
     box.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: async () => { await App.checkUpdate(); redraw(); } }, 'Проверить обновление'));
+    box.appendChild(h('div', { class: 'card flat', style: { boxShadow: 'none' } }, toggle('Проверять обновления автоматически', App.prefs.autoUpdate !== false, (v) => { App.setPref('autoUpdate', v); if (v) App.checkUpdate(); }, 'При запуске, возврате в приложение и раз в 30 минут; предложит установить')));
     if (store.isAdmin) box.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: () => sourceSheet(redraw) }, icon('link'), 'Источник'));
     return box;
   }

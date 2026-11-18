@@ -274,3 +274,6 @@ textarea.inp { min-height: 84px; resize: vertical; }
 @media (prefers-reduced-motion: reduce) { .off-badge i { animation: none !important; } }
 
 .src-url { padding: 12px 14px; border-radius: 12px; background: var(--powder); word-break: break-all; font-size: 15px; user-select: all; -webkit-user-select: all; }
+.help-btn { font-size: 20px; font-weight: 700; line-height: 1; font-family: Georgia, 'Times New Roman', serif; }
+.upd-promo { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 6px 0; }
+.upd-promo img { border-radius: 14px; object-fit: contain; }

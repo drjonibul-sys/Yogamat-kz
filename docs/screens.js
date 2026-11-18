@@ -172,7 +172,7 @@
     const ending = store.endingSoon(); const tv = store.todayVisits();
     cards.push(h('div', { class: 'stats' }, stat('people', 'Клиентов', store.state.clients.length, () => App.go('/clients')),
       stat('calendar', 'Занятий сегодня', tv.length, () => App.go('/visits')), stat('alert', 'Заканчиваются', ending.length, () => document.getElementById('ending') && document.getElementById('ending').scrollIntoView({ behavior: 'smooth' }))));
-    if (App.update && App.update.state === 'new') cards.push(h('div', { class: 'card tint' }, h('div', { class: 'h3' }, 'Доступна версия ' + App.update.version), h('div', { class: 'small soft' }, 'Установлена ' + Studio.APP_VERSION + '. Обновление применится после перезапуска.'), h('button', { class: 'btn', type: 'button', onclick: () => App.applyUpdate() }, 'Обновить')));
+    if (App.update && App.update.state === 'new') cards.push(h('div', { class: 'card tint' }, h('div', { class: 'h3' }, 'Доступна версия ' + App.update.version), h('div', { class: 'small soft' }, 'Установлена ' + Studio.APP_VERSION + '. Обновление применится после перезапуска.'), h('button', { class: 'btn', type: 'button', onclick: () => App.installUpdate() }, 'Обновить')));
     if (u && !store.hasQuestion(u.id)) cards.push(h('button', { class: 'card warn', type: 'button', style: { textAlign: 'left' }, onclick: () => App.questionForm() }, h('div', { class: 'row' }, icon('key'), h('div', { class: 'grow' }, h('div', { class: 'h3' }, 'Задайте контрольный вопрос'), h('div', { class: 'soft small' }, 'Без него забытый PIN не восстановить.')), icon('chev', 'chev'))));
     if (store.saveError) cards.push(h('div', { class: 'card warn' }, h('div', { class: 'row top' }, icon('alert'), h('div', { class: 'small' }, store.saveError))));
     cards.push(h('div', { class: 'row' },
@@ -219,6 +219,7 @@
     const head = h('div', { class: 'row top' }, h('div', { class: 'grow stack s8' },
       h('div', { class: 'title' }, greet + (u ? ', ' + u.name.split(' ')[0] : '')), h('div', { class: 'soft' }, RU.weekdayTitle(new Date())),
       h('div', { class: 'row soft studio-line', style: { gap: '8px' } }, h('img', { src: store.logoSrc(), alt: '', width: 25, height: 25, style: { borderRadius: '7px', objectFit: 'contain' } }), store.state.studioName), App.offlineBadge()),
+      h('button', { class: 'icon-btn help-btn', type: 'button', 'aria-label': 'Инструкция', title: 'Инструкция', onclick: () => App.go('/faq') }, '?'),
       h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Настройки', onclick: () => App.go('/settings') }, icon('gear')),
       h('button', { class: 'avatar', type: 'button', 'aria-label': 'Мой аккаунт', onclick: () => App.accountSheet(), style: { width: '46px', height: '46px', border: '1px solid var(--sage)' } }, (u ? u.name : '?').trim()[0].toUpperCase()));
     return h('div', { class: 'page' }, head, ...cards);
