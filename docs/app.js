@@ -107,7 +107,7 @@
   App.update = null;
   App.checkUpdate = async () => {
     try {
-      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      const r = await fetch(App.sourceBase() + 'version.json?t=' + Date.now(), { cache: 'no-store' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const v = String((await r.json()).version || '');
       const c = Studio.cmpVersion(v, Studio.APP_VERSION);

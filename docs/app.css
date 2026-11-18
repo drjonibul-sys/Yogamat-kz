@@ -272,3 +272,5 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .off-row i { width: 12px; height: 12px; margin-top: 6px; border-radius: 50%; flex: none; background: #d9a03a; } .off-row i.ok { background: #3f9b52; }
 @keyframes off-pulse { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .off-badge i { animation: none !important; } }
+
+.src-url { padding: 12px 14px; border-radius: 12px; background: var(--powder); word-break: break-all; font-size: 15px; user-select: all; -webkit-user-select: all; }
