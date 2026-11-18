@@ -1,5 +1,5 @@
 /* Йога-студия Yogamat.kz — офлайн-режим. Версия кэша совпадает с версией приложения (проверяется тестом). */
-const VERSION = '1.1.1';
+const VERSION = '1.1.2';
 const CACHE = 'yogamat-' + VERSION;
 const SHELL = ['./', 'index.html', 'app.css', 'store.js', 'ui.js', 'screens.js', 'screens2.js', 'catalog.js', 'app.js', 'manifest.webmanifest',
   'icons/logo.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'data/asanas.json', 'data/practices.json', 'data/images.json'];

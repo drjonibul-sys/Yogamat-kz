@@ -17,7 +17,7 @@
   /* ---------- каркас страницы ---------- */
   function page(title, opts, ...kids) {
     opts = opts || {};
-    const head = h('div', { class: 'head' },
+    const head = h('div', { class: 'head' + (opts.back ? ' sticky' : '') },
       opts.back ? h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Назад', onclick: () => (App.hasPrev ? history.back() : App.go(typeof opts.back === 'string' ? opts.back : '/overview')) }, icon('back')) : null,
       h('h1', { class: opts.back ? '' : 'title' }, title), opts.right || null);
     return h('div', { class: 'page' }, head, ...kids);

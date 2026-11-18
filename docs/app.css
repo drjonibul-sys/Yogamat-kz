@@ -154,6 +154,12 @@ textarea.inp { min-height: 84px; resize: vertical; }
 /* шапка внутренних страниц */
 .head { display: flex; align-items: center; gap: 12px; }
 .head h1 { font-size: 24px; flex: 1; min-width: 0; }
+.head.sticky {
+  position: sticky; top: 0; z-index: 20;
+  margin-top: calc(-14px - env(safe-area-inset-top, 0px)); padding: calc(14px + env(safe-area-inset-top, 0px)) 0 10px;
+  background: color-mix(in srgb, var(--canvas) 92%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.head.sticky h1 { font-size: 21px; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .empty { text-align: center; padding: 28px 18px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
 .empty .ic { width: 52px; height: 52px; border-radius: 50%; background: var(--sage-tint); color: var(--sage-deep); display: grid; place-items: center; }
 .empty .ic svg { width: 24px; height: 24px; }

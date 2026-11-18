@@ -25,7 +25,7 @@ with sync_playwright() as p:
     ok('кнопка «Начать работу» заблокирована до подтверждения', page.is_disabled('text=Начать работу'))
     page.check('#rc-ok'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
     ok('после создания открыт Обзор с приветствием', 'Анна' in page.inner_text('.title'))
-    ok('версия и разработчик на странице', 'Версия: 1.1.1' in page.inner_text('.app-footer') and 'Разработано Yogamat.kz' in page.inner_text('.app-footer'))
+    ok('версия и разработчик на странице', 'Версия: 1.1.2' in page.inner_text('.app-footer') and 'Разработано Yogamat.kz' in page.inner_text('.app-footer'))
     ok('у админа 5 вкладок', page.locator('.tab').count() == 5)
     page.screenshot(path=SHOTS + '/02-overview.png')
 

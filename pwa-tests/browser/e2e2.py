@@ -54,11 +54,17 @@ with sync_playwright() as p:
     page.evaluate("document.getElementById('main').scrollTop = 600"); page.wait_for_timeout(100); y2 = page.evaluate("document.getElementById('main').scrollTop")
     page.locator('.card .chip').nth(1).click(); page.wait_for_selector('.hero-img'); page.click('[aria-label="Назад"]'); page.wait_for_selector('text=План занятия'); page.wait_for_timeout(300)
     y3 = page.evaluate("document.getElementById('main').scrollTop"); ok('возврат в ту же позицию внутри комплекса (%d → %d)' % (y2, y3), y2 > 0 and abs(y3 - y2) <= 2)
+    # закреплённый верхний пояс
+    for url, name in [('#/practices', 'список комплексов'), ('#/practice/' + page.evaluate("fetch('data/practices.json').then(r=>r.json()).then(d=>d[0].id)"), 'комплекс'), ('#/asana/tadasana', 'асана')]:
+        page.goto(BASE + url); page.wait_for_selector('.head.sticky'); page.evaluate("document.getElementById('main').scrollTop = 700"); page.wait_for_timeout(200)
+        top = page.evaluate("document.querySelector('.head.sticky').getBoundingClientRect().top"); vis = page.locator('.head.sticky [aria-label="Назад"]').is_visible()
+        ok('верхний пояс закреплён: ' + name, abs(top) < 2 and vis and page.evaluate("document.getElementById('main').scrollTop") > 100)
+    page.click('.head.sticky [aria-label="Назад"]'); page.wait_for_timeout(200)
     # версии
     page.goto(BASE + '#/settings'); page.wait_for_selector('text=Проверить обновление'); page.wait_for_timeout(600)
-    ok('та же версия на сайте — не «обновление»', 'актуальная версия 1.1.1' in page.inner_text('.page') and 'Обновить до' not in page.inner_text('.page'))
+    ok('та же версия на сайте — не «обновление»', 'актуальная версия 1.1.2' in page.inner_text('.page') and 'Обновить до' not in page.inner_text('.page'))
     page.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"1.10.0"}'))
-    page.click('text=Проверить обновление'); page.wait_for_selector('text=Обновить до 1.10.0'); ok('1.10.0 новее 1.1.1 (числовое сравнение)', True)
+    page.click('text=Проверить обновление'); page.wait_for_selector('text=Обновить до 1.10.0'); ok('1.10.0 новее 1.1.2 (числовое сравнение)', True)
     page.unroute('**/version.json*'); page.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"1.0.9"}'))
     page.click('text=Проверить обновление'); page.wait_for_timeout(500); ok('старая версия на сайте не считается обновлением', 'Обновить до' not in page.inner_text('.page'))
     page.unroute('**/version.json*'); page.route('**/version.json*', lambda r: r.abort())
