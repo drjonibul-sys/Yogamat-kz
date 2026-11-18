@@ -185,7 +185,9 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .auth .logo { width: 112px; height: 112px; border-radius: 22px; margin: 0 auto; display: block; object-fit: cover; }
 .auth h1 { text-align: center; font-size: 26px; }
 .auth .lead { text-align: center; color: var(--ink-soft); }
-.pin { letter-spacing: .5em; text-align: center; font-size: 24px; }
+.auth .inp, .auth .pin { font-family: var(--font); font-size: 16px; }
+.pin { text-align: left; letter-spacing: normal; }
+.pin:not(:placeholder-shown) { letter-spacing: .3em; }
 .code-box { font-size: 28px; font-weight: 700; letter-spacing: .12em; text-align: center; padding: 16px; border-radius: 18px; background: var(--sage-tint); color: var(--sage-deep); user-select: all; }
 .user-card { display: flex; align-items: center; gap: 14px; background: var(--card); padding: 14px; border-radius: 22px; box-shadow: 0 6px 14px var(--shadow); width: 100%; text-align: left; border: 1px solid var(--hairline); }
 
