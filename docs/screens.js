@@ -243,7 +243,8 @@
     draw();
     return page('Клиенты', { right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Новый клиент', onclick: () => clientForm(null) }, icon('plus')) },
       h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: () => saleForm(null) }, 'Продать абонемент'),
-        h('button', { class: 'btn soft-btn', type: 'button', onclick: () => { UI.saveFile('klienty-' + today() + '.csv', store.clientsCSV(), 'text/csv;charset=utf-8'); } }, icon('download'), 'Таблица')),
+        h('button', { class: 'btn soft-btn', type: 'button', onclick: () => { UI.saveFile('klienty-' + today() + '.csv', store.clientsCSV(), 'text/csv;charset=utf-8'); } }, icon('download'), 'CSV'),
+        h('button', { class: 'btn soft-btn', type: 'button', onclick: () => Pdf.exportPDF('Клиенты студии', store.clientsCSV(), 'klienty-' + today() + '.pdf') }, icon('download'), 'PDF')),
       search, list);
   }
 

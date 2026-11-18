@@ -78,7 +78,7 @@
   function debts() {
     const list = store.unpaidSubscriptions().sort((a, b) => (a.purchaseDate < b.purchaseDate ? 1 : -1));
     const total = list.reduce((s, x) => s + x.price, 0);
-    return page('Долги', { back: '/income', right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Выгрузить', onclick: () => UI.saveFile('dolgi-' + App.today() + '.csv', store.debtsCSV(), 'text/csv;charset=utf-8') }, icon('download')) },
+    return page('Долги', { back: '/income', right: h('div', { class: 'row', style: { gap: '8px' } }, h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Выгрузить CSV', onclick: () => UI.saveFile('dolgi-' + App.today() + '.csv', store.debtsCSV(), 'text/csv;charset=utf-8') }, icon('download')), h('button', { class: 'btn sm', type: 'button', onclick: () => Pdf.exportPDF('Долги по абонементам', store.debtsCSV(), 'dolgi-' + App.today() + '.pdf') }, 'PDF')) },
       list.length ? h('div', { class: 'card warn' }, h('div', { class: 'soft small' }, 'Не отмечена оплата · новые сверху'), h('div', { class: 'title num' }, RU.money(total)), h('div', { class: 'small soft' }, list.length + ' абонементов')) : null,
       list.length ? h('div', { class: 'card flat' }, list.map((s) => { const c = store.client(s.clientID); return h('div', { class: 'list-row' }, h('button', { class: 'grow', type: 'button', style: { textAlign: 'left', minWidth: 0 }, onclick: () => c && App.go('/client/' + c.id) },
         h('div', { class: 'trunc', style: { fontWeight: 600 } }, c ? c.name : '—'), h('div', { class: 'soft small trunc' }, '«' + s.tariffName + '» · ' + RU.shortDate(s.purchaseDate) + ' · ' + RU.money(s.price))),
@@ -203,6 +203,7 @@
       const ymState = { year: thisYear, month: new Date().getMonth() + 1 };
       box.appendChild(section('Табель визитов'));
       box.appendChild(h('div', { class: 'card' }, periodPicker(ymState, () => {}), h('button', { class: 'btn soft-btn', type: 'button', onclick: () => UI.saveFile('vizity-' + RU.monthKey(ymState.year, ymState.month) + '.csv', store.visitsCSV(ymState.year, ymState.month), 'text/csv;charset=utf-8') }, icon('download'), 'Скачать табель (CSV)'),
+        h('button', { class: 'btn soft-btn', type: 'button', onclick: () => Pdf.exportPDF('Табель визитов — ' + RU.months[ymState.month - 1] + ' ' + ymState.year, store.visitsCSV(ymState.year, ymState.month), 'vizity-' + RU.monthKey(ymState.year, ymState.month) + '.pdf') }, icon('download'), 'Скачать табель (PDF, A4)'),
         h('div', { class: 'hint' }, 'Файл открывается в Excel и «Numbers».')));
       if (store.isAdmin) {
         box.appendChild(section('Данные'));
