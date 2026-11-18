@@ -17,9 +17,9 @@
   /* ---------- каркас страницы ---------- */
   function page(title, opts, ...kids) {
     opts = opts || {};
-    const head = h('div', { class: 'head' + (opts.back ? ' sticky' : '') },
+    const head = h('div', { class: 'head' + (opts.back || opts.sticky ? ' sticky' : '') },
       opts.back ? h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Назад', onclick: () => (App.hasPrev ? history.back() : App.go(typeof opts.back === 'string' ? opts.back : '/overview')) }, icon('back')) : null,
-      h('h1', { class: opts.back ? '' : 'title' }, title), opts.right || null);
+      h('h1', { class: opts.back || opts.sticky ? '' : 'title' }, title), opts.right || null);
     return h('div', { class: 'page' }, head, ...kids);
   }
   const section = (t) => h('div', { class: 'sec-title' }, t);
@@ -242,7 +242,7 @@
     };
     const search = h('div', { class: 'search' }, icon('search'), input({ placeholder: 'Поиск по имени или телефону', 'aria-label': 'Поиск', oninput: (e) => { q = e.target.value.trim().toLowerCase(); draw(); } }));
     draw();
-    return page('Клиенты', { right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Новый клиент', onclick: () => clientForm(null) }, icon('plus')) },
+    return page('Клиенты', { sticky: true, right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Новый клиент', onclick: () => clientForm(null) }, icon('plus')) },
       h('div', { class: 'row' }, store.isAdmin ? h('button', { class: 'btn', type: 'button', onclick: () => saleForm(null) }, 'Продать абонемент') : null,
         h('button', { class: 'btn soft-btn', type: 'button', onclick: () => { UI.saveFile('klienty-' + today() + '.csv', store.clientsCSV(), 'text/csv;charset=utf-8'); } }, icon('download'), 'CSV'),
         h('button', { class: 'btn soft-btn', type: 'button', onclick: () => Pdf.exportPDF('Клиенты студии', store.clientsCSV(), 'klienty-' + today() + '.pdf') }, icon('download'), 'PDF')),
@@ -314,7 +314,7 @@
     const chips = h('div', { class: 'seg' });
     const drawChips = () => { clear(chips); [['today', 'Сегодня'], ['week', '7 дней'], ['month', '30 дней'], ['all', 'Все']].forEach(([k, l]) => chips.appendChild(chip(l, mode === k, () => { mode = k; setPref('visitsMode', k); drawChips(); draw(); }))); };
     drawChips(); draw();
-    return page('Визиты', { right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Отметить визит', onclick: () => markVisitForm() }, icon('plus')) },
+    return page('Визиты', { sticky: true, right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Отметить визит', onclick: () => markVisitForm() }, icon('plus')) },
       h('div', { class: 'search' }, icon('search'), input({ placeholder: 'Поиск по имени клиента', 'aria-label': 'Поиск', oninput: (e) => { q = e.target.value.trim().toLowerCase(); draw(); } })), chips, list);
   }
 
@@ -428,7 +428,7 @@
       }
     };
     draw();
-    return page('Классы', { right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Направления', onclick: directionsSheet }, icon('lotus')) }, body,
+    return page('Классы', { sticky: true, right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Направления', onclick: directionsSheet }, icon('lotus')) }, body,
       h('button', { class: 'btn soft-btn', type: 'button', onclick: directionsSheet }, 'Все направления'));
   }
 

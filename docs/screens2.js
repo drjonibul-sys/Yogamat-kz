@@ -52,7 +52,7 @@
       box.appendChild(h('div', { class: 'card flat' }, navRow('money', 'Платежи', 'Все оплаты по датам', '/payments'), navRow('alert', 'Долги', 'Не отмечена оплата', '/debts'), navRow('key', 'Аренда студии', 'Ежемесячно', '/rent'),
         navRow('book', 'Тарифы', 'Цены и сроки абонементов', '/tariffs'), navRow('chart', 'Загрузка направлений', 'Занятия, визиты и заполняемость', '/class-load'), navRow('people', 'Тренеры', 'По нагрузке', '/trainer-load')));
     };
-    draw(); return page('Доход', {}, box);
+    draw(); return page('Доход', { sticky: true }, box);
   }
 
   /* ---------- Отчёт по платежам: месяц / квартал / год / свободный период ---------- */
