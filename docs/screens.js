@@ -175,7 +175,7 @@
     if (App.update && App.update.state === 'new') cards.push(h('div', { class: 'card tint' }, h('div', { class: 'h3' }, 'Доступна версия ' + App.update.version), h('div', { class: 'small soft' }, 'Установлена ' + Studio.APP_VERSION + '. Обновление применится после перезапуска.'), h('button', { class: 'btn', type: 'button', onclick: () => App.applyUpdate() }, 'Обновить')));
     if (store.saveError) cards.push(h('div', { class: 'card warn' }, h('div', { class: 'row top' }, icon('alert'), h('div', { class: 'small' }, store.saveError))));
     cards.push(h('div', { class: 'row' },
-      h('button', { class: 'btn', type: 'button', onclick: () => saleForm(null) }, icon('plus'), 'Добавить клиента'),
+      h('button', { class: 'btn', type: 'button', onclick: () => (store.isAdmin ? saleForm(null) : clientForm(null)) }, icon('plus'), 'Добавить клиента'),
       h('button', { class: 'btn soft-btn', type: 'button', onclick: () => markVisitForm() }, icon('check'), 'Отметить визит')));
     if (store.isAdmin && store.state.rentSettings) {
       const unpaid = store.unpaidRentPeriods();
@@ -217,7 +217,7 @@
 
     const head = h('div', { class: 'row top' }, h('div', { class: 'grow stack s8' },
       h('div', { class: 'title' }, greet + (u ? ', ' + u.name.split(' ')[0] : '')), h('div', { class: 'soft' }, RU.weekdayTitle(new Date())),
-      h('div', { class: 'row soft small', style: { gap: '6px' } }, h('img', { src: store.logoSrc(), alt: '', width: 18, height: 18, style: { borderRadius: '5px', objectFit: 'contain' } }), store.state.studioName)),
+      h('div', { class: 'row soft studio-line', style: { gap: '8px' } }, h('img', { src: store.logoSrc(), alt: '', width: 25, height: 25, style: { borderRadius: '7px', objectFit: 'contain' } }), store.state.studioName)),
       h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Настройки', onclick: () => App.go('/settings') }, icon('gear')),
       h('button', { class: 'avatar', type: 'button', 'aria-label': 'Мой аккаунт', onclick: () => App.accountSheet(), style: { width: '46px', height: '46px', border: '1px solid var(--sage)' } }, (u ? u.name : '?').trim()[0].toUpperCase()));
     return h('div', { class: 'page' }, head, ...cards);
@@ -242,7 +242,7 @@
     const search = h('div', { class: 'search' }, icon('search'), input({ placeholder: 'Поиск по имени или телефону', 'aria-label': 'Поиск', oninput: (e) => { q = e.target.value.trim().toLowerCase(); draw(); } }));
     draw();
     return page('Клиенты', { right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Новый клиент', onclick: () => clientForm(null) }, icon('plus')) },
-      h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: () => saleForm(null) }, 'Продать абонемент'),
+      h('div', { class: 'row' }, store.isAdmin ? h('button', { class: 'btn', type: 'button', onclick: () => saleForm(null) }, 'Продать абонемент') : null,
         h('button', { class: 'btn soft-btn', type: 'button', onclick: () => { UI.saveFile('klienty-' + today() + '.csv', store.clientsCSV(), 'text/csv;charset=utf-8'); } }, icon('download'), 'CSV'),
         h('button', { class: 'btn soft-btn', type: 'button', onclick: () => Pdf.exportPDF('Клиенты студии', store.clientsCSV(), 'klienty-' + today() + '.pdf') }, icon('download'), 'PDF')),
       search, list);
@@ -270,8 +270,8 @@
         isActive ? h('button', { class: 'btn soft-btn', type: 'button', onclick: () => transferForm(s) }, icon('repeat'), 'Перенести срок') : null);
     };
     kids.push(section('Абонемент'));
-    kids.push(active ? subCard(active, true) : h('div', { class: 'card warn' }, h('div', { class: 'h3' }, 'Нет активного абонемента'), h('div', { class: 'soft small' }, 'Продайте новый — и клиента можно записывать на занятия.')));
-    kids.push(h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: () => saleForm(c.id) }, 'Новый абонемент'),
+    kids.push(active ? subCard(active, true) : h('div', { class: 'card warn' }, h('div', { class: 'h3' }, 'Нет активного абонемента'), h('div', { class: 'soft small' }, store.isAdmin ? 'Продайте новый — и клиента можно записывать на занятия.' : 'Новый абонемент оформляет администратор.')));
+    kids.push(h('div', { class: 'row' }, store.isAdmin ? h('button', { class: 'btn', type: 'button', onclick: () => saleForm(c.id) }, 'Новый абонемент') : null,
       h('button', { class: 'btn soft-btn', type: 'button', onclick: () => markVisitForm(c.id) }, 'Отметить визит')));
     const past = subs.filter((s) => !active || s.id !== active.id);
     if (past.length) { kids.push(section('Прошлые абонементы')); past.forEach((s) => kids.push(subCard(s, false))); }
@@ -381,10 +381,10 @@
     sheet('Направления', (s) => {
       const draw = () => {
         clear(s.body);
-        s.body.appendChild(h('button', { class: 'btn', type: 'button', onclick: () => { s.close(); classEditor(null); } }, icon('plus'), 'Новое направление'));
+        if (store.isAdmin) s.body.appendChild(h('button', { class: 'btn', type: 'button', onclick: () => { s.close(); classEditor(null); } }, icon('plus'), 'Новое направление'));
         const list = store.orderedClasses();
         s.body.appendChild(h('div', { class: 'card flat' }, list.map((c) => listRow([h('div', { class: 'grow' }, h('div', { class: 'trunc', style: { fontWeight: 600 } }, c.name), h('div', { class: 'soft small trunc' }, (c.type === 'yoga' ? 'Йога' : 'Пилатес') + ' · ' + weekdaysLabel(c) + ' · ' + RU.classTime(c.startMinutes))),
-          c.active ? pill(c.level, 'sand') : pill('не проводится', 'gray')], () => { s.close(); classEditor(c.id); }))));
+          c.active ? pill(c.level, 'sand') : pill('не проводится', 'gray')], store.isAdmin ? () => { s.close(); classEditor(c.id); } : null))));
         s.body.appendChild(h('div', { class: 'hint' }, 'Направлений: ' + list.length));
       }; draw();
     });
@@ -417,7 +417,14 @@
         return listRow([h('div', { class: 'time' }, RU.classTime(c.startMinutes)), h('div', { class: 'grow' }, h('div', { class: 'trunc', style: { fontWeight: 600 } }, c.name),
           h('div', { class: 'soft small trunc' }, (store.trainerNames(c) || 'тренер не назначен') + (c.hall ? ' · ' + c.hall : ''))), full ? pill('мест нет', 'warn') : pill(n + '/' + c.capacity)], () => rosterSheet(c.id, activeKey));
       })));
-      if (store.isAdmin) body.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: () => classEditor(null) }, icon('plus'), 'Добавить занятие'));
+      if (store.isAdmin) {
+        body.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: () => classEditor(null) }, icon('plus'), 'Добавить занятие'));
+        const fb = store.futureBookings();
+        body.appendChild(h('button', { class: 'btn danger', type: 'button', disabled: !fb.length, onclick: async () => {
+          const n = store.futureBookings().length; const cl = new Set(store.futureBookings().map((v) => v.clientID)).size;
+          if (!(await confirmBox('Отменить все будущие записи?', 'Будут отменены записи на все занятия после сегодняшнего дня: ' + n + ' ' + (n % 10 === 1 && n % 100 !== 11 ? 'запись' : 'записей') + ', клиентов: ' + cl + '. Занятия вернутся в абонементы клиентов. Расписание не меняется.', 'Отменить все', true))) return;
+          try { const r = store.cancelFutureBookings(); toast('Отменено записей: ' + r.count); draw(); } catch (e) { toast(e.message); } } }, fb.length ? 'Отменить все будущие записи (' + fb.length + ')' : 'Будущих записей нет'));
+      }
     };
     draw();
     return page('Классы', { right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Направления', onclick: directionsSheet }, icon('lotus')) }, body,

@@ -275,7 +275,31 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     const fs = require('fs'); const d = __dirname + '/../docs/';
     assert(fs.readFileSync(d + 'index.html', 'utf8').includes('guide.js')); assert(fs.readFileSync(d + 'sw.js', 'utf8').includes('guide.js'));
     const src = fs.readFileSync(d + 'guide.js', 'utf8'); const rev = /GUIDE_REV = '([\d.]+)'/.exec(src)[1];
-    assert(rev.split('.').length === 3); assert(src.includes('Название и логотип студии') && src.includes('Вход и PIN'));
+    assert(rev.split('.').length === 3); assert(src.includes('Как изменить название и логотип студии?') && src.includes('Как войти в приложение?'));
+  });
+  await test('новый тренер виден в «Тренеры» сразу, даже без занятий', async () => {
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'ABCD-EFGH'); await s.addTrainer('Новый Тренер', '4321');
+    const r = s.trainerLoad(2026, 11).find((x) => x.trainer.name === 'Новый Тренер'); assert(r && r.sessions === 0 && r.occupancy === 0);
+  });
+  await test('тренер не может продавать абонементы и создавать классы; администратор может', async () => {
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'ABCD-EFGH'); const tr = await s.addTrainer('Новый Тренер', '4321');
+    await s.logOut(); await s.logIn(tr.id, '4321'); assert(!s.isAdmin);
+    assert.throws(() => sale(s), /только администратор/);
+    assert.throws(() => s.saveClass({ name: 'Новое', type: 'yoga', level: 'Лёгкий', durationMin: 60, capacity: 10, weekdays: [1], startMinutes: 600, active: true }), /только администратор/);
+    assert.throws(() => s.cancelFutureBookings(), /только администратор/);
+  });
+  await test('отмена всех будущих записей одним действием возвращает занятия', async () => {
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'ABCD-EFGH'); const c = sale(s); const cls = s.state.classes[0];
+    const sub = s.state.subscriptions[0]; const before = sub.visitsLeft; const wd = cls.weekdays[0];
+    let d = new Date(t0); d.setDate(d.getDate() + 1); while (RU.weekdayIndex(d) !== wd) d.setDate(d.getDate() + 1);
+    s.bookVisit(c.id, cls.id, RU.key(d)); assert.strictEqual(s.futureBookings().length, 1); assert.strictEqual(sub.visitsLeft, before - 1);
+    const r = s.cancelFutureBookings(); assert.strictEqual(r.count, 1); assert.strictEqual(s.futureBookings().length, 0); assert.strictEqual(sub.visitsLeft, before);
+  });
+  await test('отчёт по платежам: период, аренда и итог', async () => {
+    const s = mk(); s.addQuickSale({ name: 'А', phone: '', tariffName: '8', visitsTotal: 8, purchaseDate: '2026-11-02', expiryDate: '2026-12-02', price: 28000, paid: true, paidDate: '2026-11-03' });
+    s.addQuickSale({ name: 'Б', phone: '', tariffName: '8', visitsTotal: 8, purchaseDate: '2026-08-02', expiryDate: '2026-09-02', price: 10000, paid: true, paidDate: '2026-08-05' });
+    assert.strictEqual(s.paymentsReport('2026-11-01', '2026-11-30').total, 28000); assert.strictEqual(s.paymentsReport('2026-07-01', '2026-12-31').total, 38000);
+    assert(s.paymentsCSV('2026-07-01', '2026-12-31').includes('Итого')); assert.strictEqual(s.paymentsReport('2026-12-01', '2026-12-31').total, 0);
   });
   await test('версия в version.json совпадает', () => {
     assert.strictEqual(JSON.parse(require('fs').readFileSync(__dirname + '/../docs/version.json', 'utf8')).version, require('../docs/store.js').APP_VERSION);

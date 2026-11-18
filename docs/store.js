@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.4.0';
+  const APP_VERSION = '1.5.0';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -329,7 +329,9 @@
       Object.assign(c, { name: trim(name), phone: trim(phone), note: trim(note), since: since || c.since });
       persist();
     };
+    const noTrainer = (msg) => { const u = api.currentUser; if (u && u.role === 'trainer') fail(msg); };
     api.addQuickSale = (o) => {
+      noTrainer('Продавать абонементы может только администратор');
       if (!trim(o.name)) fail('Введите имя клиента');
       if (!trim(o.tariffName)) fail('Выберите тариф');
       const c = { id: uid(), name: trim(o.name), phone: trim(o.phone), note: '', since: todayKey() };
@@ -366,6 +368,7 @@
     };
     api.clientsWithActiveSubscription = () => S.clients.filter((c) => api.activeSubscription(c.id)).sort((a, b) => RU.compare(a.name, b.name));
     api.addSubscription = (o) => {
+      noTrainer('Продавать абонементы может только администратор');
       const name = trim(o.tariffName);
       if (!name) fail('Введите название тарифа');
       if (!(o.expiryDate >= o.purchaseDate)) fail('Срок действия раньше даты покупки');
@@ -404,6 +407,16 @@
       S.visits.splice(i, 1); persist();
     };
 
+    /* отмена всех записей на будущие занятия (после сегодняшнего дня): занятия возвращаются в абонементы */
+    api.futureBookings = () => S.visits.filter((v) => v.classID && v.date > todayKey());
+    api.cancelFutureBookings = () => {
+      if (!api.isAdmin) fail('Отменять записи может только администратор');
+      const list = api.futureBookings(); const ids = new Set(list.map((v) => v.id));
+      list.forEach((v) => { const sub = api.subscription(v.subscriptionID); if (sub) sub.visitsLeft = Math.min(sub.visitsTotal, sub.visitsLeft + 1); });
+      S.visits = S.visits.filter((v) => !ids.has(v.id)); persist();
+      return { count: list.length, clients: new Set(list.map((v) => v.clientID)).size };
+    };
+
     /* ----- классы и запись ----- */
     api.studioClass = (id) => S.classes.find((c) => c.id === id);
     api.orderedClasses = () => S.classes.slice().sort((a, b) => (a.type !== b.type ? (a.type === 'yoga' ? -1 : 1) : RU.compare(a.name, b.name)));
@@ -440,6 +453,7 @@
       persist(); return { created, skipped };
     };
     api.saveClass = (value) => {
+      noTrainer('Создавать и менять направления может только администратор');
       const c = Object.assign({}, value);
       c.name = trim(c.name);
       if (!c.name) fail('Введите название занятия');
@@ -597,14 +611,14 @@
     };
     api.trainerLoad = (year, month) => {
       const key = RU.monthKey(year, month); const out = [];
-      api.trainers.forEach((trainer) => {
+      S.staff.filter((u) => u.role === 'trainer').forEach((trainer) => {
         const directions = []; let sessions = 0;
         S.classes.filter((c) => api.isAssigned(c, trainer)).forEach((item) => {
           const n = sessionsInMonth(item, year, month); if (!n) return;
           const visits = S.visits.filter((v) => v.classID === item.id && v.date.startsWith(key)).length;
           directions.push({ item, sessions: n, visits }); sessions += n;
         });
-        if (!sessions) return;
+        if (!sessions && !trainer.active) return; /* работающий тренер виден всегда, даже без занятий */
         const visits = directions.reduce((s, d) => s + d.visits, 0);
         const cap = directions.reduce((s, d) => s + d.sessions * d.item.capacity, 0);
         out.push({ trainer, directions: directions.sort((a, b) => b.sessions - a.sessions), sessions, visits, occupancy: pct(visits, cap) });
@@ -699,6 +713,24 @@
         const c = api.client(v.clientID), k = v.classID && api.studioClass(v.classID), s = api.subscription(v.subscriptionID);
         rows.push([RU.shortDate(v.date), RU.time(new Date(v.createdAt)), c ? c.name : '—', k ? k.name : '', s ? s.tariffName : '']);
       });
+      return csv(rows);
+    };
+    /* отчёт по платежам за период [from..to] (ключи YYYY-MM-DD): оплаты абонементов и оплаченная аренда */
+    api.paymentsReport = (from, to) => {
+      const subs = api.paidSubscriptions().filter((s) => s.paidDate >= from && s.paidDate <= to).sort((a, b) => (a.paidDate < b.paidDate ? -1 : 1));
+      const rent = S.rentPeriods.filter((p) => p.paid && RU.isValidDay(p.paidDate) && p.paidDate >= from && p.paidDate <= to).sort((a, b) => (a.paidDate < b.paidDate ? -1 : 1));
+      const income = subs.reduce((s, x) => s + x.price, 0); const rentSum = rent.reduce((s, p) => s + ((S.rentSettings && S.rentSettings.monthlyAmount) || 0), 0);
+      return { subs, rent, income, rentSum, total: income - rentSum };
+    };
+    api.paymentsCSV = (from, to) => {
+      const r = api.paymentsReport(from, to); const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+      const rows = [['Дата', 'Вид', 'Клиент / описание', 'Тариф', 'Сумма, ₸']];
+      r.subs.forEach((s) => { const c = api.client(s.clientID); rows.push([RU.shortDate(s.paidDate), 'Абонемент', c ? c.name : '—', s.tariffName, fmt(s.price)]); });
+      const amount = (S.rentSettings && S.rentSettings.monthlyAmount) || 0;
+      r.rent.forEach((p) => rows.push([RU.shortDate(p.paidDate), 'Аренда', 'Аренда за ' + RU.months[p.month - 1].toLowerCase() + ' ' + p.year, '', '−' + fmt(amount)]));
+      rows.push(['', '', 'Поступления от абонементов', '', fmt(r.income)]);
+      if (r.rent.length) rows.push(['', '', 'Аренда', '', '−' + fmt(r.rentSum)]);
+      rows.push(['', '', 'Итого', '', fmt(r.total)]);
       return csv(rows);
     };
     api.debtsCSV = () => {

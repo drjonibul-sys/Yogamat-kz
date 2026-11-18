@@ -55,6 +55,43 @@
     draw(); return page('Доход', {}, box);
   }
 
+  /* ---------- Отчёт по платежам: месяц / квартал / год / свободный период ---------- */
+  function periodRange(kind, y, m, q, from, to) {
+    const pad = (n) => String(n).padStart(2, '0'); const last = (yy, mm) => new Date(yy, mm, 0).getDate();
+    if (kind === 'month') return [y + '-' + pad(m) + '-01', y + '-' + pad(m) + '-' + pad(last(y, m)), RU.months[m - 1] + ' ' + y];
+    if (kind === 'quarter') { const a = (q - 1) * 3 + 1; return [y + '-' + pad(a) + '-01', y + '-' + pad(a + 2) + '-' + pad(last(y, a + 2)), q + ' квартал ' + y]; }
+    if (kind === 'year') return [y + '-01-01', y + '-12-31', y + ' год'];
+    return [from, to, RU.shortDate(from) + ' — ' + RU.shortDate(to)];
+  }
+  App.periodRange = periodRange;
+  function reportSheet(st) {
+    UI.sheet('Отчёт по платежам', (s) => {
+      const d = new Date(); const state = { kind: 'month', year: st.year, month: st.month, quarter: Math.floor(d.getMonth() / 3) + 1, from: RU.key(new Date(d.getFullYear(), d.getMonth(), 1)), to: RU.key(d) };
+      const body = h('div', { class: 'stack' }); s.body.appendChild(body);
+      const draw = () => {
+        clear(body); const seg = h('div', { class: 'seg' });
+        [['month', 'Месяц'], ['quarter', 'Квартал'], ['year', 'Год'], ['custom', 'Период']].forEach(([k, l]) => seg.appendChild(chip(l, state.kind === k, () => { state.kind = k; draw(); })));
+        body.appendChild(seg);
+        const cy = d.getFullYear(); const years = [cy - 2, cy - 1, cy, cy + 1]; store.receiptYears().forEach((y) => { if (!years.includes(y)) years.push(y); }); years.sort((a, b) => b - a);
+        const yearSel = select(years.map((v) => ({ value: v, label: String(v) })), state.year, (e) => { state.year = +e.target.value; draw(); });
+        if (state.kind === 'month') body.appendChild(h('div', { class: 'row' }, h('div', { class: 'grow' }, select(RU.months.map((n, i) => ({ value: i + 1, label: n })), state.month, (e) => { state.month = +e.target.value; draw(); })), h('div', { style: { width: '110px', flex: 'none' } }, yearSel)));
+        else if (state.kind === 'quarter') body.appendChild(h('div', { class: 'row' }, h('div', { class: 'grow' }, select([1, 2, 3, 4].map((q) => ({ value: q, label: q + ' квартал' })), state.quarter, (e) => { state.quarter = +e.target.value; draw(); })), h('div', { style: { width: '110px', flex: 'none' } }, yearSel)));
+        else if (state.kind === 'year') body.appendChild(h('div', { style: { width: '140px' } }, yearSel));
+        else {
+          const f = input({ type: 'date', value: state.from, 'aria-label': 'С даты', onchange: (e) => { state.from = e.target.value; draw(); } }); const t = input({ type: 'date', value: state.to, 'aria-label': 'По дату', onchange: (e) => { state.to = e.target.value; draw(); } });
+          body.appendChild(h('div', { class: 'row' }, h('div', { class: 'grow' }, field('С', f)), h('div', { class: 'grow' }, field('По', t))));
+        }
+        const [from, to, label] = periodRange(state.kind, state.year, state.month, state.quarter, state.from, state.to);
+        const bad = !RU.isValidDay(from) || !RU.isValidDay(to) || from > to;
+        const r = bad ? null : store.paymentsReport(from, to);
+        body.appendChild(bad ? h('div', { class: 'card warn' }, 'Проверьте даты: начало должно быть не позже конца.') : h('div', { class: 'card tint' }, h('div', { class: 'soft small' }, label), h('div', { class: 'h2 num' }, 'Итого ' + RU.money(r.total)), h('div', { class: 'soft small' }, 'Оплат абонементов: ' + r.subs.length + (r.rent.length ? ' · аренда: ' + r.rent.length : ''))));
+        body.appendChild(h('button', { class: 'btn', type: 'button', disabled: bad, onclick: () => Pdf.exportPDF('Платежи — ' + label, store.paymentsCSV(from, to), 'platezhi-' + from + '_' + to + '.pdf', store.state.studioName + ' · ' + label) }, icon('download'), 'Создать PDF (A4)'));
+        body.appendChild(h('button', { class: 'btn soft-btn', type: 'button', disabled: bad, onclick: () => UI.saveFile('platezhi-' + from + '_' + to + '.csv', store.paymentsCSV(from, to), 'text/csv;charset=utf-8') }, icon('download'), 'Скачать CSV'));
+      };
+      draw();
+    });
+  }
+
   /* ---------- Платежи ---------- */
   function payments() {
     const st = nowState(); const box = h('div', { class: 'stack' });
@@ -71,7 +108,7 @@
         : h('div', { class: 'card soft' }, 'Нет оплат абонементов'));
       if (rentPaid.length) { box.appendChild(section('Аренда')); box.appendChild(h('div', { class: 'card flat' }, rentPaid.map((p) => listRow([h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, 'Аренда за ' + RU.months[p.month - 1].toLowerCase()), p.paidDate ? h('div', { class: 'soft small' }, 'оплачено ' + RU.longDay(p.paidDate)) : null), h('b', { class: 'num' }, '− ' + RU.money(store.state.rentSettings.monthlyAmount))])))); }
     };
-    draw(); return page('Платежи', { back: '/income' }, box);
+    draw(); return page('Платежи', { back: '/income', right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Отчёт PDF за период', onclick: () => reportSheet(st) }, icon('download')) }, box);
   }
 
   /* ---------- Долги ---------- */
@@ -139,8 +176,9 @@
     const st = nowState(); const box = h('div', { class: 'stack' });
     const draw = () => {
       clear(box); box.appendChild(periodPicker(st, draw)); const list = store.trainerLoad(st.year, st.month);
-      if (!list.length) return box.appendChild(empty('people', 'Тренеров пока нет', 'Добавьте тренеров в аккаунте и назначьте их на направления.'));
-      list.forEach((t) => box.appendChild(h('div', { class: 'card' }, h('div', { class: 'row' }, avatar(t.trainer.name, 44), h('div', { class: 'grow' }, h('div', { class: 'h3' }, t.trainer.name), h('div', { class: 'soft small' }, t.sessions + ' ' + RU.classes(t.sessions) + ' · ' + t.visits + ' ' + RU.visits(t.visits))), h('b', null, t.occupancy + '%')), bar(t.occupancy),
+      box.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: () => trainerForm(null) }, icon('plus'), 'Добавить тренера'));
+      if (!list.length) return box.appendChild(empty('people', 'Тренеров пока нет', 'Нажмите «Добавить тренера», затем назначьте его на направления в расписании.'));
+      list.forEach((t) => box.appendChild(h('div', { class: 'card', role: 'button', tabindex: 0, style: { cursor: 'pointer' }, 'aria-label': 'Тренер ' + t.trainer.name + ': изменить', onclick: () => trainerForm(t.trainer) }, h('div', { class: 'row' }, avatar(t.trainer.name, 44), h('div', { class: 'grow' }, h('div', { class: 'h3' }, t.trainer.name), h('div', { class: 'soft small' }, (t.trainer.active ? '' : 'отключён · ') + (t.sessions ? t.sessions + ' ' + RU.classes(t.sessions) + ' · ' + t.visits + ' ' + RU.visits(t.visits) : 'в этом месяце занятий нет — назначьте на направления'))), h('b', null, t.occupancy + '%')), bar(t.occupancy),
         h('div', { class: 'stack s8' }, t.directions.map((d) => h('div', { class: 'row between small' }, h('span', { class: 'trunc' }, d.item.name), h('span', { class: 'soft' }, d.sessions + ' зан. · ' + d.visits + ' виз.')))))));
     };
     draw(); return page('Тренеры', { back: '/income' }, box);
@@ -222,16 +260,10 @@
             h('button', { class: 'btn sm soft-btn', type: 'button', onclick: async () => { if (await confirmBox('Восстановить копию?', 'Текущие данные будут заменены данными копии от ' + RU.shortDate(RU.key(new Date(b.at))) + '.', 'Восстановить', true)) { try { store.restoreBackup(b.id); toast('Копия восстановлена'); draw(); } catch (e) { toast(e.message); } } } }, 'Вернуть'),
             h('button', { class: 'link danger small', type: 'button', onclick: () => { store.deleteBackup(b.id); draw(); } }, 'Удалить')]))) : h('div', { class: 'soft small' }, 'Копий пока нет. Раз в неделю при запуске создаётся автоматическая копия.')));
       }
-      box.appendChild(section('Инструкция'));
-      const role = store.isAdmin ? 'admin' : 'trainer';
-      Guide.forRole(role).forEach(([part, topics]) => {
-        box.appendChild(h('div', { class: 'guide-part' }, part));
-        box.appendChild(h('div', { class: 'card flat guide' }, topics.map(([t, paras]) => h('details', { class: 'guide-item' }, h('summary', null, t), h('div', { class: 'guide-body' }, paras.map((p) => p.startsWith('• ') ? h('div', { class: 'guide-li' }, p.slice(2)) : h('p', null, p)))))));
-      });
-      box.appendChild(h('div', { class: 'hint' }, 'Инструкция обновляется вместе с приложением (ред. ' + Guide.REV + ').'));
       box.appendChild(section('О приложении'));
       box.appendChild(h('div', { class: 'card' }, row('Студия', store.state.studioName), row('Версия', Studio.APP_VERSION), h('div', { class: 'row between' }, h('span', { class: 'soft' }, 'Разработано'), h('em', null, 'Yogamat.kz')),
         updateBlock(draw),
+        h('div', { class: 'card flat', style: { boxShadow: 'none' } }, navRow('book', 'Вопрос-ответ / FAQ', 'Инструкция по приложению для вашей роли', '/faq')),
         h('div', { class: 'hint' }, 'Справочник асан: иллюстрации и источники указаны в карточках асан.')));
       box.appendChild(h('button', { class: 'btn danger', type: 'button', onclick: () => store.logOut() }, icon('logout'), 'Выйти'));
     };
@@ -256,6 +288,17 @@
   App.routes['/tariffs'] = { tab: 'income', build: gate(tariffs) };
   App.routes['/rent'] = { tab: 'income', build: gate(rent) };
   App.routes['/class-load'] = { tab: 'income', build: gate(classLoad) };
+  /* ---------- Вопрос-ответ / FAQ ---------- */
+  function faq() {
+    const box = h('div', { class: 'stack' });
+    Guide.forRole(store.isAdmin ? 'admin' : 'trainer').forEach(([part, topics]) => {
+      box.appendChild(h('div', { class: 'faq-part' }, part));
+      box.appendChild(h('div', { class: 'faq' }, topics.map(([q, paras]) => h('details', { class: 'faq-item' }, h('summary', null, h('span', null, q)), h('div', { class: 'faq-body' }, paras.map((p) => (p.startsWith('• ') ? h('div', { class: 'faq-li' }, p.slice(2)) : h('p', null, p))))))));
+    });
+    box.appendChild(h('div', { class: 'hint' }, 'Инструкция обновляется вместе с приложением (ред. ' + Guide.REV + ').'));
+    return page('Вопрос-ответ / FAQ', { back: '/settings' }, box);
+  }
+  App.routes['/faq'] = { tab: 'overview', build: faq };
   App.routes['/trainer-load'] = { tab: 'income', build: gate(trainerLoad) };
   App.routes['/settings'] = { tab: 'overview', build: settings };
 })();

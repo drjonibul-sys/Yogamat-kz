@@ -20,7 +20,7 @@ with sync_playwright() as p:
     pg.goto('http://localhost:8765/#/settings'); pg.wait_for_selector('text=Вернуть стандартный'); pg.click('text=Вернуть стандартный'); pg.wait_for_timeout(200)
     assert 'icons/logo.png' in pg.evaluate("document.querySelector('img[alt=\"Логотип\"]').src")
     # инструкция админа
-    assert pg.locator('.guide-item').count()>=10; pg.click('summary:has-text("Название и логотип студии")'); assert pg.is_visible('text=восстанавливает исходный логотип')
+    pg.goto('http://localhost:8765/#/faq'); pg.wait_for_selector('.faq-item'); assert pg.locator('.faq-item').count()>=8; pg.click('summary:has-text("название и логотип студии")'); assert pg.is_visible('text=восстанавливает исходный логотип')
     pg.screenshot(path='/tmp/shots/14-guide.png',full_page=False)
     # тренер видит только свою часть
     assert pg.evaluate("Guide.forRole('trainer').length")==1 and pg.evaluate("Guide.forRole('admin').length")==2
