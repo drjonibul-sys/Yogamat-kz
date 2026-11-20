@@ -319,3 +319,16 @@ textarea.inp { min-height: 84px; resize: vertical; }
   .tabbar { max-width: 720px; }
   .sheet { max-width: 760px; }
 }
+
+/* кнопка «Проверить обновление»: подтверждение нажатия и ход проверки */
+.chk-btn { position: relative; transition: transform .12s ease, background-color .2s ease; }
+.chk-btn:active, .chk-btn.pressed { transform: scale(.97); }
+.chk-btn .chk-spin { display: none; width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid color-mix(in srgb, var(--sage-deep) 30%, transparent); border-top-color: var(--sage-deep); animation: chkspin .8s linear infinite; }
+.chk-btn.busy { background: var(--sage-tint); gap: 10px; }
+.chk-btn.busy .chk-spin { display: inline-block; }
+@keyframes chkspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .chk-btn .chk-spin { animation-duration: 2.4s !important; animation: chkspin 2.4s linear infinite !important; } }
+.res-ico { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--sage-tint); color: var(--sage-deep); animation: pop .35s ease; }
+.res-ico.bad { background: var(--powder-tint); color: var(--danger); }
+.res-ico svg { width: 30px; height: 30px; }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }

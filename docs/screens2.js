@@ -248,6 +248,8 @@
       const themeChips = h('div', { class: 'seg' });
       [['light', 'Светлая'], ['dark', 'Тёмная'], ['system', 'Как в системе']].forEach(([k, l]) => themeChips.appendChild(chip(l, cur === k, () => { App.setTheme(k); draw(); })));
       box.appendChild(h('div', { class: 'card' }, themeChips));
+      box.appendChild(section('Обновление'));
+      box.appendChild(h('div', { class: 'card' }, updateBlock(draw)));
       box.appendChild(section('Расписание'));
       const trainerOnly = store.currentUser && store.currentUser.role === 'trainer';
       box.appendChild(h('div', { class: 'card' }, toggle('Скрывать прошедшие занятия', !!App.prefs.hidePast, (v) => App.setPref('hidePast', v), 'Только на сегодняшний день'),
@@ -274,7 +276,6 @@
       box.appendChild(h('div', { class: 'card' }, App.offlineBlock()));
       box.appendChild(section('О приложении'));
       box.appendChild(h('div', { class: 'card' }, row('Студия', store.state.studioName), row('Версия', Studio.APP_VERSION), h('div', { class: 'row between' }, h('span', { class: 'soft' }, 'Разработано'), h('em', null, 'yoga_matkz')),
-        updateBlock(draw),
         h('div', { class: 'card flat', style: { boxShadow: 'none' } }, navRow('book', 'Вопрос-ответ / FAQ', 'Инструкция по приложению для вашей роли', '/faq')),
         h('div', { class: 'hint' }, 'Справочник асан: иллюстрации и источники указаны в карточках асан.')));
       box.appendChild(h('button', { class: 'btn danger', type: 'button', onclick: () => store.logOut() }, icon('logout'), 'Выйти'));
@@ -332,11 +333,26 @@
     if (App.sourceIsOwn()) return applyUpdate();
     if (await UI.confirmBox('Перейти на новый адрес?', 'Версия ' + u.version + ' находится по адресу ' + App.sourceBase() + '. Данные приложения хранятся отдельно для каждого адреса — сначала сохраните базу в файл JSON. Открыть адрес?', 'Открыть')) location.href = App.sourceBase();
   };
+  /* Окно с итогом нажатия «Проверить обновление»: текущая версия либо доступная новая */
+  App.updateResultSheet = (u) => {
+    u = u || App.update; if (!u) return;
+    const src = App.sourceIsOwn() ? null : h('div', { class: 'hint' }, 'Источник: ' + App.sourceBase());
+    if (u.state === 'new') promptedFor = u.version; /* автоматическое окно для этой версии больше не нужно */
+    sheet(u.state === 'new' ? 'Доступно обновление' : 'Проверка обновления', (s) => {
+      const ok = u.state === 'same' || u.state === 'older'; const bad = u.state === 'offline';
+      const head = u.state === 'new' ? [h('img', { src: store.logoSrc(), alt: '', width: 56, height: 56 }), h('div', { class: 'h3' }, 'Доступна версия ' + u.version), h('div', { class: 'small soft' }, 'Установлена ' + Studio.APP_VERSION + '. Данные не затрагиваются.')]
+        : ok ? [h('div', { class: 'res-ico ok' }, icon('check')), h('div', { class: 'h3' }, u.state === 'same' ? 'У вас последняя версия' : 'Установленная версия новее'), h('div', { class: 'small soft' }, 'Установлена ' + Studio.APP_VERSION + (u.version ? ' · на сервере ' + u.version : '') + '.')]
+        : [h('div', { class: 'res-ico bad' }, icon('alert')), h('div', { class: 'h3' }, 'Не удалось проверить'), h('div', { class: 'small soft' }, (navigator.onLine === false ? 'Нет подключения к интернету. ' : 'Нет связи с сервером обновлений. ') + 'Установлена версия ' + Studio.APP_VERSION + '.')];
+      s.body.append(h('div', { class: 'upd-promo' }, ...head), src);
+      s.setFoot(u.state === 'new' ? [h('button', { class: 'btn', type: 'button', onclick: () => { s.close(); App.installUpdate(); } }, App.sourceIsOwn() ? 'Установить' : 'Открыть источник'), h('button', { class: 'btn soft-btn', type: 'button', onclick: () => s.close() }, 'Позже')]
+        : [h('button', { class: 'btn', type: 'button', onclick: () => s.close() }, 'Готово')]);
+    });
+  };
   /* Всплывающее предложение обновиться: один раз на версию за запуск, не поверх входа и хода обновления */
   let promptedFor = null;
   App.promptUpdate = () => {
     const u = App.update;
-    if (!u || u.state !== 'new' || App.prefs.autoUpdate === false || promptedFor === u.version) return;
+    if (!u || u.state !== 'new' || App.holdPrompt || App.prefs.autoUpdate === false || promptedFor === u.version) return;
     if (!store.currentUser || updating || document.body.classList.contains('locked') || document.querySelector('.overlay')) return;
     promptedFor = u.version;
     sheet('Доступно обновление', (s) => {
@@ -383,9 +399,18 @@
     const line = h('div', { class: 'small' }, !u ? 'Проверка обновлений не выполнялась.' : u.state === 'new' ? 'Доступна новая версия ' + u.version + ' (установлена ' + Studio.APP_VERSION + ').' : u.state === 'same' ? 'Установлена актуальная версия ' + Studio.APP_VERSION + '. Версия на сайте: ' + u.version + '.' : u.state === 'older' ? 'Установленная версия (' + Studio.APP_VERSION + ') новее, чем на сайте (' + u.version + ').' : 'Не удалось проверить: нет связи с сайтом.');
     box.appendChild(line);
     if (u && u.state === 'new') box.appendChild(h('button', { class: 'btn', type: 'button', onclick: () => App.installUpdate() }, App.sourceIsOwn() ? 'Обновить до ' + u.version : 'Открыть ' + u.version + ' по адресу источника'));
-    box.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: async () => { await App.checkUpdate(); redraw(); } }, 'Проверить обновление'));
-    box.appendChild(h('div', { class: 'card flat', style: { boxShadow: 'none' } }, toggle('Проверять обновления автоматически', App.prefs.autoUpdate !== false, (v) => { App.setPref('autoUpdate', v); if (v) App.checkUpdate(); }, 'При запуске, возврате в приложение и раз в 30 минут; предложит установить')));
+    const chk = h('button', { class: 'btn soft-btn chk-btn', type: 'button' }, h('span', { class: 'chk-spin', 'aria-hidden': 'true' }), h('span', { class: 'chk-lbl' }, 'Проверить обновление'));
+    chk.addEventListener('click', async () => {
+      if (chk.classList.contains('busy')) return;
+      chk.classList.add('busy', 'pressed'); chk.setAttribute('aria-busy', 'true'); chk.querySelector('.chk-lbl').textContent = 'Проверяем…'; chk.disabled = true;
+      setTimeout(() => chk.classList.remove('pressed'), 220); App.holdPrompt = true; /* пока идёт ручная проверка, автоокно не показываем */
+      const res = await Promise.all([App.checkUpdate({ silent: true }), new Promise((r) => setTimeout(r, 900))]).then((a) => a[0]); /* анимация видна не менее 0,9 с */
+      chk.classList.remove('busy'); chk.removeAttribute('aria-busy'); chk.disabled = false; chk.querySelector('.chk-lbl').textContent = 'Проверить обновление';
+      redraw(); App.updateResultSheet(res); App.holdPrompt = false;
+    });
+    box.appendChild(chk);
     if (store.isAdmin) box.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: () => sourceSheet(redraw) }, icon('link'), 'Источник'));
+    box.appendChild(h('div', { class: 'card flat', style: { boxShadow: 'none' } }, toggle('Проверять обновления автоматически', App.prefs.autoUpdate !== false, (v) => { App.setPref('autoUpdate', v); if (v) App.checkUpdate(); }, 'При запуске, возврате в приложение и раз в 30 минут; предложит установить')));
     return box;
   }
   App.routes['/income'] = { tab: 'income', build: gate(income) };

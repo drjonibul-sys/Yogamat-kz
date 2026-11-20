@@ -106,7 +106,7 @@
 
   /* ---------- проверка версии на сайте ---------- */
   App.update = null;
-  App.checkUpdate = async () => {
+  App.checkUpdate = async (opts) => {
     try {
       const r = await fetch(App.sourceBase() + 'version.json?t=' + Date.now(), { cache: 'no-store' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -114,7 +114,7 @@
       const c = Studio.cmpVersion(v, Studio.APP_VERSION);
       App.update = { version: v, state: c > 0 ? 'new' : c < 0 ? 'older' : 'same' };
     } catch (e) { App.update = { state: 'offline' }; }
-    schedule(); if (App.promptUpdate) setTimeout(App.promptUpdate, 400); return App.update;
+    schedule(); if (App.promptUpdate && !(opts && opts.silent)) setTimeout(App.promptUpdate, 400); return App.update;
   };
   /* автоматическая проверка: при запуске, возврате в приложение, появлении сети и раз в 30 минут (не чаще раза в 5 минут) */
   let lastCheck = 0;
