@@ -332,3 +332,8 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .res-ico.bad { background: var(--powder-tint); color: var(--danger); }
 .res-ico svg { width: 30px; height: 30px; }
 @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* масштаб 100%: iOS увеличивает страницу при фокусе в поле со шрифтом меньше 16 px — шрифт полей не менее 16 px; двойное касание не увеличивает */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+input, select, textarea { font-size: 16px !important; }
+input[type="checkbox"], input[type="radio"] { font-size: inherit !important; }
