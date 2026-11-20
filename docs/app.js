@@ -36,7 +36,7 @@
     clear(tabbar);
     const tabs = TABS.filter((t) => t[0] !== 'income' || store.isAdmin);
     tabbar.appendChild(h('nav', { class: 'tabbar', 'aria-label': 'Разделы' }, tabs.map(([id, title, ic]) => h('button', { class: 'tab' + (route.tab === id ? ' on' : ''), type: 'button', 'aria-current': route.tab === id ? 'page' : null, onclick: () => { if (location.hash === '#/' + id) scroller.scrollTo({ top: 0, behavior: 'smooth' }); else App.go('/' + id); } },
-      h('span', { class: 'ico' }, icon(ic)), h('span', null, title)))));
+      h('span', { class: 'ico' }, icon(ic)), h('span', null, id === 'classes' && store.isSolo ? 'Расписание' : title)))));
     document.title = store.state.studioName || 'yoga_matkz';
     if (bgImg.getAttribute('src') !== store.logoSrc()) bgImg.src = store.logoSrc();
     if (App.promptUpdate && App.update && App.update.state === 'new') setTimeout(App.promptUpdate, 600);
@@ -59,17 +59,29 @@
   const errBox = () => h('div', { class: 'err', role: 'alert', hidden: true });
   const showErr = (box, msg) => { box.textContent = msg; box.hidden = !msg; };
 
+  /* первый запуск: сначала выбор направления работы, затем создание аккаунта */
   function authSetup() {
+    const card = (mode, title, text) => h('button', { class: 'user-card mode-card', type: 'button', 'data-mode': mode, onclick: () => authSetupForm(mode) },
+      h('div', { class: 'grow', style: { textAlign: 'left' } }, h('div', { style: { fontWeight: 700 } }, title), h('div', { class: 'soft small' }, text)));
+    authShell('Как вы работаете?', 'Выберите режим приложения. Его можно изменить позже в настройках — клиенты и абонементы сохранятся.',
+      card('solo', 'Индивидуальный тренер', 'Без студии: одно своё направление, клиенты, абонементы, визиты, доход и долги.'),
+      card('studio', 'Студия', 'Тренеры, классы, залы и места, роли администратора и тренера.'));
+  }
+  function authSetupForm(mode) {
+    const solo = mode === 'solo';
     const name = input({ placeholder: 'Например: Анна Ким', autocapitalize: 'words' }); const pin = pinInput('PIN, 4–8 цифр'); const pin2 = pinInput('Повторите PIN'); const err = errBox();
+    const dir = solo ? input({ placeholder: 'Например: Хатха-йога', autocapitalize: 'words', 'aria-label': 'Ваше направление' }) : null;
     const picker = UI.questionPicker(''); const ans = input({ placeholder: 'Ответ (от 3 знаков)', autocomplete: 'off', 'aria-label': 'Ответ на контрольный вопрос' });
     const go = h('button', { class: 'btn', type: 'button' }, 'Начать работу');
     go.addEventListener('click', async () => {
       if (!store.isValidPIN(pin.value)) return showErr(err, 'PIN — от 4 до 8 цифр');
       if (pin.value !== pin2.value) return showErr(err, 'PIN не совпадает с повтором');
-      go.disabled = true; try { await store.setupAdmin(name.value, pin.value, picker.value(), ans.value); } catch (e) { showErr(err, e.message); go.disabled = false; }
+      go.disabled = true; try { await store.setupAdmin(name.value, pin.value, picker.value(), ans.value, { mode, direction: dir && dir.value }); } catch (e) { showErr(err, e.message); go.disabled = false; }
     });
-    authShell('Первый запуск', 'Создайте аккаунт администратора студии. Данные хранятся только на этом устройстве.', field('Ваше имя', name), field('PIN для входа', pin), field(null, pin2),
-      field('Контрольный вопрос — для восстановления PIN', picker.el), field(null, ans), err, go);
+    authShell(solo ? 'Первый запуск · индивидуально' : 'Первый запуск · студия', solo ? 'Создайте свой аккаунт. Данные хранятся только на этом устройстве.' : 'Создайте аккаунт администратора студии. Данные хранятся только на этом устройстве.',
+      field('Ваше имя', name), solo ? field('Ваше направление йоги', dir) : null, field('PIN для входа', pin), field(null, pin2),
+      field('Контрольный вопрос — для восстановления PIN', picker.el), field(null, ans), err, go,
+      h('button', { class: 'link', type: 'button', style: { color: 'var(--ink-soft)' }, onclick: authSetup }, 'Назад к выбору режима'));
   }
   function authChoose() {
     const users = store.state.staff.filter((u) => u.active);

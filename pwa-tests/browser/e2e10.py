@@ -5,7 +5,7 @@ with sync_playwright() as p:
     b=p.chromium.launch(); ctx=b.new_context(viewport={'width':390,'height':800},device_scale_factor=2,locale='ru-RU',service_workers='block'); pg=ctx.new_page(); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
     # «на сайте» версия новее
     ctx.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"9.9.9"}'))
-    pg.goto(B); pg.wait_for_selector('.auth'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.click('.mode-card[data-mode=studio]'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
     pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
     pg.wait_for_selector('text=Доступна версия 9.9.9')
     # замедляем скачивание файлов оболочки

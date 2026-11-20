@@ -237,7 +237,7 @@
     const running = store.classesOn(today()).filter((c) => c.startMinutes <= nowMin && nowMin < c.startMinutes + c.durationMin);
     if (running.length) {
       cards.push(section('Сейчас'), h('div', { class: 'card flat' }, running.map((c) => listRow([h('div', { class: 'time' }, RU.classTime(c.startMinutes)),
-        h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, c.name), h('div', { class: 'soft small' }, store.trainerNames(c) + (c.hall ? ' · ' + c.hall : ''))),
+        h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, c.name), h('div', { class: 'soft small' }, store.isSolo ? c.level + ' · ' + c.durationMin + ' мин' : store.trainerNames(c) + (c.hall ? ' · ' + c.hall : ''))),
         pill(store.bookedCount(c.id, today()) + '/' + c.capacity)], () => rosterSheet(c.id, today())))));
     }
     cards.push(section('Сегодня'));
@@ -442,7 +442,7 @@
       const draw = () => {
         clear(s.body); const booked = store.bookedVisits(classID, dateKey); const free = item.capacity - booked.length;
         s.body.appendChild(h('div', { class: 'card' },
-          h('div', { class: 'row between' }, h('div', null, h('div', { class: 'h3' }, RU.longDay(dateKey) + ' · ' + RU.classTime(item.startMinutes)), h('div', { class: 'soft small' }, (store.trainerNames(item) || 'тренер не назначен') + (item.hall ? ' · ' + item.hall : ''))), pill(item.level, 'sand')),
+          h('div', { class: 'row between' }, h('div', null, h('div', { class: 'h3' }, RU.longDay(dateKey) + ' · ' + RU.classTime(item.startMinutes)), h('div', { class: 'soft small' }, store.isSolo ? item.durationMin + ' мин' : (store.trainerNames(item) || 'тренер не назначен') + (item.hall ? ' · ' + item.hall : ''))), pill(item.level, 'sand')),
           h('div', { class: 'row between small' }, h('span', null, 'Записаны: ' + booked.length + ' из ' + item.capacity), h('span', { class: 'soft' }, free > 0 ? 'свободно ' + free : 'мест нет')), bar(booked.length / item.capacity * 100, free <= 0),
           item.details ? h('div', { class: 'soft small' }, item.details) : null, item.equipment ? h('div', { class: 'small' }, h('b', null, 'Оборудование: '), item.equipment) : null));
         s.body.appendChild(section('Состав группы'));
@@ -480,11 +480,11 @@
       const time = input({ type: 'time', value: RU.classTime(cls.startMinutes) });
       const trainerText = input({ value: cls.trainer, placeholder: 'Например: Анна Ким' });
       const dayBtns = h('div', { class: 'days' }, RU.weekdayShort.map((d, i) => { const b = h('button', { class: 'day-btn' + (cls.weekdays.includes(i + 1) ? ' on' : ''), type: 'button', onclick: () => { const w = i + 1; cls.weekdays = cls.weekdays.includes(w) ? cls.weekdays.filter((x) => x !== w) : cls.weekdays.concat(w); b.classList.toggle('on'); } }, d); return b; }));
-      const trainers = store.trainers; const tBox = trainers.length ? h('div', { class: 'stack s8' }, trainers.map((t) => toggle(t.name, (cls.trainerIDs || []).includes(t.id), (v) => { cls.trainerIDs = (cls.trainerIDs || []).filter((x) => x !== t.id); if (v) cls.trainerIDs.push(t.id); }))) : null;
+      const trainers = store.isSolo ? [] : store.trainers; const tBox = trainers.length ? h('div', { class: 'stack s8' }, trainers.map((t) => toggle(t.name, (cls.trainerIDs || []).includes(t.id), (v) => { cls.trainerIDs = (cls.trainerIDs || []).filter((x) => x !== t.id); if (v) cls.trainerIDs.push(t.id); }))) : null;
       s.body.append(field('Название', name), h('div', { class: 'row' }, h('div', { class: 'grow' }, field('Тип', type)), h('div', { class: 'grow' }, field('Уровень', level))),
         field('Дни недели', dayBtns), field('Время начала', time),
-        field('Длительность', stepper(cls.durationMin, 15, 180, 5, (v) => { cls.durationMin = v; }, (v) => v + ' мин')), field('Мест в группе', stepper(cls.capacity, 1, 60, 1, (v) => { cls.capacity = v; })),
-        tBox ? field('Тренеры', tBox) : null, field(tBox ? 'Тренер (если не выбран выше)' : 'Тренер', trainerText), field('Зал', hall), field('Оборудование', equip), field('Описание', details),
+        field('Длительность', stepper(cls.durationMin, 15, 180, 5, (v) => { cls.durationMin = v; }, (v) => v + ' мин')), store.isSolo ? null : field('Мест в группе', stepper(cls.capacity, 1, 60, 1, (v) => { cls.capacity = v; })),
+        store.isSolo ? null : tBox ? field('Тренеры', tBox) : null, store.isSolo ? null : field(tBox ? 'Тренер (если не выбран выше)' : 'Тренер', trainerText), store.isSolo ? null : field('Зал', hall), field('Оборудование', equip), field('Описание', details),
         toggle('Направление проводится', cls.active, (v) => { cls.active = v; }));
       const extra = classID ? [h('button', { class: 'btn danger', type: 'button', onclick: async () => { if (await confirmBox('Удалить направление?', 'Записи клиентов сохранятся, но потеряют привязку к занятию.', 'Удалить', true)) { store.deleteClass(classID); s.close(); toast('Направление удалено'); } } }, 'Удалить занятие')] : [];
       return { extra, save() {
@@ -533,7 +533,7 @@
       else body.appendChild(h('div', { class: 'card flat' }, dayList.map((c) => {
         const n = store.bookedCount(c.id, activeKey); const full = n >= c.capacity;
         return listRow([h('div', { class: 'time' }, RU.classTime(c.startMinutes)), h('div', { class: 'grow' }, h('div', { class: 'trunc', style: { fontWeight: 600 } }, c.name),
-          h('div', { class: 'soft small trunc' }, (store.trainerNames(c) || 'тренер не назначен') + (c.hall ? ' · ' + c.hall : ''))), full ? pill('мест нет', 'warn') : pill(n + '/' + c.capacity)], () => rosterSheet(c.id, activeKey));
+          h('div', { class: 'soft small trunc' }, store.isSolo ? c.durationMin + ' мин' : (store.trainerNames(c) || 'тренер не назначен') + (c.hall ? ' · ' + c.hall : ''))), store.isSolo ? pill(String(n)) : full ? pill('мест нет', 'warn') : pill(n + '/' + c.capacity)], () => rosterSheet(c.id, activeKey));
       })));
       if (store.isAdmin) {
         body.appendChild(h('button', { class: 'btn soft-btn', type: 'button', onclick: () => classEditor(null) }, icon('plus'), 'Добавить занятие'));

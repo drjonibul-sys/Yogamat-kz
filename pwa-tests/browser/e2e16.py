@@ -6,7 +6,7 @@ def ok(n,c):
     global bad; print(('OK   ' if c else 'FAIL ')+n); bad+= (not c)
 with sync_playwright() as p:
     b=p.chromium.launch(); ctx=b.new_context(viewport={'width':834,'height':1112},locale='ru-RU',service_workers='block',device_scale_factor=1); pg=ctx.new_page()
-    pg.goto(B); pg.wait_for_selector('.auth'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.click('.mode-card[data-mode=studio]'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
     pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
     t=datetime.date.today()
     pg.evaluate("""([d0])=>{App.store.addQuickSale({name:'Айгуль',phone:'',tariffName:'8 занятий',purchaseDate:d0,expiryDate:'2027-12-30',visitsTotal:8,price:28000,paid:true,paidDate:d0});}""",[(t-datetime.timedelta(days=5)).isoformat()])

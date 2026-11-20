@@ -11,7 +11,7 @@ with sync_playwright() as p:
     def h(r):
         import json, time; time.sleep(0.0); r.fulfill(status=200,content_type='application/json',body=json.dumps({'version':ver['v']})) if ver['v'] else r.continue_()
     pg.route('**/version.json*', h)
-    pg.goto(B); pg.wait_for_selector('.auth'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.click('.mode-card[data-mode=studio]'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
     pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
     pg.goto(B+'#/settings'); pg.wait_for_selector('button.chk-btn')
     secs=pg.locator('.page h2, .page .section').all_inner_texts()

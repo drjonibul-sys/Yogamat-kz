@@ -2,7 +2,7 @@ from playwright.sync_api import sync_playwright
 B='http://localhost:8765/'
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_context(viewport={'width':390,'height':900},device_scale_factor=2,locale='ru-RU').new_page(); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.goto(B); pg.wait_for_selector('.auth')
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.click('.mode-card[data-mode=studio]')
     assert pg.locator('text=Код восстановления').count()==0 and pg.locator('#rc-ok').count()==0
     assert pg.locator('.auth select option').count()==7  # выбор + 5 типовых + свой
     pg.screenshot(path='/tmp/shots/18-setup-q.png')

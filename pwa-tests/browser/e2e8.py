@@ -10,7 +10,7 @@ json.dump(legacy,open('/tmp/legacy-backup.json','w',encoding='utf-8'),ensure_asc
 open('/tmp/bad.json','w').write('{"hello": 1}')
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_context(viewport={'width':390,'height':900},locale='ru-RU').new_page(); errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
-    pg.goto(B); pg.wait_for_selector('.auth'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.click('.mode-card[data-mode=studio]'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
     pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
     pg.goto(B+'#/settings'); pg.wait_for_selector('text=Восстановить базу из файла JSON')
     for f,expect in [('/tmp/bad.json','не похож'),('/tmp/legacy-backup.json','Загружено из прежнего приложения: клиентов 1')]:

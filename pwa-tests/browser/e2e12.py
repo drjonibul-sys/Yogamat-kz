@@ -6,7 +6,7 @@ def ok(n,c):
     global bad; print(('OK  ' if c else 'FAIL ')+n); bad+= (not c)
 with sync_playwright() as p:
     b=p.chromium.launch(); pg=b.new_context(viewport={'width':390,'height':700},locale='ru-RU',has_touch=True,is_mobile=True).new_page()
-    pg.goto(B); pg.wait_for_selector('.auth'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.click('.mode-card[data-mode=studio]'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
     pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
     pg.goto(B+'#/settings'); pg.wait_for_selector('text=Восстановить базу из файла JSON')
     with pg.expect_file_chooser() as fc: pg.click('text=Восстановить базу из файла JSON')

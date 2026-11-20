@@ -50,7 +50,7 @@
       const missing = store.paidWithoutDate();
       if (missing.length) box.appendChild(h('div', { class: 'card warn' }, h('div', { class: 'small' }, 'Абонементов с оплатой без даты: ' + missing.length + '. В доход они не входят — укажите дату оплаты в карточке клиента.')));
       box.appendChild(h('div', { class: 'card flat' }, navRow('money', 'Платежи', 'Все оплаты по датам', '/payments'), navRow('alert', 'Долги', 'Не отмечена оплата', '/debts'), navRow('key', 'Аренда студии', 'Ежемесячно', '/rent'),
-        navRow('book', 'Тарифы', 'Цены и сроки абонементов', '/tariffs'), navRow('chart', 'Загрузка направлений', 'Занятия, визиты и заполняемость', '/class-load'), navRow('people', 'Тренеры', 'По нагрузке', '/trainer-load')));
+        navRow('book', 'Тарифы', 'Цены и сроки абонементов', '/tariffs'), navRow('chart', 'Загрузка направлений', 'Занятия, визиты и заполняемость', '/class-load'), store.isSolo ? null : navRow('people', 'Тренеры', 'По нагрузке', '/trainer-load')));
     };
     draw(); return page('Доход', { sticky: true }, box);
   }
@@ -236,9 +236,9 @@
     sheet('Аккаунт', (s) => {
       const draw = () => {
         clear(s.body);
-        s.body.appendChild(h('div', { class: 'card' }, h('div', { class: 'row' }, avatar(u.name, 56), h('div', { class: 'grow' }, h('div', { class: 'h2' }, u.name), h('div', { class: 'soft small' }, u.role === 'admin' ? 'Администратор · полный доступ' : 'Тренер · свои занятия и клиенты')))));
+        s.body.appendChild(h('div', { class: 'card' }, h('div', { class: 'row' }, avatar(u.name, 56), h('div', { class: 'grow' }, h('div', { class: 'h2' }, u.name), h('div', { class: 'soft small' }, u.role === 'admin' ? (store.isSolo ? 'Индивидуальный тренер' : 'Администратор · полный доступ') : 'Тренер · свои занятия и клиенты')))));
         s.body.appendChild(h('div', { class: 'card flat' }, listRow([icon('key'), h('div', { class: 'grow' }, 'Сменить PIN')], changePinForm), listRow([icon('book'), h('div', { class: 'grow' }, h('div', null, 'Контрольный вопрос'), h('div', { class: 'soft small' }, store.hasQuestion(u.id) ? 'задан — для восстановления PIN' : 'не задан — задайте, чтобы восстановить PIN'))], questionForm)));
-        if (store.isAdmin) {
+        if (store.isAdmin && !store.isSolo) {
           s.body.appendChild(h('div', { class: 'row between' }, App.section('Тренеры'), h('button', { class: 'link', type: 'button', onclick: () => trainerForm(null) }, '+ Добавить')));
           const staff = store.state.staff.filter((x) => x.role === 'trainer');
           s.body.appendChild(staff.length ? h('div', { class: 'card flat' }, staff.map((t) => listRow([avatar(t.name, 38), h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, t.name), h('div', { class: 'soft small' }, (t.active ? 'работает' : 'отключён') + (store.hasQuestion(t.id) ? ' · есть контрольный вопрос' : ''))), t.active ? null : pill('отключён', 'gray')], () => trainerForm(t))))
@@ -252,6 +252,20 @@
   App.accountSheet = accountSheet;
 
   /* ---------- Настройки ---------- */
+  /* ---------- Режим работы: индивидуальный тренер / студия ---------- */
+  function modeBlock(redraw) {
+    const solo = store.isSolo; const frag = h('div', { class: 'stack' });
+    frag.appendChild(section('Режим работы'));
+    const seg = h('div', { class: 'seg' });
+    [['solo', 'Индивидуально'], ['studio', 'Студия']].forEach(([k, l]) => seg.appendChild(chip(l, (solo ? 'solo' : 'studio') === k, async () => {
+      if (k === store.mode) return;
+      const text = k === 'solo' ? 'Раздел «Тренеры», залы, места и роли будут скрыты. Клиенты, абонементы, визиты и доход сохранятся. Тренеры и классы не удаляются — они снова появятся при возврате в режим «Студия».'
+        : 'Появятся тренеры, залы, места и нагрузка по тренерам. Клиенты, абонементы, визиты и доход сохранятся.';
+      if (await confirmBox('Сменить режим?', text, 'Сменить', false)) { store.setMode(k); toast(k === 'solo' ? 'Режим: индивидуальный тренер' : 'Режим: студия'); redraw(); }
+    })));
+    frag.appendChild(h('div', { class: 'card' }, seg, h('div', { class: 'hint' }, solo ? 'Индивидуальный: одно ваше направление, простое расписание, без тренеров и залов.' : 'Студия: тренеры, классы, залы и места.')));
+    return frag;
+  }
   function settings() {
     const box = h('div', { class: 'stack' }); const thisYear = new Date().getFullYear();
     const draw = () => {
@@ -262,8 +276,9 @@
           h('div', { class: 'grow stack s8' },
             h('button', { class: 'btn sm soft-btn', type: 'button', onclick: async () => { const d = await UI.pickLogo(); if (d == null) return toast('Не удалось прочитать картинку'); try { store.setStudioLogo(d); toast('Логотип обновлён'); draw(); } catch (e) { toast(e.message); } } }, icon('download'), 'Выбрать логотип'),
             store.state.studioLogo ? h('button', { class: 'link small', type: 'button', onclick: () => { store.setStudioLogo(null); toast('Возвращён стандартный логотип'); draw(); } }, 'Вернуть стандартный') : null));
-        box.appendChild(h('div', { class: 'card' }, field('Название студии', name), logoBox, h('div', { class: 'hint' }, 'Логотип и название видны на Обзоре, фоне и экране входа. Иконка приложения на экране «Домой» не меняется.')));
+        box.appendChild(h('div', { class: 'card' }, field(store.isSolo ? 'Название практики' : 'Название студии', name), logoBox, h('div', { class: 'hint' }, 'Логотип и название видны на Обзоре, фоне и экране входа. Иконка приложения на экране «Домой» не меняется.')));
       }
+      if (store.isAdmin) box.appendChild(modeBlock(draw));
       box.appendChild(section('Оформление'));
       const cur = App.prefs.theme === 'light' || App.prefs.theme === 'dark' ? App.prefs.theme : 'system';
       const themeChips = h('div', { class: 'seg' });
@@ -443,7 +458,7 @@
   /* ---------- Вопрос-ответ / FAQ ---------- */
   function faq() {
     const box = h('div', { class: 'stack' });
-    Guide.forRole(store.isAdmin ? 'admin' : 'trainer').forEach(([part, topics]) => {
+    Guide.forRole(store.isSolo ? 'solo' : store.isAdmin ? 'admin' : 'trainer').forEach(([part, topics]) => {
       box.appendChild(h('div', { class: 'faq-part' }, part));
       box.appendChild(h('div', { class: 'faq' }, topics.map(([q, paras]) => h('details', { class: 'faq-item' }, h('summary', null, h('span', null, q)), h('div', { class: 'faq-body' }, paras.map((p) => (p.startsWith('• ') ? h('div', { class: 'faq-li' }, p.slice(2)) : h('p', null, p))))))));
     });

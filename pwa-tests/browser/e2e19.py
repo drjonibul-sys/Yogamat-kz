@@ -8,7 +8,7 @@ JS="""()=>{const small=[...document.querySelectorAll('input,select,textarea')].f
  return {small, over: document.documentElement.scrollWidth>window.innerWidth+1, scale: window.visualViewport?window.visualViewport.scale:1}}"""
 with sync_playwright() as p:
     b=p.chromium.launch(); ctx=b.new_context(viewport={'width':390,'height':800},locale='ru-RU',service_workers='block',has_touch=True,is_mobile=True); pg=ctx.new_page()
-    pg.goto(B); pg.wait_for_selector('.auth'); 
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.click('.mode-card[data-mode=studio]'); 
     meta=pg.get_attribute('meta[name=viewport]','content'); ok('viewport: масштаб зафиксирован на 1', 'initial-scale=1' in meta and 'maximum-scale=1' in meta and 'user-scalable=no' in meta)
     r=pg.evaluate(JS); ok('вход/настройка: шрифт полей ≥16 px %s'%r['small'], not r['small'])
     pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')

@@ -7,7 +7,7 @@ def ok(n,c):
 with sync_playwright() as p:
     b=p.chromium.launch(); ctx=b.new_context(viewport={'width':390,'height':800},locale='ru-RU',service_workers='block'); pg=ctx.new_page()
     pg.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"9.9.9"}'))
-    pg.goto(B); pg.wait_for_selector('.auth'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.click('.mode-card[data-mode=studio]'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
     pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
     pg.wait_for_selector('.overlay[aria-label="Доступно обновление"]', timeout=5000); ok('после входа — окно предложения обновления', '9.9.9' in pg.inner_text('.overlay'))
     pg.click('.overlay >> text=Позже'); pg.wait_for_timeout(1500); ok('«Позже» — окно не повторяется', pg.locator('.overlay').count()==0)

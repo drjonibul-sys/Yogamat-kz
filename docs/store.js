@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.14.1';
+  const APP_VERSION = '2.0.0';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -142,7 +142,7 @@
     const S = {
       clients: [], subscriptions: [], visits: [], transfers: [], absences: [],
       classes: [], tariffs: [], rentSettings: null, rentPeriods: [],
-      staff: [], favoriteAsanas: [], studioName: 'Студия yoga_matkz', studioLogo: null
+      staff: [], favoriteAsanas: [], mode: 'studio', studioName: 'Студия yoga_matkz', studioLogo: null
     };
     let currentUserID = null;
     let saveError = null;
@@ -168,7 +168,7 @@
       return {
         version: 1, clients: S.clients, subscriptions: S.subscriptions, visits: S.visits, transfers: S.transfers, absences: S.absences,
         studioName: S.studioName, studioLogo: S.studioLogo || null, classes: S.classes, tariffs: S.tariffs, rentSettings: S.rentSettings,
-        rentPeriods: S.rentPeriods, staff: S.staff, favoriteAsanas: S.favoriteAsanas.slice().sort()
+        rentPeriods: S.rentPeriods, staff: S.staff, mode: S.mode, favoriteAsanas: S.favoriteAsanas.slice().sort()
       };
     }
     api.snapshot = snapshot;
@@ -181,6 +181,7 @@
       S.staff = snap.staff || S.staff || []; S.favoriteAsanas = snap.favoriteAsanas || S.favoriteAsanas || [];
       if (snap.studioName) S.studioName = snap.studioName === 'Студия Yogamat.kz' ? 'Студия yoga_matkz' : snap.studioName; /* прежнее название по умолчанию */
       S.studioLogo = isLogo(snap.studioLogo) ? snap.studioLogo : null;
+      if (snap.mode === 'solo' || snap.mode === 'studio') S.mode = snap.mode;
     }
 
     function persist() {
@@ -236,12 +237,16 @@
     const clearAttempts = (id) => { const a = attempts(); delete a[id]; setAttempts(a); };
     function startSession(id) { currentUserID = id; try { storage.setItem(KEYS.session, id); } catch (e) { /* без сессии */ } api.emit(); }
 
-    api.setupAdmin = async (name, pin, question, answer) => {
+    api.setupAdmin = async (name, pin, question, answer, opts) => {
       if (S.staff.length) fail('Аккаунт администратора уже создан');
       if (!api.isValidPIN(pin)) fail('PIN — от 4 до 8 цифр');
       checkQA(question, answer);
       const user = { id: uid(), name: trim(name) || 'Администратор', role: 'admin', active: true };
       S.staff = [user];
+      if (opts && opts.mode === 'solo') {
+        S.mode = 'solo'; S.studioName = trim(opts.title) || 'Моя практика';
+        S.classes = [Object.assign({ id: uid(), active: true, trainerIDs: [], name: trim(opts.direction) || 'Йога', type: 'yoga', level: 'Лёгкий', durationMin: 60, capacity: 30, trainer: user.name, hall: '', weekdays: [], startMinutes: 540, equipment: '', details: '' })];
+      } else S.mode = 'studio';
       setVault('pin.' + user.id, await makeRecord(pin));
       setVault('qa.' + user.id, { question: trim(question), answer: await makeRecord(normAnswer(answer)) });
       persist(); startSession(user.id);
@@ -796,6 +801,13 @@
       persist();
     };
     api.logoSrc = () => (isLogo(S.studioLogo) ? S.studioLogo : 'icons/logo.png');
+    Object.defineProperty(api, 'mode', { get() { return S.mode; } });
+    Object.defineProperty(api, 'isSolo', { get() { return S.mode === 'solo'; } });
+    api.setMode = (m) => {
+      if (!api.isAdmin) fail('Режим меняет администратор');
+      if (m !== 'solo' && m !== 'studio') fail('Неизвестный режим');
+      S.mode = m; persist();
+    };
     api.setStudioName = (name) => { if (!trim(name)) return; S.studioName = trim(name); persist(); };
     api.backups = () => read(KEYS.backups, []).sort((a, b) => (a.at < b.at ? 1 : -1));
     api.createBackup = () => {
@@ -826,6 +838,7 @@
     function validate(snap) {
       if (!snap || typeof snap !== 'object' || !Array.isArray(snap.clients) || !Array.isArray(snap.subscriptions) || !Array.isArray(snap.visits)) fail('Файл не похож на копию базы');
       if (snap.studioLogo != null && !isLogo(snap.studioLogo)) fail('В файле некорректный логотип студии');
+      if (snap.mode != null && snap.mode !== 'solo' && snap.mode !== 'studio') fail('В файле неизвестный режим работы');
       const cids = new Set(snap.clients.map((c) => c.id)); const sids = new Set(snap.subscriptions.map((s) => s.id));
       snap.subscriptions.forEach((s) => {
         if (!(s.visitsTotal >= 1 && s.visitsLeft >= 0 && s.visitsLeft <= s.visitsTotal)) fail('В абонементах некорректное число занятий');

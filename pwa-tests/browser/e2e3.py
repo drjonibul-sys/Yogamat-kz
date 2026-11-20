@@ -7,7 +7,7 @@ def ok(n, c): res.append(bool(c)); print(('ok   ' if c else 'FAIL ') + n)
 with sync_playwright() as p:
     b = p.chromium.launch(); ctx = b.new_context(viewport={'width': 390, 'height': 844}, locale='ru-RU'); page = ctx.new_page()
     errs = []; page.on('pageerror', lambda e: errs.append(str(e)))
-    page.goto(BASE); page.wait_for_selector('.auth')
+    page.goto(BASE); page.wait_for_selector('.auth'); page.click('.mode-card[data-mode=studio]')
     page.fill('.auth input >> nth=0', 'Анна'); page.fill('.auth input >> nth=1', '1234'); page.fill('.auth input >> nth=2', '1234')
     page.select_option('.auth select','Город, в котором вы родились?'); page.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
     page.evaluate("""() => { const s = App.store; for (let i = 1; i <= 45; i++) { s.addQuickSale({ name: 'Клиент Длинная-Фамилия ' + i, phone: '+7 701 234 56 ' + String(i).padStart(2,'0'), tariffName: '8 занятий / месяц', purchaseDate: '2026-11-01', expiryDate: '2026-12-01', visitsTotal: 8, price: 28000, paid: i % 3 !== 0, paidDate: i % 3 !== 0 ? '2026-11-05' : null }); } }""")

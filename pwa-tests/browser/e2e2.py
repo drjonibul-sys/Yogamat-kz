@@ -7,7 +7,7 @@ def ok(n, c): res.append(bool(c)); print(('ok   ' if c else 'FAIL ') + n)
 with sync_playwright() as p:
     b = p.chromium.launch(); ctx = b.new_context(viewport={'width': 390, 'height': 844}, locale='ru-RU', color_scheme='light'); page = ctx.new_page()
     errs = []; page.on('pageerror', lambda e: errs.append(str(e)))
-    page.goto(BASE); page.wait_for_selector('.auth')
+    page.goto(BASE); page.wait_for_selector('.auth'); page.click('.mode-card[data-mode=studio]')
     page.fill('.auth input >> nth=0', 'Анна'); page.fill('.auth input >> nth=1', '1234'); page.fill('.auth input >> nth=2', '1234')
     page.select_option('.auth select','Город, в котором вы родились?'); page.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); page.click('text=Начать работу'); page.wait_for_selector('.tabbar')
     # тема
@@ -62,9 +62,9 @@ with sync_playwright() as p:
     page.click('.head.sticky [aria-label="Назад"]'); page.wait_for_timeout(200)
     # версии
     page.goto(BASE + '#/settings'); page.wait_for_selector('text=Проверить обновление'); page.wait_for_timeout(600)
-    ok('та же версия на сайте — не «обновление»', 'актуальная версия 1.14.1' in page.inner_text('.page') and 'Обновить до' not in page.inner_text('.page'))
+    ok('та же версия на сайте — не «обновление»', 'актуальная версия 2.0.0' in page.inner_text('.page') and 'Обновить до' not in page.inner_text('.page'))
     page.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"1.99.0"}'))
-    page.click('text=Проверить обновление'); page.wait_for_selector('text=Обновить до 1.99.0'); ok('1.99.0 новее 1.14.1 (числовое сравнение)', True)
+    page.click('text=Проверить обновление'); page.wait_for_selector('text=Обновить до 1.99.0'); ok('1.99.0 новее 2.0.0 (числовое сравнение)', True)
     page.unroute('**/version.json*'); page.route('**/version.json*', lambda r: r.fulfill(status=200, content_type='application/json', body='{"version":"1.0.9"}'))
     page.click('text=Проверить обновление'); page.wait_for_timeout(500); ok('старая версия на сайте не считается обновлением', 'Обновить до' not in page.inner_text('.page'))
     page.unroute('**/version.json*'); page.route('**/version.json*', lambda r: r.abort())

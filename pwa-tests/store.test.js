@@ -161,6 +161,17 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     assert.strictEqual(r.occupancy, Math.round(1 / 12 * 100));
   });
 
+  await test('режим «Индивидуальный тренер»: одно направление, смена режима, сохранение в копии', async () => {
+    const s = mk(); assert.strictEqual(s.mode, 'studio');
+    await s.setupAdmin('Мария', '1234', 'Город, в котором вы родились?', 'Астана', { mode: 'solo', direction: 'Хатха-йога' });
+    assert.strictEqual(s.mode, 'solo'); assert.strictEqual(s.isSolo, true);
+    assert.strictEqual(s.state.classes.length, 1); assert.strictEqual(s.state.classes[0].name, 'Хатха-йога');
+    assert.strictEqual(s.snapshot().mode, 'solo');
+    s.setMode('studio'); assert.strictEqual(s.mode, 'studio'); assert.strictEqual(s.state.classes.length, 1);
+    throws(() => s.setMode('xxx'), 'Неизвестный');
+    const snap = s.snapshot(); snap.mode = 'bad'; throws(() => s.importSnapshot(snap), 'режим');
+  });
+
   await test('удаление клиента: только админ, делает копию, чистит связанное', async () => {
     const s = mk(); const c = sale(s); s.markVisit(c.id, '2026-11-18');
     throws(() => s.deleteClient(c.id), 'только администратор');
