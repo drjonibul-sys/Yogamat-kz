@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.11.2';
+  const APP_VERSION = '1.12.0';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -413,6 +413,29 @@
       const s = { id: uid(), clientID: o.clientID, tariffName: name, purchaseDate: o.purchaseDate, expiryDate: o.expiryDate, visitsTotal: o.visitsTotal, visitsLeft: o.visitsTotal, price: o.price, paid: !!o.paid, paidDate: o.paid ? o.paidDate : null };
       S.subscriptions.push(s); persist(); return s;
     };
+    /* корректировка проданного абонемента (только администратор) */
+    api.updateSubscription = (id, o) => {
+      noTrainer('Менять проданные абонементы может только администратор');
+      const s = api.subscription(id); if (!s) fail('Абонемент не найден');
+      const name = trim(o.tariffName); if (!name) fail('Введите название абонемента');
+      if (!RU.isValidDay(o.purchaseDate) || !RU.isValidDay(o.expiryDate)) fail('Укажите корректные даты');
+      if (!(o.expiryDate >= o.purchaseDate)) fail('Срок действия раньше даты покупки');
+      if (!(Number.isInteger(o.visitsTotal) && o.visitsTotal >= 1)) fail('Занятий должно быть не меньше одного');
+      if (!(Number.isInteger(o.visitsLeft) && o.visitsLeft >= 0 && o.visitsLeft <= o.visitsTotal)) fail('Осталось должно быть от 0 до ' + o.visitsTotal);
+      if (!(o.price >= 0)) fail('Укажите цену — ноль или больше');
+      if (o.paid && !RU.isValidDay(o.paidDate)) fail('Укажите дату оплаты');
+      Object.assign(s, { tariffName: name, purchaseDate: o.purchaseDate, expiryDate: o.expiryDate, visitsTotal: o.visitsTotal, visitsLeft: o.visitsLeft, price: o.price, paid: !!o.paid, paidDate: o.paid ? o.paidDate : null });
+      persist(); return s;
+    };
+    /* удалить можно только абонемент без визитов, пропусков и переносов (иначе остались бы «висячие» записи) */
+    api.deleteSubscription = (id) => {
+      noTrainer('Удалять абонементы может только администратор');
+      const s = api.subscription(id); if (!s) fail('Абонемент не найден');
+      if (S.visits.some((v) => v.subscriptionID === id) || S.absences.some((a) => a.subscriptionID === id) || S.transfers.some((t) => t.subscriptionID === id)) fail('По абонементу есть визиты, пропуски или переносы — удалить нельзя. Исправьте его через «Изменить».');
+      S.subscriptions = S.subscriptions.filter((x) => x.id !== id); persist();
+    };
+    /* «Прошло»: отмеченные визиты клиента по действующему (проданному) абонементу, состоявшиеся к сегодняшнему дню */
+    api.passedVisits = (sub) => (sub ? S.visits.filter((v) => v.subscriptionID === sub.id && v.date <= todayKey()).length : 0);
     api.setPaid = (id, paid) => {
       const s = api.subscription(id); if (!s) return;
       s.paid = !!paid; s.paidDate = paid ? todayKey() : null; persist();

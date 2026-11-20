@@ -307,3 +307,15 @@ textarea.inp { min-height: 84px; resize: vertical; }
 .att-table .pay-note.paid { color: var(--sage-deep); }
 .att-table tr.tot td { background: var(--sage-tint); font-weight: 700; }
 .att-table td.day-col.moved { background: var(--sand); color: var(--terracotta); font-weight: 700; }
+
+/* iPad: шире рабочая область без изменения масштаба (размеры шрифтов и элементов прежние) */
+@media (min-width: 700px) and (orientation: portrait) {
+  .page { max-width: 780px; }
+  .tabbar { max-width: 640px; }
+  .sheet { max-width: 720px; }
+}
+@media (min-width: 900px) and (orientation: landscape) {
+  .page { max-width: 1040px; }
+  .tabbar { max-width: 720px; }
+  .sheet { max-width: 760px; }
+}

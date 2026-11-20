@@ -154,6 +154,30 @@
       return { save() { store.addTransfer(sub.id, days, date.value, note.value); toast('Срок продлён'); } };
     });
   }
+  /** Корректировка проданного абонемента (администратор). */
+  function editSubForm(sub) {
+    const c = store.client(sub.clientID);
+    formSheet('Изменить абонемент', 'Сохранить', (s) => {
+      const tName = input({ value: sub.tariffName }); const total = input({ type: 'number', inputmode: 'numeric', min: 1, value: String(sub.visitsTotal) }); const left = input({ type: 'number', inputmode: 'numeric', min: 0, value: String(sub.visitsLeft) });
+      const bought = input({ type: 'date', value: sub.purchaseDate }); const expiry = input({ type: 'date', value: sub.expiryDate }); const price = moneyInput(String(sub.price));
+      const paidDate = input({ type: 'date', value: sub.paidDate || today() }); const paidWrap = h('div', { class: 'field' }, h('label', null, 'Дата оплаты'), paidDate);
+      let paid = !!sub.paid; paidWrap.hidden = !paid;
+      s.body.append(h('div', { class: 'row' }, avatar(c ? c.name : '?', 40), h('b', null, c ? c.name : '—')), field('Название абонемента', tName),
+        h('div', { class: 'row' }, h('div', { class: 'grow' }, field('Занятий всего', total)), h('div', { class: 'grow' }, field('Осталось', left))),
+        field('Цена, ₸', price), h('div', { class: 'row' }, h('div', { class: 'grow' }, field('Дата покупки', bought)), h('div', { class: 'grow' }, field('Действует до', expiry))),
+        toggle('Оплачено', paid, (v) => { paid = v; paidWrap.hidden = !v; }), paidWrap,
+        h('div', { class: 'hint' }, 'Уже отмеченные визиты не меняются. «Осталось» правится вручную — проверьте число после изменения «Занятий всего».'));
+      const del = h('button', { class: 'btn danger', type: 'button', onclick: async () => {
+        if (!(await confirmBox('Удалить абонемент?', '«' + sub.tariffName + '» будет удалён. Это возможно, только если по нему нет визитов, пропусков и переносов.', 'Удалить', true))) return;
+        try { store.deleteSubscription(sub.id); toast('Абонемент удалён'); s.close(); } catch (e) { s.error(e.message); } } }, icon('trash'), 'Удалить абонемент');
+      return { extra: [del], save() {
+        const o = { tariffName: tName.value, purchaseDate: bought.value, expiryDate: expiry.value, visitsTotal: Math.round(num(total.value)), visitsLeft: Math.round(num(left.value)), price: num(price.value || '0'), paid, paidDate: paid ? paidDate.value : null };
+        if (!isFinite(o.price)) throw new Error('Укажите цену числом');
+        store.updateSubscription(sub.id, o); toast('Абонемент изменён');
+      } };
+    });
+  }
+
   function paidDateForm(sub) {
     formSheet('Дата оплаты', 'Сохранить', (s) => {
       const date = input({ type: 'date', value: sub.paidDate || today() });
@@ -269,7 +293,8 @@
         h('div', { class: 'row between' }, h('div', { class: 'row', style: { gap: '8px' } }, pill(s.paid ? 'Оплачено' : 'Не оплачено', s.paid ? '' : 'warn'), s.paid && s.paidDate ? h('span', { class: 'soft small' }, RU.shortDate(s.paidDate)) : null),
           h('div', { class: 'row', style: { gap: '8px' } }, s.paid ? h('button', { class: 'link small', type: 'button', onclick: () => paidDateForm(s) }, 'Дата') : null,
             h('button', { class: 'btn sm soft-btn', type: 'button', onclick: () => { if (s.paid) store.setPaid(s.id, false); else store.setPaid(s.id, true); } }, s.paid ? 'Снять оплату' : 'Отметить оплату'))),
-        isActive ? h('button', { class: 'btn soft-btn', type: 'button', onclick: () => transferForm(s) }, icon('repeat'), 'Перенести срок') : null);
+        isActive ? h('button', { class: 'btn soft-btn', type: 'button', onclick: () => transferForm(s) }, icon('repeat'), 'Перенести срок') : null,
+        store.isAdmin ? h('button', { class: 'btn soft-btn', type: 'button', onclick: () => editSubForm(s) }, icon('edit'), 'Изменить абонемент') : null);
     };
     kids.push(section('Абонемент'));
     kids.push(active ? subCard(active, true) : h('div', { class: 'card warn' }, h('div', { class: 'h3' }, 'Нет активного абонемента'), h('div', { class: 'soft small' }, store.isAdmin ? 'Продайте новый — и клиента можно записывать на занятия.' : 'Новый абонемент оформляет администратор.')));
@@ -363,7 +388,7 @@
     const clients = store.weekGridClients(dates);
     if (!clients.length) return [nav, filter, empty('people', 'Нет клиентов с действующим абонементом', 'Продайте абонемент — клиент появится в таблице недели.')];
     const th = (cls, ...kids) => h('th', { class: cls || '' }, ...kids);
-    const head = h('tr', null, th('name-col', 'Клиент'), th('num-col left', 'Осталось'), th('num-col', 'Пропуски'),
+    const head = h('tr', null, th('name-col', 'Клиент'), th('num-col left', 'Осталось'), th('num-col', 'Прошло'),
       ...dates.map((d, i) => { const dt = RU.date(d); return th(d === t ? 'today' : '', h('div', { class: 'day-head' }, h('div', { class: 'wd' }, RU.weekdayShort[i]), h('div', { class: 'dn' }, String(dt.getDate())), h('div', { class: 'mo' }, RU.monthsShort[dt.getMonth()]))); }), th('note-col', 'Примечание'));
     const totals = dates.map(() => 0);
     const rows = clients.map((c) => {
@@ -382,9 +407,9 @@
       const last = sub || store.subscriptionsOf(c.id).slice().sort((x, y) => (x.purchaseDate < y.purchaseDate ? 1 : -1))[0]; /* без действующего — последний абонемент */
       const pay = !last ? 'нет абонемента' : (last.paid ? 'Оплачено: ' + (last.paidDate ? RU.shortDate(last.paidDate) : 'дата не указана') : 'Не оплачено') + (sub ? '' : ' · абонемент завершён');
       const note = input({ value: c.attendanceNote || '', placeholder: 'Комментарий…', maxlength: 200, 'aria-label': 'Примечание: ' + c.name, onchange: (e) => { try { store.setAttendanceNote(c.id, e.target.value); } catch (er) { toast(er.message); } } });
-      const miss = store.absencesCount(c.id);
+      const passed = sub ? store.passedVisits(sub) : null;
       return h('tr', null, h('td', { class: 'name-col', onclick: () => App.go('/client/' + c.id) }, c.name),
-        h('td', { class: 'num-col left' + (sub && sub.visitsLeft <= 2 && sub.visitsTotal <= 500 ? ' low' : '') }, left), h('td', { class: 'num-col' + (miss ? ' has' : '') }, String(miss)), ...cells,
+        h('td', { class: 'num-col left' + (sub && sub.visitsLeft <= 2 && sub.visitsTotal <= 500 ? ' low' : '') }, left), h('td', { class: 'num-col' }, passed == null ? '—' : String(passed)), ...cells,
         h('td', { class: 'note-col' }, h('div', { class: 'pay-note' + (last && last.paid ? ' paid' : '') }, pay), note));
     });
     const foot = h('tr', { class: 'tot' }, h('td', { class: 'name-col' }, 'Всего за день'), h('td', { class: 'num-col' }), h('td', { class: 'num-col' }), ...totals.map((n) => h('td', null, n ? String(n) : '')), h('td', null));

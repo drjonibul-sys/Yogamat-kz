@@ -1,0 +1,34 @@
+# 1.12.0: ширина рабочей области на iPad Pro 10.5, правка проданного абонемента через интерфейс
+from playwright.sync_api import sync_playwright
+import sys, datetime
+B='http://localhost:8765/'; bad=0
+def ok(n,c):
+    global bad; print(('OK   ' if c else 'FAIL ')+n); bad+= (not c)
+with sync_playwright() as p:
+    b=p.chromium.launch(); ctx=b.new_context(viewport={'width':834,'height':1112},locale='ru-RU',service_workers='block',device_scale_factor=1); pg=ctx.new_page()
+    pg.goto(B); pg.wait_for_selector('.auth'); pg.fill('.auth input >> nth=0','Анна'); pg.fill('.auth input >> nth=1','1234'); pg.fill('.auth input >> nth=2','1234')
+    pg.select_option('.auth select','Город, в котором вы родились?'); pg.fill('.auth input[aria-label="Ответ на контрольный вопрос"]','Астана'); pg.click('text=Начать работу'); pg.wait_for_selector('.tabbar')
+    t=datetime.date.today()
+    pg.evaluate("""([d0])=>{App.store.addQuickSale({name:'Айгуль',phone:'',tariffName:'8 занятий',purchaseDate:d0,expiryDate:'2027-12-30',visitsTotal:8,price:28000,paid:true,paidDate:d0});}""",[(t-datetime.timedelta(days=5)).isoformat()])
+    w=lambda: pg.evaluate("[document.querySelector('.page').getBoundingClientRect().width, getComputedStyle(document.querySelector('.page .title, .page h1, .page')).fontSize, document.documentElement.scrollWidth]")
+    pg.goto(B+'#/overview'); pg.wait_for_selector('.page'); pg.wait_for_timeout(300)
+    pw,fs,sw=w(); ok('iPad книжная: рабочая область ≈780 px (было 640)', 770<=pw<=782)
+    ok('нет горизонтальной прокрутки страницы', sw<=834)
+    pg.set_viewport_size({'width':1112,'height':834}); pg.wait_for_timeout(300); pw2,fs2,sw2=w()
+    ok('iPad альбомная: рабочая область ≈1040 px', 1030<=pw2<=1042); ok('масштаб/шрифты не менялись', fs==fs2)
+    pg.set_viewport_size({'width':390,'height':800}); pg.wait_for_timeout(300); ok('iPhone: без изменений (≤640)', w()[0]<=390)
+    pg.set_viewport_size({'width':834,'height':1112})
+    # правка абонемента
+    cid=pg.evaluate("App.store.state.clients[0].id"); pg.goto(B+'#/client/'+cid); pg.wait_for_selector('text=Изменить абонемент')
+    pg.click('text=Изменить абонемент'); pg.wait_for_selector('.overlay[aria-label="Изменить абонемент"]')
+    sheet=pg.locator('.overlay[aria-label="Изменить абонемент"]')
+    inputs=sheet.locator('input'); 
+    sheet.locator('input').nth(0).fill('12 занятий'); sheet.locator('input').nth(1).fill('12'); sheet.locator('input').nth(2).fill('11')
+    sheet.locator('.sheet-foot .btn').first.click(); pg.wait_for_timeout(400)
+    s=pg.evaluate("App.store.state.subscriptions[0]"); ok('абонемент изменён: название, 12, осталось 11', s['tariffName']=='12 занятий' and s['visitsTotal']==12 and s['visitsLeft']==11)
+    ok('карточка показывает «Осталось 11 из 12»', 'Осталось 11 из 12' in pg.inner_text('.page'))
+    pg.click('text=Изменить абонемент'); pg.wait_for_selector('.overlay[aria-label="Изменить абонемент"]'); sheet=pg.locator('.overlay[aria-label="Изменить абонемент"]')
+    sheet.locator('input').nth(2).fill('99'); sheet.locator('.sheet-foot .btn').first.click(); pg.wait_for_selector('.err'); ok('осталось > всего отклоняется', 'от 0 до 12' in pg.inner_text('.err'))
+    pg.screenshot(path='/tmp/ipad.png')
+    b.close()
+sys.exit(1 if bad else 0)

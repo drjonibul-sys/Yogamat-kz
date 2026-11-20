@@ -20,6 +20,7 @@ with sync_playwright() as p:
         pg.evaluate("document.getElementById('main').scrollTop = 600"); pg.wait_for_timeout(250)
         st=pg.evaluate("document.getElementById('main').scrollTop"); top=pg.evaluate("document.querySelector('.head.sticky').getBoundingClientRect().top")
         vis=pg.locator('.head.sticky h1').is_visible() and pg.inner_text('.head.sticky h1').strip()==name
-        res=abs(top)<2 and vis and st>100; print(('ok  ' if res else 'FAIL'),'пояс закреплён:',name,'scrollTop',st,'top',top); assert res
+        room=pg.evaluate("document.getElementById('main').scrollHeight-document.getElementById('main').clientHeight") # «Классы» в дни без занятий короткие
+        res=abs(top)<2 and vis and (st>100 or room<=120); print(('ok  ' if res else 'FAIL'),'пояс закреплён:',name,'scrollTop',st,'top',top); assert res
         if name=='Клиенты': pg.screenshot(path='/tmp/shots/22-sticky-clients.png')
     assert not errs,errs; b.close()

@@ -398,6 +398,24 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана'); s.deleteClient(c.id); assert.strictEqual(s.state.absences.length, 0);
   });
 
+  await test('корректировка проданного абонемента и «Прошло»', async () => {
+    const s = mk(); const c = sale(s); const sub = s.activeSubscription(c.id);
+    s.markVisit(c.id, '2026-11-17'); s.markVisit(c.id, '2026-11-18'); s.markVisit(c.id, '2026-11-25'); // третий — будущая запись
+    assert.strictEqual(s.passedVisits(sub), 2, '«Прошло» — только наступившие дни'); assert.strictEqual(s.passedVisits(null), 0);
+    const base = { tariffName: '12 занятий', purchaseDate: '2026-11-10', expiryDate: '2026-12-20', visitsTotal: 12, visitsLeft: 9, price: 35000, paid: false, paidDate: null };
+    s.updateSubscription(sub.id, base); assert.strictEqual(sub.visitsTotal, 12); assert.strictEqual(sub.price, 35000); assert.strictEqual(sub.paid, false); assert.strictEqual(sub.paidDate, null);
+    s.updateSubscription(sub.id, Object.assign({}, base, { paid: true, paidDate: '2026-11-12' })); assert.strictEqual(sub.paidDate, '2026-11-12');
+    throws(() => s.updateSubscription(sub.id, Object.assign({}, base, { visitsLeft: 13 })), 'от 0 до 12');
+    throws(() => s.updateSubscription(sub.id, Object.assign({}, base, { expiryDate: '2026-11-01' })), 'раньше даты покупки');
+    throws(() => s.updateSubscription(sub.id, Object.assign({}, base, { tariffName: ' ' })), 'название');
+    throws(() => s.updateSubscription(sub.id, Object.assign({}, base, { paid: true, paidDate: '' })), 'дату оплаты');
+    throws(() => s.deleteSubscription(sub.id), 'нельзя');
+    const c2 = sale(s, { name: 'Бота' }); const sub2 = s.activeSubscription(c2.id); s.deleteSubscription(sub2.id); assert(!s.subscription(sub2.id));
+    const snap = s.snapshot(); const s2 = mk(); s2.importSnapshot(JSON.parse(JSON.stringify(snap))); assert.strictEqual(s2.subscription(sub.id).visitsTotal, 12);
+    await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана'); await s.addTrainer('Ольга', '4321'); s.logOut();
+    await s.logIn(s.state.staff.find((u) => u.role === 'trainer').id, '4321'); throws(() => s.updateSubscription(sub.id, base), 'только администратор'); throws(() => s.deleteSubscription(sub.id), 'только администратор');
+  });
+
   await test('версия в sw.js, store.js и index совпадает', () => {
     const fs = require('fs'); const sw = fs.readFileSync(__dirname + '/../docs/sw.js', 'utf8');
     assert.strictEqual(/VERSION = '([\d.]+)'/.exec(sw)[1], require('../docs/store.js').APP_VERSION);
