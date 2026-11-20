@@ -1,5 +1,5 @@
 /* Йога-студия yoga_matkz — офлайн-режим. Версия кэша совпадает с версией приложения (проверяется тестом). */
-const VERSION = '1.13.0';
+const VERSION = '1.14.0';
 const CACHE = 'yogamat-' + VERSION;
 importScripts('shell.js');
 const SHELL = self.SHELL_FILES;

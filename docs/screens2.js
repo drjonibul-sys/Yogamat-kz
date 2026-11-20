@@ -106,7 +106,7 @@
       box.appendChild(section('Абонементы'));
       box.appendChild(subs.length ? h('div', { class: 'card flat' }, subs.map((s) => { const c = store.client(s.clientID); return listRow([h('div', { class: 'grow' }, h('div', { class: 'trunc', style: { fontWeight: 600 } }, c ? c.name + ' · ' + s.tariffName : s.tariffName), h('div', { class: 'soft small' }, RU.shortDate(s.paidDate))), h('b', { class: 'num' }, RU.money(s.price))], c ? () => App.go('/client/' + c.id) : null); }))
         : h('div', { class: 'card soft' }, 'Нет оплат абонементов'));
-      if (rentPaid.length) { box.appendChild(section('Аренда')); box.appendChild(h('div', { class: 'card flat' }, rentPaid.map((p) => listRow([h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, 'Аренда за ' + RU.months[p.month - 1].toLowerCase()), p.paidDate ? h('div', { class: 'soft small' }, 'оплачено ' + RU.longDay(p.paidDate)) : null), h('b', { class: 'num' }, '− ' + RU.money(store.state.rentSettings.monthlyAmount))])))); }
+      if (rentPaid.length) { box.appendChild(section('Аренда')); box.appendChild(h('div', { class: 'card flat' }, rentPaid.map((p) => listRow([h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, 'Аренда за ' + RU.months[p.month - 1].toLowerCase()), p.paidDate ? h('div', { class: 'soft small' }, 'оплачено ' + RU.longDay(p.paidDate)) : null), h('b', { class: 'num' }, '− ' + RU.money(store.rentAmount(p)))])))); }
     };
     draw(); return page('Платежи', { back: '/income', right: h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Отчёт PDF за период', onclick: () => reportSheet(st) }, icon('download')) }, box);
   }
@@ -148,14 +148,35 @@
       return { save() { const a = num(amount.value); if (!isFinite(a)) throw new Error('Укажите сумму числом'); store.setupRent(a, Math.round(num(y.value)), +start.value); } };
     });
   }
+  /* ручная корректировка аренды за период (в том числе прошлый): сумма, оплата, дата оплаты */
+  function rentPeriodForm(p) {
+    formSheet('Аренда: ' + RU.months[p.month - 1].toLowerCase() + ' ' + p.year, 'Сохранить', (s) => {
+      const amount = moneyInput(String(store.rentAmount(p))); const paidDate = input({ type: 'date', value: p.paidDate || App.today(), max: App.today() });
+      const paidWrap = h('div', { class: 'field' }, h('label', null, 'Дата оплаты'), paidDate); let paid = !!p.paid; paidWrap.hidden = !paid;
+      s.body.append(h('div', { class: 'soft' }, 'Ежемесячная сумма по умолчанию: ' + RU.money(store.state.rentSettings.monthlyAmount) + '. Здесь можно указать фактическую сумму за этот месяц.'),
+        field('Сумма за месяц, ₸', amount), toggle('Оплачено', paid, (v) => { paid = v; paidWrap.hidden = !v; }), paidWrap,
+        h('div', { class: 'hint' }, 'Оплаченные месяцы учитываются в доходе как расходы на аренду по дате месяца периода, в отчётах по платежам — по дате оплаты.'));
+      return { save() { const a = num(amount.value || '0'); if (!isFinite(a)) throw new Error('Укажите сумму числом'); store.updateRentPeriod(p.id, { amount: a, paid, paidDate: paid ? paidDate.value : null }); toast('Аренда обновлена'); } };
+    });
+  }
+  function rentSettingsForm() {
+    const st = store.state.rentSettings;
+    formSheet('Настройки аренды', 'Сохранить', (s) => {
+      const amount = moneyInput(String(st.monthlyAmount)); const start = select(RU.months.map((n, i) => ({ value: i + 1, label: n })), st.startMonth, () => {}); const y = input({ type: 'number', inputmode: 'numeric', value: st.startYear });
+      s.body.append(h('div', { class: 'soft' }, 'Сумма по умолчанию применяется к периодам без своей суммы. Уже оплаченные месяцы сохраняют свои суммы.'), field('Ежемесячно, ₸', amount),
+        h('div', { class: 'row' }, h('div', { class: 'grow' }, field('Учёт с', start)), h('div', { style: { width: '110px' } }, field('Год', y))),
+        h('div', { class: 'hint' }, 'Чтобы добавить прошлые месяцы, выберите более ранний месяц начала — недостающие периоды появятся в списке, их можно исправить вручную. Неоплаченные месяцы раньше начала учёта удаляются.'));
+      return { save() { const a = num(amount.value || '0'); if (!isFinite(a)) throw new Error('Укажите сумму числом'); store.updateRentSettings({ monthlyAmount: a, startYear: Math.round(num(y.value)), startMonth: +start.value }); toast('Настройки аренды сохранены'); } };
+    });
+  }
   function rent() {
     const st = store.state.rentSettings;
     if (!st) return page('Аренда студии', { back: '/income' }, h('div', { class: 'card' }, h('div', { class: 'h3' }, 'Учёт аренды не настроен'), h('div', { class: 'soft' }, 'Включите учёт — приложение напомнит об оплате и учтёт аренду в итоговом доходе.'), h('button', { class: 'btn', type: 'button', onclick: rentSetup }, 'Настроить аренду')));
     const cur = store.pastAndCurrentRentPeriods(); const up = store.upcomingRentPeriods(); const missed = store.missedRentPeriods().map((p) => p.id); const cp = store.currentRentPeriod();
-    const prow = (p) => { const late = missed.includes(p.id); return listRow([h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, RU.months[p.month - 1] + ' ' + p.year), h('div', { class: 'soft small' }, p.paid ? 'оплачено' + (p.paidDate ? ' ' + RU.longDay(p.paidDate) : '') : (late ? 'просрочено' : (cp && cp.id === p.id ? 'текущий' : 'ожидает')))),
-      p.paid ? pill('Оплачено') : (late ? pill('просрочено', 'warn') : null), h('button', { class: 'btn sm ' + (p.paid ? 'soft-btn' : ''), type: 'button', onclick: () => store.setRentPaid(p.id, !p.paid) }, p.paid ? 'Снять' : 'Оплатить')]); };
+    const prow = (p) => { const late = missed.includes(p.id); return listRow([h('div', { class: 'grow' }, h('div', { style: { fontWeight: 600 } }, RU.months[p.month - 1] + ' ' + p.year), h('div', { class: 'soft small' }, RU.money(store.rentAmount(p)) + ' · ' + (p.paid ? 'оплачено' + (p.paidDate ? ' ' + RU.longDay(p.paidDate) : '') : (late ? 'просрочено' : (cp && cp.id === p.id ? 'текущий' : 'ожидает'))))),
+      p.paid ? pill('Оплачено') : (late ? pill('просрочено', 'warn') : null), h('button', { class: 'link small', type: 'button', onclick: () => rentPeriodForm(p) }, 'Изменить'), h('button', { class: 'btn sm ' + (p.paid ? 'soft-btn' : ''), type: 'button', onclick: () => store.setRentPaid(p.id, !p.paid) }, p.paid ? 'Снять' : 'Оплатить')]); };
     return page('Аренда студии', { back: '/income' }, h('div', { class: 'card tint' }, h('div', { class: 'soft small' }, 'Ежемесячно'), h('div', { class: 'title num' }, RU.money(st.monthlyAmount)),
-      row('Учёт с', RU.months[st.startMonth - 1].toLowerCase() + ' ' + st.startYear), row('Оплачено периодов', String(store.state.rentPeriods.filter((p) => p.paid).length)), row('Выплачено всего', RU.money(store.paidRentTotal()))),
+      row('Учёт с', RU.months[st.startMonth - 1].toLowerCase() + ' ' + st.startYear), row('Оплачено периодов', String(store.state.rentPeriods.filter((p) => p.paid).length)), row('Выплачено всего', RU.money(store.paidRentTotal())), h('button', { class: 'btn sm soft-btn', type: 'button', onclick: rentSettingsForm }, icon('edit'), 'Настройки аренды')),
       section('Текущий и прошлые месяцы'), h('div', { class: 'card flat' }, cur.map(prow)), up.length ? section('Предстоящие месяцы') : null, up.length ? h('div', { class: 'card flat' }, up.map(prow)) : null);
   }
 

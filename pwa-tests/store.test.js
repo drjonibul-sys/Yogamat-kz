@@ -416,6 +416,31 @@ const sale = (s, extra) => s.addQuickSale(Object.assign({ name: 'Айгуль', 
     await s.logIn(s.state.staff.find((u) => u.role === 'trainer').id, '4321'); throws(() => s.updateSubscription(sub.id, base), 'только администратор'); throws(() => s.deleteSubscription(sub.id), 'только администратор');
   });
 
+  await test('аренда: ручная корректировка периода, суммы, даты, настройки и начало учёта', async () => {
+    const s = mk(); await s.setupAdmin('Анна', '1234', 'Город, в котором вы родились?', 'Астана');
+    s.setupRent(200000, 2026, 9); s.refreshRentWindow();
+    const per = (m) => s.state.rentPeriods.find((p) => p.year === 2026 && p.month === m);
+    assert(per(9) && per(10) && per(11)); assert.strictEqual(s.rentAmount(per(9)), 200000);
+    s.updateRentPeriod(per(9).id, { amount: 150000, paid: true, paidDate: '2026-09-05' });
+    assert.strictEqual(per(9).paid, true); assert.strictEqual(per(9).paidDate, '2026-09-05'); assert.strictEqual(s.rentAmount(per(9)), 150000);
+    s.setRentPaid(per(10).id, true); assert.strictEqual(per(10).amount, 200000, 'сумма фиксируется при оплате');
+    assert.strictEqual(s.paidRentTotal(), 350000); assert.strictEqual(s.rentExpense(2026, 9), 150000);
+    s.updateRentSettings({ monthlyAmount: 250000, startYear: 2026, startMonth: 8 });
+    assert.strictEqual(s.rentAmount(per(10)), 200000, 'оплаченное не меняется'); assert.strictEqual(s.rentAmount(per(11)), 250000, 'неоплаченное — по новой сумме');
+    assert(per(8), 'ранний месяц начала добавил период'); s.updateRentPeriod(per(8).id, { amount: 100000, paid: true, paidDate: '2026-08-03' }); assert.strictEqual(s.rentExpense(2026, 8), 100000);
+    throws(() => s.updateRentSettings({ monthlyAmount: 1, startYear: 2026, startMonth: 11 }), 'оплаченные периоды');
+    throws(() => s.updateRentPeriod(per(9).id, { amount: -5, paid: false }), 'сумму');
+    throws(() => s.updateRentPeriod(per(9).id, { amount: 1, paid: true, paidDate: '' }), 'дату оплаты');
+    throws(() => s.updateRentPeriod(per(9).id, { amount: 1, paid: true, paidDate: '2030-01-01' }), 'в будущем');
+    s.updateRentPeriod(per(9).id, { amount: 150000, paid: false }); assert.strictEqual(per(9).paidDate, null); assert.strictEqual(s.rentExpense(2026, 9), 0);
+    const r = s.paymentsReport('2026-08-01', '2026-10-31'); assert.strictEqual(r.rentSum, 100000, 'по дате оплаты: оплата сентября снята, октябрь оплачен ноября');
+    assert(s.paymentsCSV('2026-08-01', '2026-10-31').includes('−100'), 'CSV берёт сумму периода');
+    const snap = JSON.parse(JSON.stringify(s.snapshot())); const s2 = mk(); s2.importSnapshot(snap); assert.strictEqual(s2.rentAmount(s2.state.rentPeriods.find((p) => p.month === 8)), 100000);
+    snap.rentPeriods[0].amount = -1; throws(() => mk().importSnapshot(snap), 'периодах аренды');
+    await s.addTrainer('Ольга', '4321'); s.logOut(); await s.logIn(s.state.staff.find((u) => u.role === 'trainer').id, '4321');
+    throws(() => s.updateRentPeriod(per(9).id, { amount: 1, paid: false }), 'только администратор'); throws(() => s.updateRentSettings({ monthlyAmount: 1, startYear: 2026, startMonth: 8 }), 'только администратор');
+  });
+
   await test('версия в sw.js, store.js и index совпадает', () => {
     const fs = require('fs'); const sw = fs.readFileSync(__dirname + '/../docs/sw.js', 'utf8');
     assert.strictEqual(/VERSION = '([\d.]+)'/.exec(sw)[1], require('../docs/store.js').APP_VERSION);

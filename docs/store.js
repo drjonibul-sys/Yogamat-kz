@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const APP_VERSION = '1.13.0';
+  const APP_VERSION = '1.14.0';
 
   /* ---------- Даты и форматирование (RU) ---------- */
   const pad = (n, w) => String(n).padStart(w || 2, '0');
@@ -619,7 +619,10 @@
     api.missedRentPeriods = () => S.rentPeriods.filter((p) => !p.paid && periodIndex(p) < curIndex()).sort(byPeriod);
     api.pastAndCurrentRentPeriods = () => api.rentPeriodsAscending().filter((p) => periodIndex(p) <= curIndex()).reverse();
     api.upcomingRentPeriods = () => api.rentPeriodsAscending().filter((p) => periodIndex(p) > curIndex());
-    api.paidRentTotal = () => S.rentSettings ? S.rentPeriods.filter((p) => p.paid).length * S.rentSettings.monthlyAmount : 0;
+    /* сумма за период: своя (если исправлена вручную или зафиксирована при оплате) либо ежемесячная по умолчанию */
+    const rentAmount = (p) => (p && typeof p.amount === 'number' && p.amount >= 0) ? p.amount : ((S.rentSettings && S.rentSettings.monthlyAmount) || 0);
+    api.rentAmount = rentAmount;
+    api.paidRentTotal = () => S.rentSettings ? S.rentPeriods.filter((p) => p.paid).reduce((s, p) => s + rentAmount(p), 0) : 0;
     api.setupRent = (amount, startYear, startMonth) => {
       if (S.rentSettings) fail('Аренда уже настроена');
       if (!(amount >= 0)) fail('Укажите сумму — ноль или больше');
@@ -642,11 +645,38 @@
     api.refreshRentWindow = () => ensureRentPeriods();
     api.setRentPaid = (id, paid) => {
       const p = S.rentPeriods.find((x) => x.id === id); if (!p) return;
+      if (paid && !(typeof p.amount === 'number')) p.amount = rentAmount(p); /* сумма фиксируется при оплате: смена тарифа аренды не меняет прошлое */
       p.paid = !!paid; p.paidDate = paid ? todayKey() : null; persist();
+    };
+    /* ручная корректировка периода аренды (только администратор): сумма, оплата, дата оплаты */
+    api.updateRentPeriod = (id, o) => {
+      noTrainer('Менять аренду может только администратор');
+      const p = S.rentPeriods.find((x) => x.id === id); if (!p) fail('Период аренды не найден');
+      const amount = (o.amount === null || o.amount === '' || o.amount === undefined) ? null : Number(o.amount);
+      if (amount !== null && !(amount >= 0 && isFinite(amount))) fail('Укажите сумму — ноль или больше');
+      if (o.paid) {
+        if (!RU.isValidDay(o.paidDate)) fail('Укажите дату оплаты');
+        if (o.paidDate > todayKey()) fail('Дата оплаты не может быть в будущем');
+      }
+      p.amount = amount === null ? (o.paid ? rentAmount(Object.assign({}, p, { amount: null })) : null) : amount;
+      p.paid = !!o.paid; p.paidDate = o.paid ? o.paidDate : null; persist(); return p;
+    };
+    /* изменение настроек аренды: сумма по умолчанию и месяц начала учёта; оплаченные периоды сохраняют свои суммы */
+    api.updateRentSettings = ({ monthlyAmount, startYear, startMonth }) => {
+      noTrainer('Менять аренду может только администратор');
+      if (!S.rentSettings) fail('Аренда не настроена');
+      if (!(monthlyAmount >= 0)) fail('Укажите сумму — ноль или больше');
+      if (!(Number.isInteger(startYear) && startYear >= 2000 && startYear <= 2100 && startMonth >= 1 && startMonth <= 12)) fail('Укажите корректный месяц и год начала учёта');
+      const ns = idx(startYear, startMonth);
+      if (S.rentPeriods.some((p) => p.paid && periodIndex(p) < ns)) fail('До выбранного месяца есть оплаченные периоды — начните учёт не позже них');
+      S.rentPeriods.filter((p) => p.paid && typeof p.amount !== 'number').forEach((p) => { p.amount = S.rentSettings.monthlyAmount; });
+      S.rentPeriods = S.rentPeriods.filter((p) => p.paid || periodIndex(p) >= ns);
+      S.rentSettings = { monthlyAmount, startYear, startMonth };
+      ensureRentPeriods(true); persist();
     };
     api.rentExpensesByMonth = () => {
       const out = {}; if (!S.rentSettings) return out;
-      S.rentPeriods.filter((p) => p.paid).forEach((p) => { const k = RU.monthKey(p.year, p.month); out[k] = (out[k] || 0) + S.rentSettings.monthlyAmount; });
+      S.rentPeriods.filter((p) => p.paid).forEach((p) => { const k = RU.monthKey(p.year, p.month); out[k] = (out[k] || 0) + rentAmount(p); });
       return out;
     };
     api.rentExpense = (y, m) => api.rentExpensesByMonth()[RU.monthKey(y, m)] || 0;
@@ -805,6 +835,7 @@
       snap.visits.forEach((v) => { if (!cids.has(v.clientID) || !sids.has(v.subscriptionID) || !RU.isValidDay(v.date)) fail('В визитах есть запись с неизвестным клиентом или абонементом'); });
       (snap.absences || []).forEach((a) => { if (!cids.has(a.clientID) || !RU.isValidDay(a.date)) fail('В пропусках есть некорректная запись'); });
       (snap.transfers || []).forEach((t) => { if (!cids.has(t.clientID) || !sids.has(t.subscriptionID) || !(t.days >= 1)) fail('В переносах есть некорректная запись'); });
+      (snap.rentPeriods || []).forEach((p) => { if (!(p.month >= 1 && p.month <= 12) || (p.amount != null && !(p.amount >= 0)) || (p.paid && !RU.isValidDay(p.paidDate))) fail('В периодах аренды есть некорректная запись'); });
       (snap.classes || []).forEach((c) => { if (!(c.capacity >= 1 && c.durationMin >= 1)) fail('В направлениях есть некорректное занятие'); });
       (snap.tariffs || []).forEach((t) => { if (!(t.visitsCount >= 1 && t.durationDays >= 1 && t.price >= 0)) fail('В тарифах есть некорректная запись'); });
       if (snap.rentSettings && !(snap.rentSettings.monthlyAmount >= 0 && snap.rentSettings.startMonth >= 1 && snap.rentSettings.startMonth <= 12)) fail('В настройках аренды некорректные данные');
@@ -871,15 +902,14 @@
     api.paymentsReport = (from, to) => {
       const subs = api.paidSubscriptions().filter((s) => s.paidDate >= from && s.paidDate <= to).sort((a, b) => (a.paidDate < b.paidDate ? -1 : 1));
       const rent = S.rentPeriods.filter((p) => p.paid && RU.isValidDay(p.paidDate) && p.paidDate >= from && p.paidDate <= to).sort((a, b) => (a.paidDate < b.paidDate ? -1 : 1));
-      const income = subs.reduce((s, x) => s + x.price, 0); const rentSum = rent.reduce((s, p) => s + ((S.rentSettings && S.rentSettings.monthlyAmount) || 0), 0);
+      const income = subs.reduce((s, x) => s + x.price, 0); const rentSum = rent.reduce((s, p) => s + rentAmount(p), 0);
       return { subs, rent, income, rentSum, total: income - rentSum };
     };
     api.paymentsCSV = (from, to) => {
       const r = api.paymentsReport(from, to); const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
       const rows = [['Дата', 'Вид', 'Клиент / описание', 'Тариф', 'Сумма, ₸']];
       r.subs.forEach((s) => { const c = api.client(s.clientID); rows.push([RU.shortDate(s.paidDate), 'Абонемент', c ? c.name : '—', s.tariffName, fmt(s.price)]); });
-      const amount = (S.rentSettings && S.rentSettings.monthlyAmount) || 0;
-      r.rent.forEach((p) => rows.push([RU.shortDate(p.paidDate), 'Аренда', 'Аренда за ' + RU.months[p.month - 1].toLowerCase() + ' ' + p.year, '', '−' + fmt(amount)]));
+      r.rent.forEach((p) => rows.push([RU.shortDate(p.paidDate), 'Аренда', 'Аренда за ' + RU.months[p.month - 1].toLowerCase() + ' ' + p.year, '', '−' + fmt(rentAmount(p))]));
       rows.push(['', '', 'Поступления от абонементов', '', fmt(r.income)]);
       if (r.rent.length) rows.push(['', '', 'Аренда', '', '−' + fmt(r.rentSum)]);
       rows.push(['', '', 'Итого', '', fmt(r.total)]);

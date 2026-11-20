@@ -2,6 +2,7 @@
 from playwright.sync_api import sync_playwright
 import sys
 B='http://localhost:8765/'; bad=0
+import json; VER=json.load(open('docs/version.json'))['version']
 def ok(n,c):
     global bad; print(('OK   ' if c else 'FAIL ')+n); bad+= (not c)
 with sync_playwright() as p:
@@ -18,7 +19,7 @@ with sync_playwright() as p:
     ok('в «О приложении» кнопки проверки больше нет', pg.locator('button.chk-btn').count()==1)
     # та же версия
     pg.click('button.chk-btn'); pg.wait_for_selector('button.chk-btn.busy'); ok('анимация: кнопка «Проверяем…» со спиннером', 'Проверяем' in pg.inner_text('button.chk-btn') and pg.locator('.chk-spin').is_visible())
-    pg.wait_for_selector('.overlay[aria-label="Проверка обновления"]'); t=pg.inner_text('.overlay'); ok('окно: «У вас последняя версия» и номер', 'последняя версия' in t and '1.13.0' in t)
+    pg.wait_for_selector('.overlay[aria-label="Проверка обновления"]'); t=pg.inner_text('.overlay'); ok('окно: «У вас последняя версия» и номер', 'последняя версия' in t and VER in t)
     pg.click('.overlay >> text=Готово'); pg.wait_for_function("document.querySelector('button.chk-btn') && !document.querySelector('button.chk-btn.busy')"); ok('кнопка вернулась в исходное состояние', 'Проверить обновление' in pg.inner_text('button.chk-btn') and pg.locator('button.chk-btn.busy').count()==0)
     # есть новая
     ver['v']='9.9.9'; pg.click('button.chk-btn'); pg.wait_for_selector('.overlay[aria-label="Доступно обновление"]'); t=pg.inner_text('.overlay'); ok('окно: «Доступна версия 9.9.9», Установить/Позже', '9.9.9' in t and 'Установить' in t and 'Позже' in t)
