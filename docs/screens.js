@@ -158,15 +158,25 @@
   function editSubForm(sub) {
     const c = store.client(sub.clientID);
     formSheet('Изменить абонемент', 'Сохранить', (s) => {
-      const tName = input({ value: sub.tariffName }); const total = input({ type: 'number', inputmode: 'numeric', min: 1, value: String(sub.visitsTotal) }); const left = input({ type: 'number', inputmode: 'numeric', min: 0, value: String(sub.visitsLeft) });
+      const tName = input({ value: sub.tariffName, placeholder: 'Например: 8 занятий / месяц' }); const total = input({ type: 'number', inputmode: 'numeric', min: 1, value: String(sub.visitsTotal) }); const left = input({ type: 'number', inputmode: 'numeric', min: 0, value: String(sub.visitsLeft) });
       const bought = input({ type: 'date', value: sub.purchaseDate }); const expiry = input({ type: 'date', value: sub.expiryDate }); const price = moneyInput(String(sub.price));
+      const used = sub.visitsTotal - sub.visitsLeft; /* уже использовано занятий — сохраняется при выборе тарифа */
+      const tariffs = store.orderedTariffs(); const MANUAL = '__manual__';
+      const match = tariffs.find((x) => x.name === sub.tariffName);
+      const nameWrap = h('div', { class: 'field' }, h('label', null, 'Название абонемента'), tName);
+      const pick = select(tariffs.map((x) => ({ value: x.id, label: x.name + ' · ' + x.visitsCount + ' ' + RU.classes(x.visitsCount) + ' · ' + RU.money(x.price) })).concat([{ value: MANUAL, label: 'Ввести вручную' }]), match ? match.id : MANUAL, (e) => {
+        const x = tariffs.find((y) => y.id === e.target.value); nameWrap.hidden = !!x; if (!x) return;
+        tName.value = x.name; total.value = String(x.visitsCount); left.value = String(Math.max(0, Math.min(x.visitsCount, x.visitsCount - used))); price.value = String(x.price);
+        if (RU.isValidDay(bought.value)) expiry.value = RU.addDays(x.durationDays, bought.value);
+      });
+      nameWrap.hidden = !!match;
       const paidDate = input({ type: 'date', value: sub.paidDate || today() }); const paidWrap = h('div', { class: 'field' }, h('label', null, 'Дата оплаты'), paidDate);
       let paid = !!sub.paid; paidWrap.hidden = !paid;
-      s.body.append(h('div', { class: 'row' }, avatar(c ? c.name : '?', 40), h('b', null, c ? c.name : '—')), field('Название абонемента', tName),
+      s.body.append(h('div', { class: 'row' }, avatar(c ? c.name : '?', 40), h('b', null, c ? c.name : '—')), field('Тариф', pick), nameWrap,
         h('div', { class: 'row' }, h('div', { class: 'grow' }, field('Занятий всего', total)), h('div', { class: 'grow' }, field('Осталось', left))),
         field('Цена, ₸', price), h('div', { class: 'row' }, h('div', { class: 'grow' }, field('Дата покупки', bought)), h('div', { class: 'grow' }, field('Действует до', expiry))),
         toggle('Оплачено', paid, (v) => { paid = v; paidWrap.hidden = !v; }), paidWrap,
-        h('div', { class: 'hint' }, 'Уже отмеченные визиты не меняются. «Осталось» правится вручную — проверьте число после изменения «Занятий всего».'));
+        h('div', { class: 'hint' }, 'Выбор тарифа подставляет название, число занятий, цену и срок; уже использованные занятия сохраняются. Любое поле можно поправить вручную. Уже отмеченные визиты не меняются.'));
       const del = h('button', { class: 'btn danger', type: 'button', onclick: async () => {
         if (!(await confirmBox('Удалить абонемент?', '«' + sub.tariffName + '» будет удалён. Это возможно, только если по нему нет визитов, пропусков и переносов.', 'Удалить', true))) return;
         try { store.deleteSubscription(sub.id); toast('Абонемент удалён'); s.close(); } catch (e) { s.error(e.message); } } }, icon('trash'), 'Удалить абонемент');
